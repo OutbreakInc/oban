@@ -1,0 +1,66 @@
+<html>
+<head>
+	<title>ACE test</title>
+	<link rel="stylesheet" type="text/css" href="IDE.css" media="screen"/>
+	<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.9.0/build/treeview/assets/skins/sam/treeview.css"/>
+	</style>
+	
+</head>
+<body>
+	<script src="jquery.1.7.2.min.js" type="application/javascript" charset="utf-8"></script>
+	<script src="trACE.min.js" type="application/javascript" charset="utf-8"></script>
+	<script src="theme-chrome.js" type="application/javascript" charset="utf-8"></script>
+	<script src="mode-c_cpp.js" type="application/javascript" charset="utf-8"></script>
+ 	<script src="IDE.js" type="application/javascript" charset="utf-8"></script>
+	
+	<script src="http://yui.yahooapis.com/2.9.0/build/yahoo-dom-event/yahoo-dom-event.js"></script>
+	<script src="http://yui.yahooapis.com/2.9.0/build/treeview/treeview-min.js"></script>
+	
+	
+	<div class="tabView">
+		<div class="header">
+			<div id="tabFirst" class="firstActive startHidden"></div>
+			<ul id="tabBar" class="tabBar">
+			</ul>
+		</div>
+		<div class="documentView"></div>
+	</div>
+	<div class="debugView">
+		<div class="varView yui-skin-sam">
+			<div id="varTree" class="varTree">
+				<ul>
+					<li class="expanded"><span>this <em>const Object*</em></span>
+						<ul>
+							<li><span>owner: 0x10000246 <em>Thing*</em></span>
+								<ul>
+									<li><span>blah: 0 <em>int</em></span></li>
+									<li><span>name: 0x12345678 <em>"hello"</em></span></li>
+								</ul>
+							</li>
+						</ul>
+					</li>
+					<li class="expanded">Locals
+						<ul>
+							<li><span>i: 7 <em>int</em></span></li>
+							<li><span>buffer: 0x10001FF2 <em>char[128]</span></em>
+								<ul>
+									<li><span>buffer[0]: 'h' (104, 0x68) <em>char</em></span></li>
+									<li><span>buffer[1]: 'e' (101, 0x65) <em>char</em></span></li>
+								</ul>
+							</li>
+						</ul>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="callstackView">
+			<ul>
+				<li class="odd selected"><strong>Thing::delete</strong>(int, char const**) <em>main.cpp:53</em></li>
+				<li class="even"><strong>download</strong>() <em>main.cpp:72</em></li>
+				<li class="odd"><strong>main</strong>(int, char const**) <em>main.cpp:20</em></li>
+				<li class="even"><strong>_start</strong>() <em>LPC11xx.S:124</em></li>
+			</ul>
+		</div>
+	</div>
+</body>
+</html>

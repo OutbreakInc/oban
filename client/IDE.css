@@ -1,0 +1,241 @@
+body, span, div, ol, ul, li, p
+{
+	margin: 0;
+	padding: 0;
+	border: 0;
+	vertical-align: baseline;
+}
+ol, ul
+{
+	list-style: none;
+}
+
+body
+{
+	background-color: #EEEEEE;
+}
+
+.header
+{
+	height: 30px;
+	background-color: #C9C9C9;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	right: 1px;
+	border-right: 1px #A0A0A0 solid;
+}
+
+.startHidden
+{
+	/*visibility: hidden;*/
+	display: none;
+}
+
+.tabBar
+{
+	background: url('tabstrip.png') repeat-x;
+	position: absolute;
+	left: 25px;
+	right: 0px;
+	height: 25px;
+	bottom: 0px;
+}
+
+.tab
+{
+	float: left;
+	position: relative;
+	height: 25px;
+	width: 200px;
+	text-align: center;
+	cursor: pointer;
+}
+
+.tab .closeButton
+{
+}
+
+.tabBody
+{
+	height: 25px;
+	margin-left: 25px;
+	margin-right: 25px;
+	overflow: hidden;
+}
+
+.tabText
+{
+	position: relative;
+	top: 4px;
+	left: -12px;
+	font-family: 'Verdana', sans-serif;
+	font-size: 11px;
+}
+
+.firstActive, .firstInactive
+{
+	position: absolute;
+	left: 0px;
+	bottom: 0px;
+	width: 25px;
+	height: 25px;
+}
+
+.nextActive, .bothInactive, .nextInactive, .lastActive, .lastInactive
+{
+	position: absolute;
+	right: 0px;
+	top: 0px;
+	width: 25px;
+	height: 25px;
+}
+
+.firstInactive
+{
+	background: transparent url('tabstrip.png') 0 -75px no-repeat;
+}
+
+.firstActive
+{
+	background: transparent url('tabstrip.png') 0 -100px no-repeat;
+}
+
+.tabActive
+{
+	background: url('tabstrip.png') 0 -25px repeat-x;
+	height: 25px;
+}
+
+.tabInactive
+{
+	z-index: 10;
+	background: url('tabstrip.png') 0 -50px repeat-x;
+	height: 25px;
+}
+
+.nextActive
+{
+	background: transparent url('tabstrip.png') 0 -150px no-repeat;
+}
+
+.bothInactive
+{
+	background: transparent url('tabstrip.png') 0 -125px no-repeat;
+}
+
+.nextInactive
+{
+	background: transparent url('tabstrip.png') 0 -175px no-repeat;
+}
+
+.lastActive
+{
+	background: transparent url('tabstrip.png') 0 -225px no-repeat;
+}
+
+.lastInactive
+{
+	background: transparent url('tabstrip.png') 0 -200px no-repeat;
+}
+
+.tabView
+{
+	position: absolute;
+	height: 100%;
+	left: 0px;
+	right: 400px;
+}
+.documentView
+{
+	position: absolute;
+	width: 100%;
+	top: 35px;
+	bottom: 1px;
+}
+
+.tabPage
+{
+	background-color: #FFFFFF;
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	border-top: 1px #A0A0A0 solid;
+}
+
+.editor
+{
+	width: 100%;
+	height: 100%;
+}
+
+.debugView
+{
+	position: absolute;
+	height: 100%;
+	width: 400px;
+	right: 0px;
+}
+
+.varView
+{
+	position: absolute;
+	background-color: #FFFFFF;
+	border-top: 1px  #A0A0A0 solid;
+	border-bottom: 1px  #A0A0A0 solid;
+	border-left: 1px  #A0A0A0 solid;
+	width: 100%;
+	top: 35px;
+	bottom: 295px;
+}
+
+.varView span
+{
+	font-family: 'Verdana', sans-serif;
+	font-size: 11px;
+}
+.varView em:hover
+{
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.callstackView
+{
+	position: absolute;
+	background-color: #FFFFFF;
+	border-top: 1px  #A0A0A0 solid;
+	border-left: 1px  #A0A0A0 solid;
+	width: 100%;
+	height: 300px;
+	bottom: 0px;
+}
+
+.callstackView li
+{
+	font-family: 'Verdana', sans-serif;
+	font-size: 11px;
+	padding-top: 3px;
+	padding-bottom: 3px;
+	cursor: pointer;
+}
+
+.callstackView li.even
+{
+	background-color: #FFFFFF;
+}
+
+.callstackView li.odd
+{
+	background-color: #F0F0F0;
+}
+
+.callstackView li.selected
+{
+	background-color: #E0D8F0;
+}
+
+.callstackView em:hover
+{
+	text-decoration: underline;
+}
