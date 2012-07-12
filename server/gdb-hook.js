@@ -29,6 +29,11 @@
 			gdb.stdin.write(command + "\n");
 		});
 
+		client.on("gdb_sigint", function()
+		{
+			gdb.kill("SIGINT");
+		});
+
 		client.on("disconnect", function()
 		{
 			gdb.stdin.write("quit");

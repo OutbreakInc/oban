@@ -12,11 +12,10 @@
 	<script src="theme-chrome.js" type="application/javascript" charset="utf-8"></script>
 	<script src="mode-c_cpp.js" type="application/javascript" charset="utf-8"></script>
  	<script src="IDE.js" type="application/javascript" charset="utf-8"></script>
-	
 	<script src="http://yui.yahooapis.com/2.9.0/build/yahoo-dom-event/yahoo-dom-event.js"></script>
 	<script src="http://yui.yahooapis.com/2.9.0/build/treeview/treeview-min.js"></script>
-	
-	
+ 	<script src="/js/socket.io.js" type="application/javascript" charset="utf-8"></script>
+
 	<div class="tabView">
 		<div class="header">
 			<div id="tabFirst" class="firstActive startHidden"></div>
@@ -60,6 +59,9 @@
 				<li class="odd"><strong>main</strong>(int, char const**) <em>main.cpp:20</em></li>
 				<li class="even"><strong>_start</strong>() <em>LPC11xx.S:124</em></li>
 			</ul>
+		</div>
+		<div class="inputs">
+			<input id="gdbInput" type="text"></input>
 		</div>
 	</div>
 </body>
