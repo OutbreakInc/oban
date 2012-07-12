@@ -2,6 +2,20 @@
 {
 	spawn = require("child_process").spawn;
 
+	function getLineNumber(data)
+	{
+		var lines = data.split("\n");
+
+		for (var i = 0; i < lines.length; ++i)
+		{
+			var lineNumber = lines[i].match(/^[0-9]+/);
+
+			if (lineNumber) return lineNumber[0];
+		}
+
+		return -1;
+	};
+
 	module.exports.runGdb = function(startScript, client)
 	{
 		var gdb = spawn("./arm-elf-gdb", ["-x", startScript]);
@@ -16,11 +30,15 @@
 		gdb.stdout.setEncoding("utf8");
 		gdb.stdout.on("data", function(data)
 		{
-			if (client)
+			if (/stopped/.exec(data) !== null)
 			{
-				client.emit("gdb_message", data);
+				console.log(data);
+				var line = getLineNumber(data);
+
+				client.emit("gdb_stop", {line: line});
 			}
-			console.log(data);
+
+			client.emit("gdb_message", data);
 		});
 
 		client.on("gdb_command", function(command, data)

@@ -275,11 +275,33 @@ $(document).ready(function()
 	gTabs.SelectTab(t);
 
 	var socket = io.connect();
+	this.socket = socket;
 	$(".callstackView").html("");
 	socket.on("gdb_message", function(data)
 	{
 		console.log(data);
 		$(".callstackView").append(data);
+	});
+
+	socket.on("gdb_stop", function(data)
+	{
+		if (data.line)
+		{
+			// mark line where to stop
+		}
+
+		if (data.stack)
+		{
+			// show stack in bottom right
+		}
+
+	});
+
+	$("#continueButton").click(function(event)
+	{
+		socket.emit("gdb_command", "c");
+
+		return false;
 	});
 
 	$("#gdbInput").keyup(function(event)
