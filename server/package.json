@@ -1,0 +1,15 @@
+{
+  "name": "galago-ide",
+  "version": "0.0.1",
+  "description": "Galago web-based IDE",
+  "main": "server.js",
+  "dependencies": {
+  	"socket.io": ">0",
+    "express": ">0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "license": "BSD"
+}
