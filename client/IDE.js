@@ -35,6 +35,8 @@ String.prototype.padFront = function(length, char)
 	return(s);
 };
 
+var Range = require("ace/range").Range;
+
 Date.prototype.months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 Date.prototype.toCompactString = function()
 {
@@ -54,6 +56,18 @@ Date.prototype.toCompactString = function()
 if(JSON == undefined){JSON = {"parse": function(str){return(eval("(" + str + ")"));}};}
 
 ////////////////////////////////
+
+function setBreakpoint(line, isSet)
+{
+	if (isSet)
+	{
+		document.socket.emit("gdb_break", line);
+	}
+	else
+	{
+		document.socket.emit("gdb_command", "clear " + line);
+	}
+}
 
 function createElement(type, classes)
 {
@@ -137,11 +151,14 @@ function EditorTab(tabContainer, sourceFile)
 		if (e.clientX > 25 + target.getBoundingClientRect().left) 
 			return; 
 		var row = e.getDocumentPosition().row;
+		var line = row + 1;
 		if( e.editor.session.getBreakpoints()[row] ) {
 			e.editor.session.clearBreakpoint(row);
+			setBreakpoint(line, false);
 		}
 		else {
 			e.editor.session.setBreakpoint(row);
+			setBreakpoint(line, true);
 		}
 		e.stop();
 	});
@@ -283,11 +300,25 @@ $(document).ready(function()
 		$(".callstackView").append(data);
 	});
 
-	socket.on("gdb_stop", function(data)
+	var breakPointMark;
+
+	socket.on("gdb_break", function(data)
 	{
 		if (data.line)
 		{
-			// mark line where to stop
+			var line = parseInt(data.line, 10);
+			var row = line - 1;
+
+			var range = new Range(row, 0, row, 100);
+
+			if (breakPointMark)
+			{
+				gTabs.currentTab.page.editor.session.removeMarker(breakPointMark);
+			}
+
+			breakPointMark = 
+				gTabs.currentTab.page.editor.session.addMarker(
+					range, "ace_selection", "background");
 		}
 
 		if (data.stack)

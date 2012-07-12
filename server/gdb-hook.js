@@ -20,6 +20,8 @@
 	{
 		var gdb = spawn("./arm-elf-gdb", ["-x", startScript]);
 
+		var fakeBreakpoint;
+
 		gdb.stderr.setEncoding("utf8");
 		gdb.stderr.on("data", function(data)
 		{
@@ -32,10 +34,12 @@
 		{
 			if (/stopped/.exec(data) !== null)
 			{
-				console.log(data);
+				console.log("fixed breakpoint: " + fakeBreakpoint);
 				var line = getLineNumber(data);
 
-				client.emit("gdb_stop", {line: line});
+				if (fakeBreakpoint) line = fakeBreakpoint;
+
+				client.emit("gdb_break", {line: line});
 			}
 
 			client.emit("gdb_message", data);
@@ -45,6 +49,12 @@
 		{
 			console.log("client command: ", command);
 			gdb.stdin.write(command + "\n");
+		});
+
+		client.on("gdb_break", function(line)
+		{
+			fakeBreakpoint = line;
+			gdb.stdin.write("b " + line + "\n");
 		});
 
 		client.on("gdb_sigint", function()
