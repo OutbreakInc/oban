@@ -256,21 +256,58 @@ function TabCollection()
 var gTabs = new TabCollection();
 
 $(document).ready(function()
+{
+	var tree = new YAHOO.widget.TreeView(document.getElementById("varTree"));
+	tree.render();
+	
+	//hack, will need to be applied to each node as it's created
+	$(".callstackView li").click(function(event)
+		{
+			console.log(event);
+			$(".callstackView li").removeClass("selected");
+			$(event.currentTarget).addClass("selected");
+		});
+	
+	
+	gTabs.CreateTab("kuy/project/main.cpp");
+	var t = gTabs.CreateTab("kuy/veryverylongprojectname/main.cpp");
+	gTabs.CreateTab("kuy/foo/main.cpp");
+	gTabs.SelectTab(t);
+
+	var socket = io.connect();
+	$(".callstackView").html("");
+	socket.on("gdb_message", function(data)
 	{
-		var tree = new YAHOO.widget.TreeView(document.getElementById("varTree"));
-		tree.render();
-		
-		//hack, will need to be applied to each node as it's created
-		$(".callstackView li").click(function(event)
-			{
-				console.log(event);
-				$(".callstackView li").removeClass("selected");
-				$(event.currentTarget).addClass("selected");
-			});
-		
-		
-		gTabs.CreateTab("kuy/project/main.cpp");
-		var t = gTabs.CreateTab("kuy/veryverylongprojectname/main.cpp");
-		gTabs.CreateTab("kuy/foo/main.cpp");
-		gTabs.SelectTab(t);
+		console.log(data);
+		$(".callstackView").append(data);
 	});
+
+	$("#gdbInput").keyup(function(event)
+	{
+		if (event.keyCode === 13)
+		{
+			console.log("sending ", $("#gdbInput").val());
+			socket.emit("gdb_command", $("#gdbInput").val());
+			$("#gdbInput").val("");
+		}
+	});
+
+	var ctrlDown = false;
+	var ctrlKey = 17, cKey = 67;
+
+	$("#gdbInput").keydown(function(e)
+	{
+		if (e.keyCode == ctrlKey) ctrlDown = true;
+	}).keyup(function(e)
+	{
+		if (e.keyCode == ctrlKey) ctrlDown = false;
+	});
+
+	$("#gdbInput").keydown(function(e)
+	{
+		if (ctrlDown && (e.keyCode == cKey))
+		{
+			socket.emit("gdb_sigint");
+		}
+	});
+});
