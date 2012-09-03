@@ -272,6 +272,21 @@ function TabCollection()
 
 var gTabs = new TabCollection();
 
+function updateLocalVariables(tree, variables)
+{
+	var root = tree.getRoot();
+	tree.removeChildren(root);
+
+	for (var i = 0; i < variables.length; ++i)
+	{
+		var contents = { label: variables[i] }
+
+		var node = new YAHOO.widget.TextNode({ 
+			label: variables[i]
+		}, root);
+	}
+}
+
 $(document).ready(function()
 {
 	var tree = new YAHOO.widget.TreeView(document.getElementById("varTree"));
@@ -284,7 +299,6 @@ $(document).ready(function()
 			$(".callstackView li").removeClass("selected");
 			$(event.currentTarget).addClass("selected");
 		});
-	
 	
 	gTabs.CreateTab("kuy/project/main.cpp");
 	var t = gTabs.CreateTab("kuy/veryverylongprojectname/main.cpp");
@@ -325,7 +339,13 @@ $(document).ready(function()
 		{
 			// show stack in bottom right
 		}
+	});
 
+	socket.on("gdb_variables", function(variables)
+	{
+		console.log("gdb_variables!!");
+		updateLocalVariables(tree, variables);
+		tree.render();
 	});
 
 	$("#continueButton").click(function(event)
