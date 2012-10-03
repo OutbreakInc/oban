@@ -22,8 +22,6 @@ GdbListener.prototype.emit = function(data)
 	{
 		if (listener.pattern.exec(data))
 		{
-			console.log(that);
-
 			listener.callback(data, that.client);
 		}
 	});
