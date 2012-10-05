@@ -1,0 +1,175 @@
+body, span, div, ol, ul, li, p
+{
+	margin: 0;
+	padding: 0;
+	border: 0;
+	vertical-align: baseline;
+}
+ol, ul
+{
+	list-style: none;
+}
+
+body
+{
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	background-color: #EEEEEE;
+}
+
+.headerView
+{
+	background-color: #555;
+	color: #f0f0f0;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	right: 0px;
+	height: 30px;
+}
+
+.projecttitle
+{
+	display: inline-block;
+	font-family: 'Verdana', sans-serif;
+	font-weight: bold;
+}
+
+.runcontrols
+{
+	display: inline-block;
+	position: absolute;
+	top: 0px;
+	bottom: 0px;
+	right: 0px;
+	width: auto;
+}
+
+.editorView
+{
+	position: absolute;
+	background-color: #fff;
+	top: 30px;
+	left: 0px;
+	right: 0px;
+	bottom: 0px;
+}
+
+.documentView
+{
+	position: absolute;
+	height: 100%;
+	left: 0px;
+	right: 400px;
+}
+
+.sidebar
+{
+	position: absolute;
+	background-color: #e8e8e8;
+	height: 100%;
+	width: 400px;
+	right: 0px;
+}
+
+.sidebar hr
+{
+	margin: 0px;
+	border-top: 1px solid #888;
+	border-bottom: 1px solid #222;
+}
+
+.sidebarHeader
+{
+	padding: 8px 0px 5px 0px;
+	background-color: #555;
+	color: #f0f0f0;
+	font-family: 'Verdana', sans-serif;
+}
+
+.hiddenView
+{
+	display: none;
+}
+
+.devView
+{
+}
+
+.debugView
+{
+}
+
+.varView
+{
+	position: absolute;
+	background-color: #FFFFFF;
+	border-top: 1px  #A0A0A0 solid;
+	border-bottom: 1px  #A0A0A0 solid;
+	border-left: 1px  #A0A0A0 solid;
+	width: 100%;
+	top: 0px;
+	bottom: 99px;
+	overflow: auto;
+}
+
+.varView span
+{
+	font-family: 'Verdana', sans-serif;
+	font-size: 11px;
+}
+.varView em:hover
+{
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.callstackView
+{
+	position: absolute;
+	background-color: #FFFFFF;
+	border-top: 1px  #A0A0A0 solid;
+	border-left: 1px  #A0A0A0 solid;
+	width: 100%;
+	height: 100px;
+	bottom: 0px;
+	overflow: auto;
+}
+
+.callstackView li
+{
+	font-family: 'Verdana', sans-serif;
+	font-size: 11px;
+	padding-top: 3px;
+	padding-bottom: 3px;
+	cursor: pointer;
+}
+
+.callstackView li.even
+{
+	background-color: #FFFFFF;
+}
+
+.callstackView li.odd
+{
+	background-color: #F0F0F0;
+}
+
+.callstackView li.selected
+{
+	background-color: #E0D8F0;
+}
+
+.callstackView em:hover
+{
+	text-decoration: underline;
+}
+
+.ace_gutter-cell.ace_breakpoint
+{ 
+    border-radius: 20px 0px 0px 20px; 
+    box-shadow: 0px 0px 1px 1px red inset; 
+} 
+

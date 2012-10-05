@@ -1,0 +1,88 @@
+<html>
+<head>
+	<title>Galago</title>
+	<link rel="stylesheet" type="text/css" href="IDE.css" media="screen"/>
+	<link rel="stylesheet" type="text/css" href="lib/yui/treeview.css"/>
+	
+	<script src="lib/platform/jquery.1.7.2.min.js" type="application/javascript" charset="utf-8"></script>
+	<script src="lib/platform/underscore.js" type="application/javascript" charset="utf-8"></script>
+	<script src="lib/platform/backbone.js" type="application/javascript" charset="utf-8"></script>
+	<script src="lib/ace/trACE.min.js" type="application/javascript" charset="utf-8"></script>
+	<script src="lib/ace/theme-chrome.js" type="application/javascript" charset="utf-8"></script>
+	<script src="lib/ace/mode-c_cpp.js" type="application/javascript" charset="utf-8"></script>
+ 	<script src="IDE.js" type="application/javascript" charset="utf-8"></script>
+	<script src="lib/yui/yahoo-dom-event.js"></script>
+	<script src="lib/yui/treeview-min.js"></script>
+	
+</head>
+<body>
+	<div class="editorView">
+		<div class="documentView"></div>
+		<div class="devView sidebar">
+			<div class="optionsView">
+				<div class="modulesView">
+					<hr/>
+					<div class="modulesHeader sidebarHeader">
+						Modules
+						<input class="settingsButton" type="button" value="+"></input>
+					</div>
+					<div class="modulesList"></div>
+				</div>
+				<div class="settingsView">
+					<hr/>
+					<div class="settingsHeader sidebarHeader">
+						Settings
+					</div>
+					<div class="settingsList"></div>
+				</div>
+			</div>
+		</div>
+		<div class="debugView sidebar hiddenView">
+			<div class="varView yui-skin-sam">
+				<div id="varTree" class="varTree">
+					<ul>
+						<li class="expanded"><span>this <em>const Object*</em></span>
+							<ul>
+								<li><span>owner: 0x10000246 <em>Thing*</em></span>
+									<ul>
+										<li><span>blah: 0 <em>int</em></span></li>
+										<li><span>name: 0x12345678 <em>"hello"</em></span></li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+						<li class="expanded">Locals
+							<ul>
+								<li><span>i: 7 <em>int</em></span></li>
+								<li><span>buffer: 0x10001FF2 <em>char[128]</span></em>
+									<ul>
+										<li><span>buffer[0]: 'h' (104, 0x68) <em>char</em></span></li>
+										<li><span>buffer[1]: 'e' (101, 0x65) <em>char</em></span></li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</div>
+			<div class="callstackView">
+				<div>
+					<ul>
+						<li class="odd selected"><strong>Thing::delete</strong>(int, char const**) <em>main.cpp:53</em></li>
+						<li class="even"><strong>download</strong>() <em>main.cpp:72</em></li>
+						<li class="odd"><strong>main</strong>(int, char const**) <em>main.cpp:20</em></li>
+						<li class="even"><strong>_start</strong>() <em>LPC11xx.S:124</em></li>
+						<li class="odd"><strong>main</strong>(int, char const**) <em>main.cpp:20</em></li>
+						<li class="even"><strong>_start</strong>() <em>LPC11xx.S:124</em></li>
+						<li class="odd"><strong>main</strong>(int, char const**) <em>main.cpp:20</em></li>
+						<li class="even"><strong>_start</strong>() <em>LPC11xx.S:124</em></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="headerView">
+		<div class="projecttitle">My project</div><div class="runcontrols"><input id="verifyButton" type="button" value="Verify"></input><input id="runButton" type="button" value="Run"></input></div>
+	</div>
+</body>
+</html>
