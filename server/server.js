@@ -19,7 +19,6 @@ app.configure(function()
     app.use(app.router);
     app.use(express.static(__dirname + "/../client"));
     console.log(__dirname + "/../client");
-
 });
 
 io.set("log level", 1);
