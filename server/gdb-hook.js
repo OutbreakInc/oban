@@ -1,6 +1,7 @@
 (function()
 {
 	var spawn = require("child_process").spawn,
+		_ = require("underscore"),
 		GdbListener = require("./gdb/listener"),
 		Parser = require("./gdb/parser"),
 		Gdb = require("./gdb");
@@ -11,8 +12,10 @@
 		var listener = new GdbListener(client);
 		var parser = new Parser;
 
+		_.bindAll(parser);
+
 		gdb.setListener(listener);
-		gdb.setDebugging(true);
+		// gdb.setDebugging(true);
 
 		listener.on(/All defined variables/, parser.onShowVariables);
 		listener.on(/stopped/, parser.onHitBreakpoint);
@@ -20,7 +23,6 @@
 		gdb.run("demo.elf");
 
 		gdb.process.stdin.write("b main\n");
-		gdb.getGlobalVariables();
 
 		client.on("gdb_command", function(command, data)
 		{
@@ -32,6 +34,7 @@
 		{
 			parser.setFakeBreakpoint(line);
 			gdb.setBreakpoint(line);
+			gdb.resume();
 		});
 
 		client.on("gdb_sigint", function()
