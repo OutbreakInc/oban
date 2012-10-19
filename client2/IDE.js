@@ -57,32 +57,60 @@ Date.prototype.toCompactString = function()
 
 ////////////////////////////////
 
-var EditorView = Backbone.View.extend(
+var App = {};
+
+// state/collections
+App.EditorState = Backbone.State.extend();
+App.FileState = Backbone.State.extend({});
+
+App.FileCollection = Backbone.Collection.extend(
+{
+	backend: "File",
+	state: App.FileState,
+
+	initialize: function()
+	{
+		this.bindBackend();
+	}
+});
+
+App.Files = new App.FileCollection;
+
+// views
+
+App.EditorView = Backbone.View.extend(
 {
 	initialize: function()
 	{
-		this.state.bind("change", this.render, this);
-		this.editor = ace.edit(this.el);
+		this.state = new App.EditorState();
+
+		App.Files.on("add", this.addFile, this);
+		App.Files.on("reset", this.addAll, this);
+
+		this.state.on("change", this.render, this);
+		this.editor = ace.edit(this.$el.find(".documentView")[0]);
 		
 		this.editor.setTheme("ace/theme/chrome");
 		
 		this.el.style.fontSize = "11px";
+
+		this.session = this.editor.getSession();
 		
 		var session = this.editor.getSession();
 		var ACECPlusPlusMode = require("ace/mode/c_cpp").Mode;
 		session.setMode(new ACECPlusPlusMode());
 		
 		setTimeout(function()
-			{
-				console.log("Settings applied.");
-				
-				this.editor.setBehavioursEnabled(false);
-				this.editor.setShowPrintMargin(false);
-				this.editor.setHighlightActiveLine(false);
-				this.editor.setSelectionStyle("line");
-				this.editor.session.setUseSoftTabs(false);
-				
-			}.ob_bind(this), 100);	//this should be done when ACE emits an event that I don't yet know about
+		{
+			console.log("Settings applied.");
+			
+			this.editor.setBehavioursEnabled(false);
+			this.editor.setShowPrintMargin(false);
+			this.editor.setHighlightActiveLine(false);
+			this.editor.setSelectionStyle("line");
+			this.editor.session.setUseSoftTabs(false);
+			
+		}.ob_bind(this), 100);	//this should be done when ACE emits an event that I don't yet know about
 		
 		this.editor.on("guttermousedown", function(e)
 		{
@@ -107,29 +135,77 @@ var EditorView = Backbone.View.extend(
 			e.stop();
 		});
 	},
+
 	render: function()
 	{
 		//this.$el.html(Handlebars.partials.login(this.state.toJSON()));
 		var session = this.editor.getSession();
 		
-		session.setValue("hello");	//this.state
+		// session.setValue("hello");	//this.state
 	},
+
 	events:
 	{
 		"change .documentView": "update",
+		"click .settingsButton" : "createFile"
+	},
+
+	createFile: function()
+	{
+		console.log("create");
+		App.Files.create({text: "#include <derp.txt>\n\n\n\n"});
 	},
 	
 	update: function()
 	{
 		console.log("derp");
+	},
+
+	addFile: function(file)
+	{
+		var view = new App.FileView({ state: file, session: this.session });
+		view.render();
+	},
+
+	addAll: function()
+	{
+		App.Files.each(this.addFile, this);
 	}
 });
 
-EditorState = Backbone.State.extend(
+App.FileView = Backbone.View.extend(
 {
-	initialize: function()
+	initialize: function(options)
 	{
-		this.view = new EditorView({state:this, el:$(".documentView")});
+		this.session = options.session;
+
+		this.state.on("change", this.render, this);
+		this.state.on("destroy", this.remove, this);
+
+		this.session.on("change", this.save.ob_bind(this));
+	},
+
+	render: function()
+	{
+		console.log("render");
+		var text = this.state.toJSON().text;
+		console.log(text);
+		this.session.setValue(text, { renderCall: true });
+		return this;
+	},
+
+	save: function(e)
+	{
+		if (e.flags && e.flags.renderCall)
+		{
+			console.log("OMG IT WORKS");
+		}
+		else
+		{
+			console.log("App.FileView.save");
+			console.log(e);
+			this.state.save({ "text": this.session.getValue() }, { silent: true });
+		}
 	}
 });
 
@@ -150,6 +226,10 @@ $(document).ready(function()
 {
 	var tree = new YAHOO.widget.TreeView(document.getElementById("varTree"));
 	tree.render();
+
+	Backbone.io.connect();
+
+	App.Files.fetch();
 	
-	this.editorState = new EditorState({herp: "derp", foo: ["bar"]});
+	App.Editor = new App.EditorView({el: $(".editorView")});
 });
