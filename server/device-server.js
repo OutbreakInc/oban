@@ -9,20 +9,6 @@ var spawn = require("child_process").spawn,
 	winston = require("winston"),
 	_ = require("underscore");
 
-function setupLogger()
-{
-	var options = 
-	{
-		// colorize: true,
-		timestamp: true
-	};
-
-	winston.remove(winston.transports.Console);
-	winston.add(winston.transports.Console, options);
-}
-
-setupLogger();
-
 function DeviceServer()
 {
 	EventEmitter.call(this);
