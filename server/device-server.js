@@ -42,7 +42,7 @@ DeviceServer.prototype.run = function()
 	{
 		if (/connected/.exec(data))
 		{
-			deviceServer.emit("connected");
+			deviceServer.emit("connect");
 		}
 
 		if (/Exiting!/.exec(data))
@@ -60,7 +60,6 @@ DeviceServer.prototype.run = function()
 	});
 }
 
-var server = new DeviceServer;
-server.run();
+module.exports = DeviceServer;
 
 }).call(this);
