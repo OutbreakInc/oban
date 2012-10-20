@@ -1,27 +1,32 @@
-var express = require("express"),
-	backboneio = require("backbone.io");
-
-var app = express.createServer();
-app.listen(8000);
-
-console.log(__dirname + "/../client2/");
-app.use(express.static(__dirname + "/../client2/"));
-
-app.get("/", function(req, res)
+(function()
 {
-	res.redirect("/IDE.html");
-});
 
-var File = backboneio.createBackend();
+var backboneio = require("backbone.io"),
+	fs = require("fs"),
+	winston = require("winston");
 
-File.use(function(req, res, next)
+module.exports = {};
+
+var backends = {};
+
+module.exports.load = function(app)
 {
-	console.log(req.backend);
-	console.log(req.method);
-	console.log(JSON.stringify(req.model));
-	next();
-});
+	var syncFiles = fs.readdirSync(__dirname + "/sync");
 
-File.use(backboneio.middleware.memoryStore());
+	syncFiles.forEach(function(syncFile)
+	{
+		var syncModule = require(__dirname + "/sync/" + syncFile);
 
-backboneio.listen(app, { File: File });
+		var backend = syncModule.load(backboneio);
+
+		backends[syncModule.name] = backend;
+	});
+
+	backboneio.listen(app, backends);
+
+	winston.debug("Loaded sync module");
+}
+
+module.exports.backends = backends;
+
+}).call(this);

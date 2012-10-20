@@ -196,16 +196,11 @@ App.FileView = Backbone.View.extend(
 
 	save: function(e)
 	{
-		if (e.flags && e.flags.renderCall)
-		{
-			console.log("OMG IT WORKS");
-		}
-		else
-		{
-			console.log("App.FileView.save");
-			console.log(e);
-			this.state.save({ "text": this.session.getValue() }, { silent: true });
-		}
+		// don't prompt a save if we called setValue
+		// or else we'll end up in an infinite render/save loop
+		if (e.flags && e.flags.renderCall) return;
+
+		this.state.save({ "text": this.session.getValue() }, { silent: true });
 	}
 });
 

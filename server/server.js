@@ -2,11 +2,16 @@
 {
 var express = require("express"),
 	app = express.createServer(),
-	io = require("socket.io").listen(app),
 	gdb = require("./gdb-hook"),
-	fs = require("fs");
+	DeviceServer = require("./device-server"),
+	dataSync = require("./sync"),
+	fs = require("fs"),
+	winston = require("winston"),
+	logging = require("./logging");
 
 var GDB_SCRIPT = "demo.gdb";
+
+logging.configure(winston);
 
 app.listen(8000);
 
@@ -17,20 +22,24 @@ app.configure(function()
     app.use(express.methodOverride());
     app.use(express.bodyParser());
     app.use(app.router);
-    app.use(express.static(__dirname + "/../client"));
-    console.log(__dirname + "/../client");
+    app.use(express.static(__dirname + "/../client2"));
 });
 
-io.set("log level", 1);
-
-io.sockets.on("connection", function(socket)
+app.get("/", function(req, res)
 {
-	gdb.runGdb(GDB_SCRIPT, socket);
+	res.redirect("/IDE.html");
+});
 
-	socket.on("gdb_break", function(line)
-	{
-		socket.emit("gdb_break", { "foo": "bar" });
-	});
+dataSync.load(app);
+
+// io.set("log level", 1);
+
+var deviceServer = new DeviceServer;
+deviceServer.run();
+
+deviceServer.on("connect", function()
+{
+	winston.debug("device connected!");
 });
 
 }).call(this);
