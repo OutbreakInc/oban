@@ -3,11 +3,11 @@
 
 var BackendCollection = require("./backend-collection");
 
-function BackboneStore(model, name)
+function BackboneStore(model, name, options)
 {
 	var Collection = BackendCollection.create(model, name);
 
-	this.collection = new Collection(null, { dontPersist: true });
+	this.collection = new Collection(null, options);
 }
 
 module.exports = BackboneStore;
@@ -20,8 +20,8 @@ BackboneStore.prototype.middleware = function()
 	{
 		create: function(req, res, next) 
 		{
-			self.collection.add(model);
-			res.end(model);
+			self.collection.add(req.model);
+			res.end(req.model);
 		},
 		
 		read: function(req, res, next) 

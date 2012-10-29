@@ -14,7 +14,8 @@ module.exports.load = function(backboneio)
 {
 	var Device = backboneio.createBackend();
 
-	var dataStore = new BackboneStore(DeviceModel, module.exports.name);
+	var dataStore = new BackboneStore(
+		DeviceModel, module.exports.name, { dontSaveToFile: true });
 
 	dataStore.collection.bindToBackend(Device);
 
@@ -30,7 +31,7 @@ module.exports.load = function(backboneio)
 
 	Device.dataStore = dataStore;
 
-	winston.debug("loaded device module");
+	winston.debug("loaded module: "+module.exports.name);
 
 	return Device;
 }

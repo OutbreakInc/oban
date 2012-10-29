@@ -19,7 +19,7 @@ create: function(model, name)
 		{
 			options = options || {};
 
-			if (options.dontPersist) return;
+			if (options.dontSaveToFile) return;
 
 			this.on("all", FileStore.middleware(this), this);
 		},
