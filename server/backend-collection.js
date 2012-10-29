@@ -2,16 +2,27 @@
 {
 
 var Backbone = require("backbone"),
+	FileStore = require("./file-store"),
 	_ = require("underscore");
 
 module.exports = {
 
-create: function(model)
+create: function(model, name)
 {
 	return Backbone.Collection.extend(
 	{
 		id: 0,
 		model: model,
+		name: name,
+
+		initialize: function(models, options)
+		{
+			options = options || {};
+
+			if (options.dontPersist) return;
+
+			this.on("all", FileStore.middleware(this), this);
+		},
 
 		_assignIds: function(models, options)
 		{
@@ -61,7 +72,7 @@ create: function(model)
 				json.id = model.id;				
 
 				backend.emit("updated", json);
-			})
+			});
 
 			this.on("remove", function(model, collection, options)
 			{
