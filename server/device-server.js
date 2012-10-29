@@ -42,7 +42,22 @@ DeviceServer.prototype.run = function()
 	{
 		if (/connected/.exec(data))
 		{
-			deviceServer.emit("connect");
+			var matches = data.match(/Device '([^']*)' connected, id = ([^\.]*)/);
+
+			var deviceName = matches[1];
+			var deviceId = matches[2];
+
+			deviceServer.emit("connect", deviceId, deviceName);
+		}
+
+		else if (/removed/.exec(data))
+		{
+			var matches = data.match(/Device '([^']*)' removed, id = ([^\.]*)/);
+
+			var deviceName = matches[1];
+			var deviceId = matches[2];
+
+			deviceServer.emit("disconnect", deviceId, deviceName);			
 		}
 
 		if (/Exiting!/.exec(data))

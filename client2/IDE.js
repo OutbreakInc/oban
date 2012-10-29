@@ -61,7 +61,7 @@ var App = {};
 
 // state/collections
 App.EditorState = Backbone.State.extend();
-App.FileState = Backbone.State.extend({});
+App.FileState = Backbone.State.extend();
 
 App.FileCollection = Backbone.Collection.extend(
 {
@@ -76,6 +76,32 @@ App.FileCollection = Backbone.Collection.extend(
 
 App.Files = new App.FileCollection;
 
+App.DeviceState = Backbone.State.extend(
+{
+	initialize: function()
+	{
+		this.on("remove", this.onRemove, this);
+	},
+
+	onRemove: function()
+	{
+		this.trigger("destroy");
+	}
+});
+
+App.DeviceCollection = Backbone.Collection.extend(
+{
+	backend: "Device",
+	state: App.DeviceState,
+
+	initialize: function()
+	{
+		this.bindBackend();
+	}
+});
+
+App.Devices = new App.DeviceCollection;
+
 // views
 
 App.EditorView = Backbone.View.extend(
@@ -83,6 +109,12 @@ App.EditorView = Backbone.View.extend(
 	initialize: function()
 	{
 		this.state = new App.EditorState();
+
+		this.deviceListView = new App.DeviceListView(
+			{
+				el: ".devicesList",
+				collection: App.Devices
+			});
 
 		App.Files.on("add", this.addFile, this);
 		App.Files.on("reset", this.addAll, this);
@@ -201,6 +233,49 @@ App.FileView = Backbone.View.extend(
 		if (e.flags && e.flags.renderCall) return;
 
 		this.state.save({ "text": this.session.getValue() }, { silent: true });
+	}
+});
+
+App.DeviceListView = Backbone.View.extend(
+{
+	initialize: function(options)
+	{
+		this.collection = options.collection;
+		this.collection.bind("add", this.addOne, this);
+		this.collection.bind("reset", this.addAll, this);
+
+		this.collection.fetch();
+	},
+
+	addOne: function(device)
+	{
+		var view = new App.DeviceView({state: device});
+		this.$el.append(view.render().el);
+	},
+
+	addAll: function()
+	{
+		this.$el.empty();
+		this.collection.each(this.addOne.bind(this));
+	}
+});
+
+App.DeviceView = Backbone.View.extend(
+{
+	initialize: function(options)
+	{
+		this.state.on("change", this.render, this);
+		this.state.on("destroy", this.remove, this);
+	},
+
+	render: function()
+	{
+		var id = this.state.get("deviceId");
+		var name = this.state.get("name");
+
+		this.$el.html("<li>"+id+": "+name+"</li>");
+
+		return this;
 	}
 });
 

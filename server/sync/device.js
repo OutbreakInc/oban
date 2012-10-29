@@ -1,13 +1,22 @@
 (function()
 {
 
-var winston = require("winston");
+var winston = require("winston"),
+	BackboneStore = require("../backbone-store"),
+	FileStore = require("../file-store"),
+	DeviceModel = require("../models/device");
 
 module.exports = {};
+
+module.exports.name = "Device";
 
 module.exports.load = function(backboneio)
 {
 	var Device = backboneio.createBackend();
+
+	var dataStore = new BackboneStore(DeviceModel, module.exports.name);
+
+	dataStore.collection.bindToBackend(Device);
 
 	Device.use(function(req, res, next)
 	{
@@ -17,11 +26,13 @@ module.exports.load = function(backboneio)
 		next();
 	});
 
-	Device.use(backboneio.middleware.memoryStore());
+	Device.use(dataStore.middleware());
+
+	Device.dataStore = dataStore;
+
+	winston.debug("loaded device module");
 
 	return Device;
 }
-
-module.exports.name = "Device";
 
 }).call(this);

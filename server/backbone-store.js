@@ -1,21 +1,26 @@
 (function()
 {
 
-var Backbone = require("backbone");
-
 var BackendCollection = require("./backend-collection");
 
-module.exports = function(model)
-{	
-	var Collection = BackendCollection.create(model);
+function BackboneStore(model, name)
+{
+	var Collection = BackendCollection.create(model, name);
 
-	var collection = new Collection;
+	this.collection = new Collection(null, { dontPersist: true });
+}
+
+module.exports = BackboneStore;
+
+BackboneStore.prototype.middleware = function()
+{
+	var self = this;
 
 	var crud = 
 	{
 		create: function(req, res, next) 
 		{
-			collection.add(model);
+			self.collection.add(model);
 			res.end(model);
 		},
 		
@@ -23,41 +28,37 @@ module.exports = function(model)
 		{
 			if (req.model.id)
 			{
-				res.end(collection.get(req.model.id));
+				res.end(self.collection.get(req.model.id));
 			} 
 			else 
 			{
-				res.end(collection.toJSON());
+				res.end(self.collection.toJSON());
 			}
 		},
 		
 		update: function(req, res, next)
 		{
-			var item = collection.get(req.model.id);
+			var item = self.collection.get(req.model.id);
 			if (item) item.set(req.model, {socketSilent: true});
 			res.end(req.model);
 		},
 		
 		delete: function(req, res, next)
 		{
-			collection.remove(req.model, {socketSilent: true});
+			self.collection.remove(req.model, {socketSilent: true});
 			res.end(req.model);
 		}
 	};
 	
-	return {
-		middleware: function(req, res, next) 
+	return function(req, res, next) 
+	{
+		if (!crud[req.method]) 
 		{
-			if (!crud[req.method]) 
-			{
-				return next(new Error("Unsuppored method " + req.method));
-			}
+			return next(new Error("Unsuppored method " + req.method));
+		}
 
-			crud[req.method](req, res, next);
-		},
-
-		collection: collection
-	}
+		crud[req.method](req, res, next);
+	};
 }
 
 // var Person = Backbone.Model.extend();

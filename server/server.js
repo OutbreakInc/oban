@@ -35,11 +35,26 @@ dataSync.load(app);
 // io.set("log level", 1);
 
 var deviceServer = new DeviceServer;
+
 deviceServer.run();
 
-deviceServer.on("connect", function()
+deviceServer.on("connect", function(id, name)
 {
-	winston.debug("device connected!");
+	dataSync.backends.Device.dataStore.collection.add({ deviceId: id, name: name });
+	winston.debug("device connected (id: "+id+", name: "+name+")");
+});
+
+deviceServer.on("disconnect", function(id, name)
+{
+	var collection = dataSync.backends.Device.dataStore.collection;
+
+	var model = collection.find(function(device)
+	{
+		return device.get("deviceId") == id;
+	});
+
+	collection.remove(model);
+	winston.debug("device disconnected (id: "+id+", name: "+name+")");
 });
 
 }).call(this);
