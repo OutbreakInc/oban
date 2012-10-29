@@ -29,8 +29,8 @@ var DEVICE_CONNECTED_MSG = "";
 
 DeviceServer.prototype.run = function()
 {
-	winston.debug("Starting device server...");
-
+	winston.debug("Starting device server...");	
+	
 	this.process = spawn(this.binary);
 
 	this.process.stdout.setEncoding("utf8");

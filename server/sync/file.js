@@ -1,13 +1,22 @@
 (function()
 {
 
-var winston = require("winston");
+var winston = require("winston"),
+	BackboneStore = require("../backbone-store"),
+	FileStore = require("../file-store"),
+	FileModel = require("../models/file");
 
 module.exports = {};
+
+module.exports.name = "File";
 
 module.exports.load = function(backboneio)
 {
 	var File = backboneio.createBackend();
+
+	var dataStore = new BackboneStore(FileModel, module.exports.name);
+
+	dataStore.collection.bindToBackend(File);
 
 	File.use(function(req, res, next)
 	{
@@ -17,11 +26,13 @@ module.exports.load = function(backboneio)
 		next();
 	});
 
-	File.use(backboneio.middleware.memoryStore());
+	File.use(dataStore.middleware());
+
+	File.dataStore = dataStore;
+
+	winston.debug("loaded sync module: "+module.exports.name);
 
 	return File;
 }
-
-module.exports.name = "File";
 
 }).call(this);

@@ -6,7 +6,7 @@ define(function(require)
 {
 	var Backbone = require("backbone");
 
-	var DeviceModel = Backbone.Model.extend();
+	var FileModel = Backbone.Model.extend();
 
-	return DeviceModel;
+	return FileModel;
 })
