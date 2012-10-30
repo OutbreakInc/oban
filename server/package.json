@@ -6,7 +6,8 @@
   "dependencies": {
   	"socket.io": ">0",
     "express": ">0",
-    "underscore": ">0"
+    "underscore": ">0",
+    "winston": ">0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
