@@ -4,35 +4,53 @@
 var backboneio = require("backbone.io"),
 	fs = require("fs"),
 	winston = require("winston"),
+	BackboneStore = require("./backbone-store"),
+	FileStore = require("./file-store"),	
 	_ = require("underscore");
 
 module.exports = {};
 
 var backends = {};
 
+var MODELS_DIR = __dirname + "/models/";
+
 module.exports.load = function(app)
 {
-	var syncFiles = fs.readdirSync(__dirname + "/sync");
+	var modelFiles = fs.readdirSync(MODELS_DIR);
 
-	syncFiles = _.filter(syncFiles, function(file) 
+	modelFiles = _.filter(modelFiles, function(file) 
 	{ 
 		return file.lastIndexOf(".js") == file.length - 3
 	});
 
-	syncFiles.forEach(function(syncFile)
+	modelFiles.forEach(function(syncFile)
 	{
-		var syncModule = require(__dirname + "/sync/" + syncFile);
+		var model = require(MODELS_DIR + syncFile);
+		var backend = loadModel(model);
 
-		console.log(syncModule);
-
-		var backend = syncModule.load(backboneio);
-
-		backends[syncModule.name] = backend;
+		backends[model.meta.name] = backend;
 	});
 
 	backboneio.listen(app, backends);
 
 	winston.debug("Loaded sync module");
+}
+
+function loadModel(model)
+{
+	var backend = backboneio.createBackend();
+
+	var dataStore = new BackboneStore(
+		model, model.meta.name, model.meta.options);
+
+	dataStore.collection.bindToBackend(backend);
+
+	backend.use(dataStore.middleware());
+	backend.dataStore = dataStore;
+
+	winston.debug("loaded module: "+model.meta.name);
+
+	return backend;
 }
 
 module.exports.backends = backends;

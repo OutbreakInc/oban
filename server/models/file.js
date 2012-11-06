@@ -8,5 +8,10 @@ define(function(require)
 
 	var FileModel = Backbone.Model.extend();
 
+	FileModel.meta =
+	{
+		name: "File"
+	};
+
 	return FileModel;
 })
