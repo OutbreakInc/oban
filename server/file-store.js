@@ -21,10 +21,10 @@ module.exports.middleware = function(collection)
 	{
 		collection.reset(JSON.parse(
 			fs.readFileSync(fileName, "utf8")));
-	}
 
-	winston.debug("restored collection:");
-	winston.debug(JSON.stringify(collection.toJSON()));
+		winston.debug("restored collection:");
+		winston.debug(JSON.stringify(collection.toJSON()));		
+	}
 
 	return function(method, model, collection, options)
 	{
