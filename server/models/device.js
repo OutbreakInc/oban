@@ -8,5 +8,14 @@ define(function(require)
 
 	var DeviceModel = Backbone.Model.extend();
 
+	DeviceModel.meta =
+	{
+		name: "Device",
+		options:
+		{
+			dontSaveToFile: true
+		}
+	};
+
 	return DeviceModel;
 })
