@@ -360,6 +360,7 @@ GDBServer.prototype =
 			return;
 			
 		case "Z":	//add/set breakpoint
+			console.log("ADD BREAKPOINT");
 			var args = command.split(",");	//Z<type>,<hex location>,<num bytes>
 			console.log(args);
 			switch(args[0])

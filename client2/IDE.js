@@ -35,7 +35,7 @@ String.prototype.padFront = function(length, char)
 	return(s);
 };
 
-var Range = require("ace/range").Range;
+// var Range = require("ace/range").Range;
 
 Date.prototype.months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 Date.prototype.toCompactString = function()

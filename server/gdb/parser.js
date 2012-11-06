@@ -63,7 +63,7 @@ Parser.prototype.onShowVariables = function(data, client)
 		// split up into name and type
 		var item =
 		{
-			name: line.slice(lastSpace),
+			name: line.slice(lastSpace, line.length - 1),
 			type: line.slice(0, lastSpace)
 		};
 
@@ -73,19 +73,25 @@ Parser.prototype.onShowVariables = function(data, client)
 	// console.log("Sending client list of variables");
 
 	// callback(variables);
-
-	client.emit("gdb_variables", variables);
 };
 
 Parser.prototype.setFakeBreakpoint = function(lineNumber)
 {
+	console.log("setting fake breakpoint to: " + lineNumber);
 	this.fakeBreakpoint = lineNumber;
+	console.log(this);
 }
 
 Parser.prototype.onHitBreakpoint = function(data, client)
 {
+	console.log("onHitBreakpoint");
+	console.log(this);
+	var line = utils.getLineNumber(data);
+
+	if (!this.fakeBreakpoint && line == 0) return;
+
 	console.log("fixed breakpoint: " + this.fakeBreakpoint);
-	var line = getLineNumber(data);
+	console.log("parsed breakpoint: " + line);
 
 	if (this.fakeBreakpoint) line = this.fakeBreakpoint;
 
