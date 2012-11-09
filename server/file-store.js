@@ -26,10 +26,12 @@ module.exports.middleware = function(collection)
 		winston.debug(JSON.stringify(collection.toJSON()));		
 	}
 
-	return function(method, model, collection, options)
+	// don't need any of the callback's arguments because we have
+	// access to the collection thru the closure
+
+	return function()
 	{
 		winston.debug("file store middleware invoked!");
-		console.log(arguments);
 
 		// immediately save collection when it's been modified, 
 		// but only save once every MS_BETWEEN_SAVES milliseconds
@@ -38,18 +40,6 @@ module.exports.middleware = function(collection)
 		recentlySaved = true;
 
 		winston.debug("saving "+fileName+" to file");
-
-		// pretty hacky, but the most clear and obvious way without
-		// writing too much code elsewhere to invoke this function
-		// differently for each Backbone event type
-		if (method == "reset")
-		{
-			collection = model;
-		}
-		else if (method.indexOf("change") == 0)
-		{
-			collection = model.collection;
-		}
 
 		fs.writeFile(fileName, 
 			JSON.stringify(collection.toJSON(), null, " "), "utf8", 

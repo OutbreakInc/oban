@@ -7,6 +7,8 @@ var express = require("express"),
 	dataSync = require("./sync"),
 	fs = require("fs"),
 	winston = require("winston"),
+	Project = require("./project"),
+	File = require("./models/file"),
 	logging = require("./logging");
 
 var GDB_SCRIPT = "demo.gdb";
@@ -56,5 +58,41 @@ deviceServer.on("disconnect", function(id, name)
 	collection.remove(model);
 	winston.debug("device disconnected (id: "+id+", name: "+name+")");
 });
+
+// user should see list of projects, stored inside of Project.json
+var projects = dataSync.backends.Project.dataStore.collection;
+var files = dataSync.backends.File.dataStore.collection;
+
+files.on("change", function(file)
+{
+	winston.debug("files change event!");
+
+	var filePath = file.path();
+
+	fs.writeFile(filePath, file.get("text"), "utf8", 
+		function(err)
+	{
+		if (err) return winston.error("Couldn't save file to disk!");
+
+		winston.debug("saved file to " + filePath);
+	});
+});
+
+// when a new project is created
+projects.on("add", function(project)
+{
+	var file = new File({ 
+		text: "#include <LPC1313.h>\n\nint main() { return 0; }\n", 
+		name: project.name + ".cpp", 
+		project: project });
+
+	project.addFile(file.path());
+
+	// set active files to new project's file
+	files.reset([file]);
+});
+
+// on user saying "build file", run build script and send it to GDB server
+var project = new Project;
 
 }).call(this);

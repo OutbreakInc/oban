@@ -62,6 +62,20 @@ var App = {};
 // state/collections
 App.EditorState = Backbone.State.extend();
 App.FileState = Backbone.State.extend();
+App.ProjectState = Backbone.State.extend();
+
+App.ProjectCollection = Backbone.Collection.extend(
+{
+	backend: "Project",
+	state: App.ProjectState,
+
+	initialize: function()
+	{
+		this.bindBackend();
+	}
+});
+
+App.Projects = new App.ProjectCollection;
 
 App.FileCollection = Backbone.Collection.extend(
 {
@@ -106,6 +120,14 @@ App.Devices = new App.DeviceCollection;
 
 App.EditorView = Backbone.View.extend(
 {
+	addToProjectList: function(project)
+	{
+	},
+
+	addAllProjects: function()
+	{
+	},
+
 	initialize: function()
 	{
 		this.state = new App.EditorState();
@@ -115,6 +137,9 @@ App.EditorView = Backbone.View.extend(
 				el: ".devicesList",
 				collection: App.Devices
 			});
+
+		App.Projects.on("add", this.addToProjectList, this);
+		App.Projects.on("reset", this.addAllProjects, this);
 
 		App.Files.on("add", this.addFile, this);
 		App.Files.on("reset", this.addAll, this);
@@ -179,13 +204,13 @@ App.EditorView = Backbone.View.extend(
 	events:
 	{
 		"change .documentView": "update",
-		"click .settingsButton" : "createFile"
+		"click .settingsButton" : "createProject"
 	},
 
-	createFile: function()
+	createProject: function()
 	{
 		console.log("create");
-		App.Files.create({text: "#include <derp.txt>\n\n\n\n"});
+		this.activeProject = App.Projects.create({ name: "New Project" });
 	},
 	
 	update: function()
