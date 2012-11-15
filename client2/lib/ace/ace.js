@@ -4375,8 +4375,8 @@ var EditSession = function(text, mode) {
         this.bgTokenizer.$updateOnChange(delta);
         this._emit("change", e);
     };
-    this.setValue = function(text) {
-        this.doc.setValue(text);
+    this.setValue = function(text, flags) {
+        this.doc.setValue(text, flags);
         this.selection.moveCursorTo(0, 0);
         this.selection.clearSelection();
 
@@ -7322,8 +7322,9 @@ var Document = function(text) {
 (function() {
 
     oop.implement(this, EventEmitter);
-    this.setValue = function(text) {
+    this.setValue = function(text, flags) {
         var len = this.getLength();
+        this.flags = flags;
         this.remove(new Range(0, 0, len, this.getLine(len-1).length));
         this.insert({row: 0, column:0}, text);
     };
@@ -7446,7 +7447,7 @@ var Document = function(text) {
             range: range,
             lines: lines
         };
-        this._emit("change", { data: delta });
+        this._emit("change", { data: delta, flags: this.flags });
         return end || range.end;
     };
     this.insertNewLine = function(position) {
@@ -7466,7 +7467,7 @@ var Document = function(text) {
             range: Range.fromPoints(position, end),
             text: this.getNewLineCharacter()
         };
-        this._emit("change", { data: delta });
+        this._emit("change", { data: delta, flags: this.flags });
 
         return end;
     };
@@ -7489,7 +7490,7 @@ var Document = function(text) {
             range: Range.fromPoints(position, end),
             text: text
         };
-        this._emit("change", { data: delta });
+        this._emit("change", { data: delta, flags: this.flags });
 
         return end;
     };
@@ -7538,7 +7539,7 @@ var Document = function(text) {
             range: range,
             text: removed
         };
-        this._emit("change", { data: delta });
+        this._emit("change", { data: delta, flags: this.flags });
         return range.start;
     };
     this.removeLines = function(firstRow, lastRow) {
@@ -7551,7 +7552,7 @@ var Document = function(text) {
             nl: this.getNewLineCharacter(),
             lines: removed
         };
-        this._emit("change", { data: delta });
+        this._emit("change", { data: delta, flags: this.flags });
         return removed;
     };
     this.removeNewLine = function(row) {
@@ -7568,7 +7569,7 @@ var Document = function(text) {
             range: range,
             text: this.getNewLineCharacter()
         };
-        this._emit("change", { data: delta });
+        this._emit("change", { data: delta, flags: this.flags });
     };
     this.replace = function(range, text) {
         if (text.length == 0 && range.isEmpty())
