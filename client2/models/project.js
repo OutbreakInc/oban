@@ -15,7 +15,7 @@ define(function(require)
 
 		initialize: function()
 		{
-			this.set("path", "/Users/projects/galago/" + this.get("name"));
+			this.set("path", "/Users/exhaze/projects/galago/" + this.get("name"));
 		},
 
 		validate: function(attrs)
