@@ -51,7 +51,7 @@
         // collection models accordingly.
         bindBackend: function() {
             var self = this;
-            var idAttribute = this.state.prototype.idAttribute;
+            var idAttribute = this.model.prototype.idAttribute;
             
             this.backend.ready(function() {
                 var event = self.backend.options.event;
