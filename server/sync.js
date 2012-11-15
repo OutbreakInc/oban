@@ -12,7 +12,7 @@ module.exports = {};
 
 var backends = {};
 
-var MODELS_DIR = __dirname + "/models/";
+var MODELS_DIR = __dirname + "/../client2/models/";
 
 module.exports.load = function(app)
 {

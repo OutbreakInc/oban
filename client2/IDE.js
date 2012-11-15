@@ -1,3 +1,14 @@
+define(function(require) 
+{
+
+var $ = require("jquery"),
+	Backbone = require("backbone"),
+	YAHOO = require("yui/yahoo-dom-event"),
+	ace = require("ace/ace");
+
+require("backbone.io");
+require("yui/treeview-min");
+
 ////////////////////////////////////////////////////////////////
 
 Array.prototype.merge = function(appendage)
@@ -328,3 +339,6 @@ $(document).ready(function()
 	
 	App.Editor = new App.EditorView({el: $(".editorView")});
 });
+
+});
+
