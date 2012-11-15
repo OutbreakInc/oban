@@ -7327,6 +7327,7 @@ var Document = function(text) {
         this.flags = flags;
         this.remove(new Range(0, 0, len, this.getLine(len-1).length));
         this.insert({row: 0, column:0}, text);
+        delete this.flags;
     };
     this.getValue = function() {
         return this.getAllLines().join(this.getNewLineCharacter());
