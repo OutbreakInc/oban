@@ -16,7 +16,6 @@ module.exports.middleware = function(collection)
 	winston.debug("created file store middleware");
 
 	// restore collection from file on load if file exists
-
 	if (fs.existsSync(fileName))
 	{
 		collection.reset(JSON.parse(
