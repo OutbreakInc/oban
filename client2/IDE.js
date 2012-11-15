@@ -4,6 +4,7 @@ define(function(require)
 var App = {};
 
 var $ = require("jquery"),
+	_ = require("underscore"),
 	Backbone = require("backbone"),
 	YAHOO = require("yui/yahoo-dom-event"),
 	ace = require("ace/ace");
@@ -25,12 +26,6 @@ Array.prototype.merge = function(appendage)
 	Array.prototype.splice.apply(this, arr);
 	return(this);
 }
-
-Function.prototype.ob_bind = function(thisObj)
-{
-	var __method = this, args = Array.prototype.slice.call(arguments, 1);
-	return(function(){Array.prototype.merge.call(arguments, args); return(__method.apply(thisObj, arguments));});
-};
 
 String.prototype.trim = function()
 {
@@ -130,6 +125,8 @@ App.EditorView = Backbone.View.extend(
 
 	initialize: function()
 	{
+		_.bindAll(this);
+
 		this.model = new App.EditorModel();
 
 		this.deviceListView = new App.DeviceListView(
@@ -138,13 +135,13 @@ App.EditorView = Backbone.View.extend(
 			collection: App.Devices
 		});
 
-		App.Projects.on("add", this.addToProjectList, this);
-		App.Projects.on("reset", this.addAllProjects, this);
+		App.Projects.on("add", this.addToProjectList);
+		App.Projects.on("reset", this.addAllProjects);
 
-		App.Files.on("add", this.addFile, this);
-		App.Files.on("reset", this.addAll, this);
+		App.Files.on("add", this.addFile);
+		App.Files.on("reset", this.addAll);
 
-		this.model.on("change", this.render, this);
+		this.model.on("change", this.render);
 		this.editor = ace.edit(this.$el.find(".documentView")[0]);
 		
 		this.editor.setTheme("ace/theme/chrome");
@@ -155,7 +152,7 @@ App.EditorView = Backbone.View.extend(
 		// var ACECPlusPlusMode = ace.require("ace/mode/c_cpp").Mode;
 		// this.session.setMode(new ACECPlusPlusMode());
 		
-		setTimeout(function()
+		setTimeout(_.bind(function()
 		{
 			console.log("Settings applied.");
 			
@@ -165,9 +162,11 @@ App.EditorView = Backbone.View.extend(
 			this.editor.setSelectionStyle("line");
 			this.editor.session.setUseSoftTabs(false);
 			
-		}.ob_bind(this), 100);	//this should be done when ACE emits an event that I don't yet know about
+		}, this), 100);	//this should be done when ACE emits an event that I don't yet know about
 		
-		this.editor.on("guttermousedown", this.toggleBreakpoint.ob_bind(this));
+		this.editor.on("guttermousedown", this.toggleBreakpoint);
+
+		// $(".runcontrols #verifyButton").click(this.verifyBuild);
 	},
 
 	toggleBreakpoint: function(e)
@@ -234,12 +233,14 @@ App.FileView = Backbone.View.extend(
 {
 	initialize: function(options)
 	{
+		_.bindAll(this);
+
 		this.session = options.session;
 
-		this.model.on("change", this.render, this);
-		this.model.on("destroy", this.remove, this);
+		this.model.on("change", this.render);
+		this.model.on("destroy", this.remove);
 
-		this.session.on("change", this.save.ob_bind(this));
+		this.session.on("change", this.save);
 	},
 
 	render: function()
