@@ -12,12 +12,12 @@ define(function(require)
 		{
 			if (!this.get("project"))
 			{
-				winston.error(this.toJSON());
-				winston.error("file doesn't have a project associated with it:");
+				console.log(this.toJSON());
+				console.log("file doesn't have a project associated with it:");
 				return;
 			}
 
-			return this.get("project").get("path") + "/" + this.get("name");
+			return this.get("project").path + "/" + this.get("name");
 		}
 	});
 

@@ -69,10 +69,11 @@ files.on("change", function(file)
 
 	var filePath = file.path();
 
+	// TODO: add creation of path to where file is supposed to be saved
 	fs.writeFile(filePath, file.get("text"), "utf8", 
 		function(err)
 	{
-		if (err) return winston.error("Couldn't save file to disk!");
+		if (err) return winston.error("Couldn't save file to " + filePath + "!");
 
 		winston.debug("saved file to " + filePath);
 	});
@@ -82,8 +83,8 @@ files.on("change", function(file)
 projects.on("add", function(project)
 {
 	var file = new File({ 
-		text: "#include <LPC1313.h>\n\nint main() { return 0; }\n", 
-		name: project.name + ".cpp", 
+		text: "#include <LPC1313.h>\n\nint main()\n{\n\treturn 0;\n}\n", 
+		name: "main.cpp", 
 		project: project });
 
 	project.addFile(file.path());
