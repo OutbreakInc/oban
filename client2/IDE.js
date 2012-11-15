@@ -151,11 +151,9 @@ App.EditorView = Backbone.View.extend(
 		
 		this.el.style.fontSize = "11px";
 
-		this.session = this.editor.getSession();
-		
-		var session = this.editor.getSession();
-		var ACECPlusPlusMode = require("ace/mode/c_cpp").Mode;
-		session.setMode(new ACECPlusPlusMode());
+		this.session = this.editor.getSession();		
+		// var ACECPlusPlusMode = ace.require("ace/mode/c_cpp").Mode;
+		// this.session.setMode(new ACECPlusPlusMode());
 		
 		setTimeout(function()
 		{
@@ -169,28 +167,30 @@ App.EditorView = Backbone.View.extend(
 			
 		}.ob_bind(this), 100);	//this should be done when ACE emits an event that I don't yet know about
 		
-		this.editor.on("guttermousedown", function(e)
-		{
-			var target = e.domEvent.target;
-				
-			if (target.className.indexOf("ace_gutter-cell") == -1) 
-				return; 
-			if (!e.editor.isFocused()) 
-				return; 
-			if (e.clientX > 25 + target.getBoundingClientRect().left) 
-				return; 
-			var row = e.getDocumentPosition().row;
-			var line = row + 1;
-			if( e.editor.session.getBreakpoints()[row] ) {
-				e.editor.session.clearBreakpoint(row);
-				setBreakpoint(line, false);
-			}
-			else {
-				e.editor.session.setBreakpoint(row);
-				setBreakpoint(line, true);
-			}
-			e.stop();
-		});
+		this.editor.on("guttermousedown", this.toggleBreakpoint.ob_bind(this));
+	},
+
+	toggleBreakpoint: function(e)
+	{
+		var target = e.domEvent.target;
+			
+		if (target.className.indexOf("ace_gutter-cell") == -1) 
+			return; 
+		if (!e.editor.isFocused()) 
+			return; 
+		if (e.clientX > 25 + target.getBoundingClientRect().left) 
+			return; 
+		var row = e.getDocumentPosition().row;
+		var line = row + 1;
+		if( e.editor.session.getBreakpoints()[row] ) {
+			e.editor.session.clearBreakpoint(row);
+			// setBreakpoint(line, false);
+		}
+		else {
+			e.editor.session.setBreakpoint(row);
+			// setBreakpoint(line, true);
+		}
+		e.stop();	
 	},
 
 	render: function()
