@@ -11,12 +11,12 @@ define(function(require)
 		defaults:
 		{
 			files: [],
-		}
+		},
 
 		initialize: function()
 		{
 			this.set("path", "/Users/projects/galago/" + this.get("name"));
-		}
+		},
 
 		validate: function(attrs)
 		{

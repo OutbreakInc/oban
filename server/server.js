@@ -8,7 +8,7 @@ var express = require("express"),
 	fs = require("fs"),
 	winston = require("winston"),
 	Project = require("./project"),
-	File = require("./models/file"),
+	File = require("../client2/models/file"),
 	logging = require("./logging");
 
 var GDB_SCRIPT = "demo.gdb";
