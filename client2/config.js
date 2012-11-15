@@ -5,7 +5,8 @@ requirejs.config(
 	paths:
 	{
 		ace: "../ace",
-		yui: "../yui" 
+		yui: "../yui",
+		models: "../../models"
 	},
 
 	shim:

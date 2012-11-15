@@ -1,10 +1,16 @@
 define(function(require) 
 {
 
+var App = {};
+
 var $ = require("jquery"),
 	Backbone = require("backbone"),
 	YAHOO = require("yui/yahoo-dom-event"),
 	ace = require("ace/ace");
+
+App.FileModel = require("models/file"),
+App.DeviceModel = require("models/device"),
+App.ProjectModel = require("models/project");
 
 require("backbone.io");
 require("yui/treeview-min");
@@ -68,17 +74,13 @@ Date.prototype.toCompactString = function()
 
 ////////////////////////////////
 
-var App = {};
-
-// state/collections
-App.EditorState = Backbone.State.extend();
-App.FileState = Backbone.State.extend();
-App.ProjectState = Backbone.State.extend();
+// model/collections
+App.EditorModel = Backbone.Model.extend();
 
 App.ProjectCollection = Backbone.Collection.extend(
 {
 	backend: "Project",
-	state: App.ProjectState,
+	model: App.ProjectModel,
 
 	initialize: function()
 	{
@@ -91,7 +93,7 @@ App.Projects = new App.ProjectCollection;
 App.FileCollection = Backbone.Collection.extend(
 {
 	backend: "File",
-	state: App.FileState,
+	model: App.FileModel,
 
 	initialize: function()
 	{
@@ -101,7 +103,7 @@ App.FileCollection = Backbone.Collection.extend(
 
 App.Files = new App.FileCollection;
 
-App.DeviceState = Backbone.State.extend(
+App.DeviceModel = Backbone.Model.extend(
 {
 	initialize: function()
 	{
@@ -117,7 +119,7 @@ App.DeviceState = Backbone.State.extend(
 App.DeviceCollection = Backbone.Collection.extend(
 {
 	backend: "Device",
-	state: App.DeviceState,
+	model: App.DeviceModel,
 
 	initialize: function()
 	{
@@ -141,13 +143,13 @@ App.EditorView = Backbone.View.extend(
 
 	initialize: function()
 	{
-		this.state = new App.EditorState();
+		this.model = new App.EditorModel();
 
 		this.deviceListView = new App.DeviceListView(
-			{
-				el: ".devicesList",
-				collection: App.Devices
-			});
+		{
+			el: ".devicesList",
+			collection: App.Devices
+		});
 
 		App.Projects.on("add", this.addToProjectList, this);
 		App.Projects.on("reset", this.addAllProjects, this);
@@ -155,7 +157,7 @@ App.EditorView = Backbone.View.extend(
 		App.Files.on("add", this.addFile, this);
 		App.Files.on("reset", this.addAll, this);
 
-		this.state.on("change", this.render, this);
+		this.model.on("change", this.render, this);
 		this.editor = ace.edit(this.$el.find(".documentView")[0]);
 		
 		this.editor.setTheme("ace/theme/chrome");
@@ -206,10 +208,10 @@ App.EditorView = Backbone.View.extend(
 
 	render: function()
 	{
-		//this.$el.html(Handlebars.partials.login(this.state.toJSON()));
+		//this.$el.html(Handlebars.partials.login(this.model.toJSON()));
 		var session = this.editor.getSession();
 		
-		// session.setValue("hello");	//this.state
+		// session.setValue("hello");	//this.model
 	},
 
 	events:
@@ -231,7 +233,7 @@ App.EditorView = Backbone.View.extend(
 
 	addFile: function(file)
 	{
-		var view = new App.FileView({ state: file, session: this.session });
+		var view = new App.FileView({ model: file, session: this.session });
 		view.render();
 	},
 
@@ -247,8 +249,8 @@ App.FileView = Backbone.View.extend(
 	{
 		this.session = options.session;
 
-		this.state.on("change", this.render, this);
-		this.state.on("destroy", this.remove, this);
+		this.model.on("change", this.render, this);
+		this.model.on("destroy", this.remove, this);
 
 		this.session.on("change", this.save.ob_bind(this));
 	},
@@ -256,7 +258,7 @@ App.FileView = Backbone.View.extend(
 	render: function()
 	{
 		console.log("render");
-		var text = this.state.toJSON().text;
+		var text = this.model.toJSON().text;
 		console.log(text);
 		this.session.setValue(text, { renderCall: true });
 		return this;
@@ -268,7 +270,7 @@ App.FileView = Backbone.View.extend(
 		// or else we'll end up in an infinite render/save loop
 		if (e.flags && e.flags.renderCall) return;
 
-		this.state.save({ "text": this.session.getValue() }, { silent: true });
+		this.model.save({ "text": this.session.getValue() }, { silent: true });
 	}
 });
 
@@ -285,7 +287,7 @@ App.DeviceListView = Backbone.View.extend(
 
 	addOne: function(device)
 	{
-		var view = new App.DeviceView({state: device});
+		var view = new App.DeviceView({model: device});
 		this.$el.append(view.render().el);
 	},
 
@@ -300,14 +302,14 @@ App.DeviceView = Backbone.View.extend(
 {
 	initialize: function(options)
 	{
-		this.state.on("change", this.render, this);
-		this.state.on("destroy", this.remove, this);
+		this.model.on("change", this.render, this);
+		this.model.on("destroy", this.remove, this);
 	},
 
 	render: function()
 	{
-		var id = this.state.get("deviceId");
-		var name = this.state.get("name");
+		var id = this.model.get("deviceId");
+		var name = this.model.get("name");
 
 		this.$el.html("<li>"+id+": "+name+"</li>");
 

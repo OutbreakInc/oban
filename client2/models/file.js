@@ -17,7 +17,7 @@ define(function(require)
 				return;
 			}
 
-			return this.get("project").get("path") + this.get("name");
+			return this.get("project").get("path") + "/" + this.get("name");
 		}
 	});
 
