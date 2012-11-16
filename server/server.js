@@ -24,7 +24,7 @@ app.configure(function()
     app.use(express.methodOverride());
     app.use(express.bodyParser());
     app.use(app.router);
-    app.use(express.static(__dirname + "/../client2"));
+    app.use(express.static(__dirname + "/../client"));
 });
 
 app.get("/", function(req, res)
