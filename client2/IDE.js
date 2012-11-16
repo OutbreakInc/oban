@@ -9,9 +9,9 @@ var $ = require("jquery"),
 	YAHOO = require("yui/yahoo-dom-event"),
 	ace = require("ace/ace");
 
-App.FileModel = require("models/file"),
-App.DeviceModel = require("models/device"),
-App.ProjectModel = require("models/project");
+App.FileModel = require("app/models/file");
+App.DeviceModel = require("app/models/device");
+App.ProjectModel = require("app/models/project");
 
 require("backbone.io");
 require("yui/treeview-min");
@@ -166,7 +166,27 @@ App.EditorView = Backbone.View.extend(
 		
 		this.editor.on("guttermousedown", this.toggleBreakpoint);
 
-		// $(".runcontrols #verifyButton").click(this.verifyBuild);
+		$(".runcontrols #verifyButton").click(this.verifyBuild);
+		this.model.on("verified", this.onVerified);
+	},
+
+	verifyBuild: function()
+	{
+		// tell backend to compile the file
+		this.model.trigger("build");
+	},
+
+	onVerified: function(err)
+	{
+		// check arguments to see if file built successfully
+
+		// if it didn't build successfully, highlight the lines that had issues
+
+		// err:
+		// compileErrors: [ { line: 5, message: "Unexpected identifier" }, ... ]
+
+		// if err is null, compilation succeeded
+		console.log(arguments);
 	},
 
 	toggleBreakpoint: function(e)

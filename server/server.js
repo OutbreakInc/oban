@@ -85,7 +85,7 @@ projects.on("add", function(project)
 	var file = new File({ 
 		text: "#include <LPC1313.h>\n\nint main()\n{\n\treturn 0;\n}\n", 
 		name: "main.cpp", 
-		project: project });
+		project: project.toJSON() });
 
 	project.addFile(file.path());
 
