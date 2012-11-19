@@ -9,6 +9,8 @@ var $ = require("jquery"),
 	YAHOO = require("yui/yahoo-dom-event"),
 	ace = require("ace/ace");
 
+require("ace/mode-c_cpp");
+
 App.FileModel = require("app/models/file");
 App.DeviceModel = require("app/models/device");
 App.ProjectModel = require("app/models/project");
@@ -149,8 +151,8 @@ App.EditorView = Backbone.View.extend(
 		this.el.style.fontSize = "11px";
 
 		this.session = this.editor.getSession();		
-		// var ACECPlusPlusMode = ace.require("ace/mode/c_cpp").Mode;
-		// this.session.setMode(new ACECPlusPlusMode());
+		var ACECPlusPlusMode = ace.require("ace/mode/c_cpp").Mode;
+		this.session.setMode(new ACECPlusPlusMode());
 		
 		setTimeout(_.bind(function()
 		{

@@ -7,7 +7,6 @@ var express = require("express"),
 	dataSync = require("./sync"),
 	fs = require("fs"),
 	winston = require("winston"),
-	Project = require("./project"),
 	File = require("../client/models/file"),
 	logging = require("./logging");
 
@@ -29,7 +28,7 @@ app.configure(function()
 
 app.get("/", function(req, res)
 {
-	res.redirect("/IDE.html");
+	res.sendfile("client/IDE.html");
 });
 
 dataSync.load(app);
@@ -92,8 +91,5 @@ projects.on("add", function(project)
 	// set active files to new project's file
 	files.reset([file]);
 });
-
-// on user saying "build file", run build script and send it to GDB server
-var project = new Project;
 
 }).call(this);

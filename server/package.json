@@ -1,18 +1,22 @@
 {
-  "name": "galago-ide",
-  "version": "0.0.1",
-  "description": "Galago web-based IDE",
-  "main": "server.js",
-  "dependencies": {
-  	"socket.io": ">0",
-    "express": ">0",
-    "underscore": ">0",
-    "winston": ">0",
-    "amdefine": "0.0.4"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
-  },
-  "license": "BSD"
+	"name": "galago-ide",
+	"version": "0.0.1",
+	"description": "Galago web-based IDE",
+	"main": "server/server.js",
+	"dependencies":
+	{
+		"socket.io": ">0",
+		"backbone": ">0",
+		"backbone.io": ">0",
+		"express": "2.x.x",
+		"underscore": ">0",
+		"winston": ">0",
+		"amdefine": "0.0.4"
+	},
+	"scripts":
+	{
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"start": "node server.js"
+	},
+	"license": "BSD"
 }

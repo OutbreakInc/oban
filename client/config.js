@@ -34,6 +34,11 @@ requirejs.config(
 		"ace/ace":
 		{
 			exports: "ace"
+		},
+
+		"ace/mode-c_cpp":
+		{
+			deps: ["ace/ace"]
 		}
 	}
 });
