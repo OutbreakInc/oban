@@ -30,6 +30,13 @@ body
 	height: 30px;
 }
 
+.navbutton
+{
+	display: inline-block;
+	font-family: 'Verdana', sans-serif;
+	font-weight: bold;
+}
+
 .projecttitle
 {
 	display: inline-block;
