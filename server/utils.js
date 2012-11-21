@@ -16,6 +16,14 @@ documentsDir: function()
 	}
 },
 
+settingsDir: function()
+{
+	switch (os.platform())
+	{
+	case "darwin": return process.env["HOME"] + "/Library/Application Support/outbreak-ide";
+	}
+},
+
 projectsDir: function()
 {
 	return projectsDir || module.exports.documentsDir() + "/outbreak-ide";

@@ -12,14 +12,6 @@ var BUILDER = "../SDK/scripts/build.sh";
 module.exports =
 {
 
-init: function()
-{
-	if (!fs.existsSync(utils.projectsDir()))
-	{
-		fs.mkdirSync(utils.projectsDir());
-	}
-},
-
 build: function(sources, name, outputPath)
 {
 	if (!fs.existsSync(outputPath))
@@ -44,16 +36,16 @@ build: function(sources, name, outputPath)
 		});
 
 	buildProcess.stderr.setEncoding("utf8");
-	buildProcess.stderr.on("data", function()
+	buildProcess.stderr.on("data", function(err)
 	{
-		console.log(arguments);
+		console.log(err);
 	});
 
 	buildProcess.stdout.setEncoding("utf8");
 
-	buildProcess.stdout.on("data", function()
+	buildProcess.stdout.on("data", function(data)
 	{
-		console.log(arguments);
+		console.log(data);
 	});
 
 	buildProcess.on("exit", function()
