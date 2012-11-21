@@ -40,8 +40,6 @@ module.exports.middleware = function(collection)
 
 		recentlySaved = true;
 
-		winston.debug("saving "+fileName+" to file");
-
 		fs.writeFile(fileName, 
 			JSON.stringify(collection.toJSON(), null, " "), "utf8", 
 			function(err)

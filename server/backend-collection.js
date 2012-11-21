@@ -73,43 +73,28 @@ create: function(model, name)
 			{
 				if (options.socketSilent) return;
 
-				var json = model.toJSON();
-
-				console.log("emit add");
-				console.log(json);
-
-				backend.emit("created", json);
+				backend.emit("created", model.toJSON());
 			});
 
 			this.on("change", function(model, options)
 			{
 				if (options.socketSilent) return;
 
-				var json = model.toJSON();
-
-				console.log("emit change");
-				console.log(json);
-
-				backend.emit("updated", json);
+				backend.emit("updated", model.toJSON());
 			});
 
 			this.on("remove", function(model, collection, options)
 			{
 				if (options.socketSilent) return;
 
-				var json = model.toJSON();			
-
-				backend.emit("deleted", json);
+				backend.emit("deleted", model.toJSON());
 			});
 
-			this.on("reset", function(collection)
+			this.on("reset", function(collection, options)
 			{
-				var json = collection.toJSON();
+				if (options.socketSilent) return;
 
-				backend.emit("reset", json);
-
-				console.log("emit reset");
-				console.log(json);
+				backend.emit("reset", collection.toJSON());
 			});
 		}
 	});
