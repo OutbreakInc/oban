@@ -8,13 +8,21 @@ var backboneio = require("backbone.io"),
 	FileStore = require("./file-store"),	
 	_ = require("underscore");
 
-module.exports = {};
-
-var backends = {};
-
 var MODELS_DIR = __dirname + "/../client/models/";
 
-module.exports.load = function(app)
+function DataSync(app)
+{
+	this.app = app;
+	this.backends = {};
+	this.collections = {};
+}
+
+module.exports = DataSync;
+
+DataSync.prototype =
+{
+
+load: function()
 {
 	var modelFiles = fs.readdirSync(MODELS_DIR);
 
@@ -26,17 +34,16 @@ module.exports.load = function(app)
 	modelFiles.forEach(function(syncFile)
 	{
 		var model = require(MODELS_DIR + syncFile);
-		var backend = loadModel(model);
+		var backend = this._loadModel(model);
 
-		backends[model.meta.name] = backend;
-	});
+		this.backends[model.meta.name] = backend;
+		this.collections[model.meta.name] = backend.dataStore.collection;
+	}, this);
 
-	module.exports.socket = backboneio.listen(app, backends);
+	this.socket = backboneio.listen(this.app, this.backends);
+},
 
-	winston.debug("Loaded sync module");
-}
-
-function loadModel(model)
+_loadModel: function(model)
 {
 	var backend = backboneio.createBackend();
 
@@ -53,6 +60,6 @@ function loadModel(model)
 	return backend;
 }
 
-module.exports.backends = backends;
+}
 
 }).call(this);

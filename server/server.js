@@ -3,14 +3,13 @@
 var express = require("express"),
 	app = express.createServer(),
 	gdb = require("./gdb-hook"),
-	DeviceServer = require("./device-server"),
-	dataSync = require("./sync"),
 	fs = require("fs"),
 	utils = require("./utils"),
 	winston = require("winston"),
 	File = require("../client/models/file"),
 	logging = require("./logging"),
-	toolchain = require("./toolchain")
+	toolchain = require("./toolchain"),
+	Core = require("./core");
 
 var GDB_SCRIPT = "demo.gdb";
 
@@ -33,37 +32,13 @@ app.get("/", function(req, res)
 	res.sendfile("client/IDE.html");
 });
 
-toolchain.init();
-dataSync.load(app);
+var core = new Core(app);
 
-dataSync.socket.set("log level", 1);
-
-var deviceServer = new DeviceServer;
-
-deviceServer.run();
-
-deviceServer.on("connect", function(id, name)
-{
-	dataSync.backends.Device.dataStore.collection.add({ deviceId: id, name: name });
-	winston.debug("device connected (id: "+id+", name: "+name+")");
-});
-
-deviceServer.on("disconnect", function(id, name)
-{
-	var collection = dataSync.backends.Device.dataStore.collection;
-
-	var model = collection.find(function(device)
-	{
-		return device.get("deviceId") == id;
-	});
-
-	collection.remove(model);
-	winston.debug("device disconnected (id: "+id+", name: "+name+")");
-});
+core.init();
 
 // user should see list of projects, stored inside of Project.json
-var projects = dataSync.backends.Project.dataStore.collection;
-var files = dataSync.backends.File.dataStore.collection;
+var projects = core.dataSync.collections.Project;
+var files = core.dataSync.collections.File;
 
 files.on("change", function()
 {
@@ -74,17 +49,16 @@ files.on("add", function()
 {
 	console.log("add");
 	console.log(arguments);
-})
+	saveFile(file);
+});
 
 files.on("change:name", function(file)
 {
 	winston.debug("file rename event: " + file.get("name"));
 });
 
-files.on("change:text", function(file)
+function saveFile(file)
 {
-	winston.debug("file text change event!");
-
 	var filePath = file.path();
 
 	// TODO: add creation of path to where file is supposed to be saved
@@ -94,7 +68,14 @@ files.on("change:text", function(file)
 		if (err) return winston.error("Couldn't save file to " + filePath + "!");
 
 		winston.debug("saved file to " + filePath);
-	});
+	});	
+}
+
+files.on("change:text", function(file)
+{
+	winston.debug("file text change event!");
+
+	saveFile(file);
 });
 
 files.on("change:buildStatus", function(file)
