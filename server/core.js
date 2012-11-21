@@ -82,15 +82,24 @@ _bindFileEvents: function()
 
 	var self = this;
 
+	function loadFile(file)
+	{
+		if (file.get("text"))
+		{
+			self._saveFile(file);
+		}
+		else
+		{
+			// load text from file
+			winston.debug("restoring " + file.path() + " from file");
+			self._readFile(file);
+		}
+	}
+
 	files.on("reset", function()
 	{
 		console.log("reset");
-
-		files.forEach(function(file)
-		{
-			console.log("saving " + file.get("name"));
-			self._saveFile(file);
-		});
+		files.forEach(loadFile);
 	});
 
 	files.on("change", function()
@@ -98,12 +107,7 @@ _bindFileEvents: function()
 		console.log(arguments);
 	});
 
-	files.on("add", function()
-	{
-		console.log("add");
-		console.log(arguments);
-		self._saveFile(file);
-	});
+	files.on("add", loadFile);
 
 	files.on("change:name", function(file)
 	{
@@ -132,13 +136,30 @@ _bindFileEvents: function()
 			toolchain.build(
 				[file.path()], 
 				file.get("name"),
-				project.get("path"));
+				project.get("path"),
+				function(err)
+				{
+					self._onBuildFinished(err, file);
+				});
 		}
 
 		}
-
-		file.set("buildStatus", "compiled");
 	});	
+},
+
+_onBuildFinished: function(err, file)
+{
+	var files = this.dataSync.collections.File;
+
+	if (err)
+	{
+		// return all error messages to frontend
+		// also return lines where errors happened
+	}
+	else
+	{
+		file.set("buildStatus", "compiled");
+	}
 },
 
 _bindProjectEvents: function()
@@ -157,7 +178,7 @@ _bindProjectEvents: function()
 		self._mkdirIfNotExist(projectPath);
 
 		var file = new File({ 
-			text: "//#include <LPC1313.h>\n\nint main()\n{\n\treturn 0;\n}\n", 
+			// text: "//#include <LPC1313.h>\n\nint main()\n{\n\treturn 0;\n}\n", 
 			name: "main.cpp", 
 			project: project.toJSON() });
 
@@ -168,11 +189,23 @@ _bindProjectEvents: function()
 	});
 },
 
+_readFile: function(file)
+{
+	var filePath = file.path();
+
+	fs.readFile(filePath, "utf8",
+		function(err, data)
+	{
+		if (err) return winston.error("Couldn't read file from " + filePath + "!");
+
+		file.set("text", data);
+	});	
+},
+
 _saveFile: function(file)
 {
 	var filePath = file.path();
 
-	// TODO: add creation of path to where file is supposed to be saved
 	fs.writeFile(filePath, file.get("text"), "utf8", 
 		function(err)
 	{

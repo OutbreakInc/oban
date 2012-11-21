@@ -45,18 +45,26 @@ build: function(sources, name, outputPath)
 
 	buildProcess.stdout.on("data", function(data)
 	{
+		console.log("data:");
 		console.log(data);
 	});
 
-	buildProcess.on("exit", function()
+	buildProcess.on("exit", function(exitCode)
 	{
 		console.log("exit");
 		console.log(arguments);
+
+		if (exitCode == 0)
+		{
+			callback();
+		}
+		else
+		{
+			callback("")
+		}
 	});
 }
 
 }
-
-// module.exports.build(["derp.cpp", "herp.cpp"], "derp");
 
 }).call(this);
