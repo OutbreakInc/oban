@@ -13,12 +13,12 @@ module.exports.middleware = function(collection)
 	var recentlySaved = false;
 	var fileName = collection.name + ".json";
 
-	winston.debug("created file store middleware");
+	winston.debug("created file store middleware: " + collection.name);
 
 	// restore collection from file on load if file exists
 	if (fs.existsSync(fileName))
 	{
-		console.log("restored collection:");
+		console.log("restored collection: " + collection.name);
 		console.log(JSON.parse(
 			fs.readFileSync(fileName, "utf8")));
 

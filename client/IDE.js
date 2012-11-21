@@ -232,7 +232,7 @@ App.EditorView = Backbone.View.extend(
 	createProject: function()
 	{
 		console.log("create");
-		this.activeProject = App.Projects.create({ name: "New Project" });
+		this.activeProject = App.Projects.create({ name: "hello-world" });
 	},
 	
 	update: function()
