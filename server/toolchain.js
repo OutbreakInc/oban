@@ -2,12 +2,12 @@
 {
 
 var spawn = require("child_process").spawn,
+	utils = require("./utils"),
 	fs = require("fs");
 
 module.exports = {};
 
 var BUILDER = "../SDK/scripts/build.sh";
-var PROJECT_PATH = process.env.HOME + "/outbreak/";
 
 module.exports.build = function(sources, name)
 {
@@ -16,7 +16,7 @@ module.exports.build = function(sources, name)
 			env: 
 			{ 
 				PART: "lpc1343", 
-				BUILD_DIR: PROJECT_PATH + name 
+				BUILD_DIR: utils.projectsDir() + "/" + name 
 			} 
 		});
 
