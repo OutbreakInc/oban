@@ -2,7 +2,8 @@
 {
 
 var fs = require("fs"),
-	winston = require("winston");
+	winston = require("winston"),
+	utils = require("./utils");	
 
 var MS_BETWEEN_SAVES = 1000;
 
@@ -11,7 +12,7 @@ module.exports = {};
 module.exports.middleware = function(collection)
 {
 	var recentlySaved = false;
-	var fileName = collection.name + ".json";
+	var fileName = utils.settingsDir() + "/" + collection.name + ".json";
 
 	winston.debug("created file store middleware: " + collection.name);
 

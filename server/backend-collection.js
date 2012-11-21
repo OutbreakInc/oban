@@ -108,7 +108,7 @@ create: function(model, name)
 
 				backend.emit("reset", json);
 
-				console.log("reset");
+				console.log("emit reset");
 				console.log(json);
 			});
 		}
