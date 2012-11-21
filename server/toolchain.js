@@ -2,21 +2,44 @@
 {
 
 var spawn = require("child_process").spawn,
-	utils = require("./utils"),
-	fs = require("fs");
+	fs = require("fs"),
+	utils = require("./utils");
 
 module.exports = {};
 
 var BUILDER = "../SDK/scripts/build.sh";
 
-module.exports.build = function(sources, name)
+module.exports =
 {
+
+init: function()
+{
+	if (!fs.existsSync(utils.projectsDir()))
+	{
+		fs.mkdirSync(utils.projectsDir());
+	}
+},
+
+build: function(sources, name, outputPath)
+{
+	if (!fs.existsSync(outputPath))
+	{
+		fs.mkdirSync(outputPath);
+	}
+
+	var buildDir = outputPath + "/build";
+
+	if (!fs.existsSync(buildDir))
+	{
+		fs.mkdirSync(buildDir);
+	};
+
 	var buildProcess = spawn(BUILDER, [name, sources.join(" ")], 
 		{ 
 			env: 
 			{ 
 				PART: "lpc1343", 
-				BUILD_DIR: utils.projectsDir() + "/" + name 
+				BUILD_DIR: "\"" + buildDir + "\""
 			} 
 		});
 
@@ -40,6 +63,8 @@ module.exports.build = function(sources, name)
 	});
 }
 
-module.exports.build(["derp.cpp", "herp.cpp"], "derp");
+}
+
+// module.exports.build(["derp.cpp", "herp.cpp"], "derp");
 
 }).call(this);

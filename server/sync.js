@@ -31,7 +31,7 @@ module.exports.load = function(app)
 		backends[model.meta.name] = backend;
 	});
 
-	backboneio.listen(app, backends);
+	module.exports.socket = backboneio.listen(app, backends);
 
 	winston.debug("Loaded sync module");
 }
