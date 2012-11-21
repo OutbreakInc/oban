@@ -6,9 +6,11 @@ var express = require("express"),
 	DeviceServer = require("./device-server"),
 	dataSync = require("./sync"),
 	fs = require("fs"),
+	utils = require("./utils"),
 	winston = require("winston"),
 	File = require("../client/models/file"),
-	logging = require("./logging");
+	logging = require("./logging"),
+	toolchain = require("./toolchain")
 
 var GDB_SCRIPT = "demo.gdb";
 
@@ -31,9 +33,10 @@ app.get("/", function(req, res)
 	res.sendfile("client/IDE.html");
 });
 
+toolchain.init();
 dataSync.load(app);
 
-// io.set("log level", 1);
+dataSync.socket.set("log level", 1);
 
 var deviceServer = new DeviceServer;
 
@@ -94,13 +97,40 @@ files.on("change:text", function(file)
 	});
 });
 
+files.on("change:buildStatus", function(file)
+{
+	winston.debug("build status changed for file: " + file.get("name"));
+
+	var project = projects.get(file.get("project").id);
+
+	winston.debug("build status: " + file.get("buildStatus"));
+	console.log(project.toJSON());
+
+	switch (file.get("buildStatus"))
+	{
+	case "verify":
+	{
+		toolchain.build(
+			[file.path()], 
+			file.get("name"),
+			project.get("path"));
+	}
+
+	}
+
+	file.set("buildStatus", "compiled");
+});
+
 // when a new project is created
 projects.on("add", function(project)
 {
+	project.set("path", utils.projectsDir() + "/" + project.get("name"));
+
 	var file = new File({ 
 		text: "#include <LPC1313.h>\n\nint main()\n{\n\treturn 0;\n}\n", 
 		name: "main.cpp", 
-		project: project.toJSON() });
+		project: project.toJSON(),
+		buildStatus: "unverified" });
 
 	project.addFile(file.path());
 
