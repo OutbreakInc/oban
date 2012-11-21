@@ -66,6 +66,9 @@
                 self.bind(event + ':delete', function(model) {
                     self.remove(model[idAttribute]);
                 });
+                self.bind(event + ':reset', function(collection) {
+                    self.reset(collection);
+                });
             });
         }  
     };
