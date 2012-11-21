@@ -62,9 +62,25 @@ deviceServer.on("disconnect", function(id, name)
 var projects = dataSync.backends.Project.dataStore.collection;
 var files = dataSync.backends.File.dataStore.collection;
 
-files.on("change", function(file)
+files.on("change", function()
 {
-	winston.debug("files change event!");
+	console.log(arguments);
+});
+
+files.on("add", function()
+{
+	console.log("add");
+	console.log(arguments);
+})
+
+files.on("change:name", function(file)
+{
+	winston.debug("file rename event: " + file.get("name"));
+});
+
+files.on("change:text", function(file)
+{
+	winston.debug("file text change event!");
 
 	var filePath = file.path();
 
