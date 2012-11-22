@@ -3,7 +3,8 @@
 
 var fs = require("fs"),
 	winston = require("winston"),
-	utils = require("./utils");	
+	utils = require("./utils"),
+	_ = require("underscore");
 
 var MS_BETWEEN_SAVES = 1000;
 
@@ -30,15 +31,9 @@ module.exports.middleware = function(collection)
 	// don't need any of the callback's arguments because we have
 	// access to the collection thru the closure
 
-	return function()
+	function save()
 	{
 		winston.debug("file store middleware invoked for: " + fileName);
-
-		// immediately save collection when it's been modified, 
-		// but only save once every MS_BETWEEN_SAVES milliseconds
-		if (recentlySaved) return;
-
-		recentlySaved = true;
 
 		fs.writeFile(fileName, 
 			JSON.stringify(collection.toJSON(), null, " "), "utf8", 
@@ -47,17 +42,10 @@ module.exports.middleware = function(collection)
 			if (err) return winston.error("Couldn't save data to disk!");
 
 			winston.debug("saved to file: " + fileName);
-
-			// allow saving again after certain period of time
-			setTimeout(function()
-			{
-				winston.debug(collection.name+" save timeout reached");
-				recentlySaved = false;
-
-			}, MS_BETWEEN_SAVES);
 		});
-
 	}
+
+	return _.debounce(save, MS_BETWEEN_SAVES);
 }
 
 }).call(this);
