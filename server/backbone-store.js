@@ -20,6 +20,10 @@ BackboneStore.prototype.middleware = function()
 	{
 		create: function(req, res, next) 
 		{
+			// can't really check if the model addition failed, because if
+			// the model fails validation, Backbone itself will throw an Error
+			// This error is caught higher upstream by backbone.io and is
+			// sent back with res.end()
 			self.collection.add(req.model);
 			res.end(req.model);
 		},
@@ -28,7 +32,16 @@ BackboneStore.prototype.middleware = function()
 		{
 			if (req.model.id)
 			{
-				res.end(self.collection.get(req.model.id));
+				var model = self.collection.get(req.model.id);
+
+				if (model)
+				{
+					res.end(model);
+				}
+				else
+				{
+					res.end(new Error("No such model"));
+				}
 			} 
 			else 
 			{
@@ -39,8 +52,19 @@ BackboneStore.prototype.middleware = function()
 		update: function(req, res, next)
 		{
 			var item = self.collection.get(req.model.id);
-			if (item) item.set(req.model, {socketSilent: true});
-			res.end(req.model);
+
+			if (!item) return res.end(new Error("No such model"));
+			
+			var result = item.set(req.model, {socketSilent: true});
+
+			if (!result)
+			{
+				res.end(new Error("Validation failed!"));
+			}
+			else
+			{
+				res.end(req.model);
+			}
 		},
 		
 		delete: function(req, res, next)
