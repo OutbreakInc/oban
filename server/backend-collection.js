@@ -3,7 +3,8 @@
 
 var Backbone = require("backbone"),
 	FileStore = require("./file-store"),
-	_ = require("underscore");
+	_ = require("underscore"),
+	idGen = require("./idGen");
 
 module.exports = {
 
@@ -11,7 +12,7 @@ create: function(model, name)
 {
 	return Backbone.Collection.extend(
 	{
-		id: 0,
+		id: idGen(),
 		model: model,
 		name: name,
 
@@ -24,30 +25,44 @@ create: function(model, name)
 			this.on("all", FileStore.middleware(this), this);
 		},
 
+		_setId: function(model)
+		{
+			if (model.id === undefined || model.id === null) 
+			{
+				model.set("id", idGen(), { silent: true });
+			}
+		},
+
 		_assignIds: function(models, options)
 		{
-			models.forEach(function(model)
+			models = _.isArray(models) ? models.slice() : [models];
+
+			// transform all model objects into actual instances of the model
+			// and only then assign ID
+			for (var i = 0; i < models.length; ++i)
 			{
-				if (!model.id) model.id = this.id++;
-			}.bind(this));
+				models[i] = Backbone.Collection.prototype._prepareModel.call(this, models[i], options);
+				this._setId(models[i]);
+			}
+
+			return models;
 		},
 
 		add: function(models, options)
 		{
-			models = _.isArray(models) ? models.slice() : [models];
-			this._assignIds(models, options);
+			models = this._assignIds(models, options);
 			return Backbone.Collection.prototype.add.call(this, models, options);
 		},
 
 		create: function(model, options)
 		{
-			if (!model.id) model.id = this.id++;
+			model = Backbone.Collection.prototype._prepareModel.call(this, model, options);			
+			this._setId(model);
 			return Backbone.Collection.prototype.create.call(this, model, options);
 		},
 
 		reset: function(models, options)
 		{
-			models = _.isArray(models) ? models.slice() : [models];
 			this._assignIds(models, options);
 			return Backbone.Collection.prototype.reset.call(this, models, options);
 		},
@@ -58,30 +73,28 @@ create: function(model, name)
 			{
 				if (options.socketSilent) return;
 
-				var json = model.toJSON();
-				json.id = model.id;
-
-				backend.emit("created", json);
+				backend.emit("created", model.toJSON());
 			});
 
 			this.on("change", function(model, options)
 			{
 				if (options.socketSilent) return;
 
-				var json = model.toJSON();
-				json.id = model.id;				
-
-				backend.emit("updated", json);
+				backend.emit("updated", model.toJSON());
 			});
 
 			this.on("remove", function(model, collection, options)
 			{
 				if (options.socketSilent) return;
 
-				var json = model.toJSON();
-				json.id = model.id;				
+				backend.emit("deleted", model.toJSON());
+			});
 
-				backend.emit("deleted", json);
+			this.on("reset", function(collection, options)
+			{
+				if (options.socketSilent) return;
+
+				backend.emit("reset", collection.toJSON());
 			});
 		}
 	});

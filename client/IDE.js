@@ -169,16 +169,17 @@ App.EditorView = Backbone.View.extend(
 		this.editor.on("guttermousedown", this.toggleBreakpoint);
 
 		$(".runcontrols #verifyButton").click(this.verifyBuild);
-		this.model.on("verified", this.onVerified);
+		// this.fileView.model.on("change:buildStatus", this.onBuildStatus);
 	},
 
 	verifyBuild: function()
 	{
 		// tell backend to compile the file
-		this.model.trigger("build");
+		this.fileView.model.set("buildStatus", "verify");
+		this.fileView.model.save();
 	},
 
-	onVerified: function(err)
+	onBuildStatus: function(err)
 	{
 		// check arguments to see if file built successfully
 
@@ -231,7 +232,7 @@ App.EditorView = Backbone.View.extend(
 	createProject: function()
 	{
 		console.log("create");
-		this.activeProject = App.Projects.create({ name: "New Project" });
+		this.activeProject = App.Projects.create({ name: "hello-world" });
 	},
 	
 	update: function()
@@ -241,8 +242,9 @@ App.EditorView = Backbone.View.extend(
 
 	addFile: function(file)
 	{
-		var view = new App.FileView({ model: file, session: this.session });
-		view.render();
+		console.log(file);
+		this.fileView = new App.FileView({ model: file, session: this.session });
+		this.fileView.render();
 	},
 
 	addAll: function()
@@ -262,7 +264,15 @@ App.FileView = Backbone.View.extend(
 		this.model.on("change", this.render);
 		this.model.on("destroy", this.remove);
 
+		this.model.on("change:buildStatus", this.onBuildStatus);
+
 		this.session.on("change", this.save);
+	},
+
+	onBuildStatus: function()
+	{
+		console.log("buildStatus");
+		console.log(arguments);
 	},
 
 	render: function()

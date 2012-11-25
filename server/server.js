@@ -3,12 +3,13 @@
 var express = require("express"),
 	app = express.createServer(),
 	gdb = require("./gdb-hook"),
-	DeviceServer = require("./device-server"),
-	dataSync = require("./sync"),
 	fs = require("fs"),
+	utils = require("./utils"),
 	winston = require("winston"),
 	File = require("../client/models/file"),
-	logging = require("./logging");
+	logging = require("./logging"),
+	toolchain = require("./toolchain"),
+	Core = require("./core");
 
 var GDB_SCRIPT = "demo.gdb";
 
@@ -31,65 +32,7 @@ app.get("/", function(req, res)
 	res.sendfile("client/IDE.html");
 });
 
-dataSync.load(app);
-
-// io.set("log level", 1);
-
-var deviceServer = new DeviceServer;
-
-deviceServer.run();
-
-deviceServer.on("connect", function(id, name)
-{
-	dataSync.backends.Device.dataStore.collection.add({ deviceId: id, name: name });
-	winston.debug("device connected (id: "+id+", name: "+name+")");
-});
-
-deviceServer.on("disconnect", function(id, name)
-{
-	var collection = dataSync.backends.Device.dataStore.collection;
-
-	var model = collection.find(function(device)
-	{
-		return device.get("deviceId") == id;
-	});
-
-	collection.remove(model);
-	winston.debug("device disconnected (id: "+id+", name: "+name+")");
-});
-
-// user should see list of projects, stored inside of Project.json
-var projects = dataSync.backends.Project.dataStore.collection;
-var files = dataSync.backends.File.dataStore.collection;
-
-files.on("change", function(file)
-{
-	winston.debug("files change event!");
-
-	var filePath = file.path();
-
-	// TODO: add creation of path to where file is supposed to be saved
-	fs.writeFile(filePath, file.get("text"), "utf8", 
-		function(err)
-	{
-		if (err) return winston.error("Couldn't save file to " + filePath + "!");
-
-		winston.debug("saved file to " + filePath);
-	});
-});
-
-// when a new project is created
-projects.on("add", function(project)
-{
-	var file = new File({ 
-		text: "#include <LPC1313.h>\n\nint main()\n{\n\treturn 0;\n}\n", 
-		name: "main.cpp", 
-		project: project.toJSON() });
-
-	project.addFile(file.path());
-
-	// set active files to new project's file
-	files.reset([file]);
-});
+var core = new Core(app);
+core.init();
 
 }).call(this);

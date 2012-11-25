@@ -1,13 +1,14 @@
 {
 	"name": "galago-ide",
 	"version": "0.0.1",
+	"private": true,
 	"description": "Galago web-based IDE",
 	"main": "server/server.js",
 	"dependencies":
 	{
 		"socket.io": ">0",
 		"backbone": ">0",
-		"backbone.io": ">0",
+		"backbone.io": "git://github.com/exhaze/backbone.io.git",
 		"express": "2.x.x",
 		"underscore": ">0",
 		"winston": ">0",
