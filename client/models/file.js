@@ -8,6 +8,11 @@ define(function(require)
 
 	var FileModel = Backbone.Model.extend(
 	{
+		defaults:
+		{
+			buildStatus: "unverified"
+		},
+
 		path: function()
 		{
 			if (!this.get("project"))
@@ -18,6 +23,11 @@ define(function(require)
 			}
 
 			return this.get("project").path + "/" + this.get("name");
+		},
+
+		validate: function(attrs)
+		{
+			if (!attrs.name) return "must have a name";
 		}
 	});
 

@@ -13,16 +13,9 @@ define(function(require)
 			files: [],
 		},
 
-		initialize: function()
-		{
-			this.set("path", "/Users/exhaze/projects/galago/" + this.get("name"));
-		},
-
 		validate: function(attrs)
 		{
-			// project requires: name
 			if (!attrs.name) return "must have a name";
-			if (!attrs.path) return "must have a path";
 		},
 
 		addFile: function(path)

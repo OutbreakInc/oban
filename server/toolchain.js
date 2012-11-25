@@ -2,44 +2,69 @@
 {
 
 var spawn = require("child_process").spawn,
-	fs = require("fs");
+	fs = require("fs"),
+	utils = require("./utils");
 
 module.exports = {};
 
 var BUILDER = "../SDK/scripts/build.sh";
-var PROJECT_PATH = process.env.HOME + "/outbreak/";
 
-module.exports.build = function(sources, name)
+module.exports =
 {
+
+build: function(sources, name, outputPath)
+{
+	if (!fs.existsSync(outputPath))
+	{
+		fs.mkdirSync(outputPath);
+	}
+
+	var buildDir = outputPath + "/build";
+
+	if (!fs.existsSync(buildDir))
+	{
+		fs.mkdirSync(buildDir);
+	};
+
 	var buildProcess = spawn(BUILDER, [name, sources.join(" ")], 
 		{ 
 			env: 
 			{ 
 				PART: "lpc1343", 
-				BUILD_DIR: PROJECT_PATH + name 
+				BUILD_DIR: "\"" + buildDir + "\""
 			} 
 		});
 
 	buildProcess.stderr.setEncoding("utf8");
-	buildProcess.stderr.on("data", function()
+	buildProcess.stderr.on("data", function(err)
 	{
-		console.log(arguments);
+		console.log(err);
 	});
 
 	buildProcess.stdout.setEncoding("utf8");
 
-	buildProcess.stdout.on("data", function()
+	buildProcess.stdout.on("data", function(data)
 	{
-		console.log(arguments);
+		console.log("data:");
+		console.log(data);
 	});
 
-	buildProcess.on("exit", function()
+	buildProcess.on("exit", function(exitCode)
 	{
 		console.log("exit");
 		console.log(arguments);
+
+		if (exitCode == 0)
+		{
+			callback();
+		}
+		else
+		{
+			callback("")
+		}
 	});
 }
 
-module.exports.build(["derp.cpp", "herp.cpp"], "derp");
+}
 
 }).call(this);
