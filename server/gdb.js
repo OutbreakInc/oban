@@ -3,6 +3,7 @@
 
 var spawn = require("child_process").spawn,
 	fs = require("fs"),
+	path = require("path"),
 	GdbListener = require("./gdb/listener"),
 	Parser = require("./gdb/parser");
 
@@ -43,10 +44,11 @@ Gdb.prototype.setListener = function(listener)
 // start gdb process and connect to our local gdb server
 Gdb.prototype.run = function(symbolFile)
 {
-	this.process = spawn(this.binary);
+	this.process = spawn(this.binary, [], {cwd: path.dirname(symbolFile)});
 
-	this.process.stdin.write("file " + symbolFile + "\n");
-	this.process.stdin.write("target remote localhost:1033\n");
+	this.rawCommand("file " + symbolFile);
+
+	// this.process.stdin.write("target remote localhost:1033\n");
 
 	// if we don't set encoding, data will be given to us as Buffer objects
 	this.process.stdout.setEncoding("utf8");
@@ -96,6 +98,11 @@ Gdb.prototype.process = function()
 	return this.process;
 };
 
+Gdb.prototype.isRunning = function()
+{
+	return !!this.process;
+}
+
 Gdb.prototype.rawCommand = function(command) 
 {
 	this.process.stdin.write(command + "\n");
@@ -119,6 +126,7 @@ Gdb.prototype.pause = function()
 
 Gdb.prototype.exit = function()
 {
+	this.pause();
 	this.process.stdin.write("quit\n");
 	this.process.stdin.end();
 }

@@ -3,7 +3,7 @@
 
 var spawn = require("child_process").spawn,
 	fs = require("fs"),
-	utils = require("./utils");
+	path = require("path");
 
 module.exports = {};
 
@@ -12,8 +12,13 @@ var BUILDER = "../SDK/scripts/build.sh";
 module.exports =
 {
 
-build: function(sources, name, outputPath)
+build: function(project, callback)
 {
+	var sources = project.get("files"),
+		name = project.get("name"),
+		path = project.get("path");
+
+
 	if (!fs.existsSync(outputPath))
 	{
 		fs.mkdirSync(outputPath);
@@ -26,18 +31,22 @@ build: function(sources, name, outputPath)
 		fs.mkdirSync(buildDir);
 	};
 
-	var buildProcess = spawn(BUILDER, [name, sources.join(" ")], 
+	console.log(buildDir);
+
+	var buildProcess = spawn(BUILDER, ["-g", sources.join(" ")], 
 		{ 
 			env: 
 			{ 
 				PART: "lpc1343", 
-				BUILD_DIR: "\"" + buildDir + "\""
-			} 
+				BUILD_DIR: buildDir
+			},
+			cwd: buildDir
 		});
 
 	buildProcess.stderr.setEncoding("utf8");
 	buildProcess.stderr.on("data", function(err)
 	{
+		console.log("error:");
 		console.log(err);
 	});
 
@@ -56,7 +65,7 @@ build: function(sources, name, outputPath)
 
 		if (exitCode == 0)
 		{
-			callback();
+			callback(buildDir + "/a.out");
 		}
 		else
 		{

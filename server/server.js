@@ -2,16 +2,9 @@
 {
 var express = require("express"),
 	app = express.createServer(),
-	gdb = require("./gdb-hook"),
-	fs = require("fs"),
-	utils = require("./utils"),
 	winston = require("winston"),
-	File = require("../client/models/file"),
 	logging = require("./logging"),
-	toolchain = require("./toolchain"),
 	Core = require("./core");
-
-var GDB_SCRIPT = "demo.gdb";
 
 logging.configure(winston);
 
