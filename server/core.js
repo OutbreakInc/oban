@@ -21,22 +21,29 @@ Core.prototype =
 
 init: function()
 {
-	winston.debug("initializng directories");
+	winston.debug("initializing directories");
 	this._initDirectories();
 
 	winston.debug("loading data sync module");
 	this.dataSync = new DataSync(this.app);
 	this.dataSync.load();
+
 	// this.dataSync.socket.set("log level", 1);
+
+	this.socket = this.dataSync.socket;
 
 	winston.debug("loading device server module");
 
 	this.deviceServer = new DeviceServer;
 	this.deviceServer.run();
 
+	this.gdb = new Gdb("gdb");
+
 	this._bindDeviceServerEvents();
 	this._bindFileEvents();
 	this._bindProjectEvents();
+
+	this._bindGdbEvents();
 },
 
 _initDirectories: function()
@@ -84,15 +91,15 @@ _bindFileEvents: function()
 
 	function loadFile(file)
 	{
-		if (file.get("text"))
+		// sync with existing file on disk, if possible
+		if (fs.exists(file.path()))
 		{
-			self._saveFile(file);
+			winston.debug("restoring " + file.path() + " from file");
+			self._readFile(file);
 		}
 		else
 		{
-			// load text from file
-			winston.debug("restoring " + file.path() + " from file");
-			self._readFile(file);
+			self._saveFile(file);	
 		}
 	}
 
@@ -104,7 +111,7 @@ _bindFileEvents: function()
 
 	files.on("change", function()
 	{
-		console.log(arguments);
+		// console.log(arguments);
 	});
 
 	files.on("add", loadFile);
@@ -119,48 +126,40 @@ _bindFileEvents: function()
 		winston.debug("file text change event!");
 		self._saveFile(file);
 	});
-
-	files.on("change:buildStatus", function(file)
-	{
-		winston.debug("build status changed for file: " + file.get("name"));
-
-		var project = projects.get(file.get("project").id);
-
-		winston.debug("build status: " + file.get("buildStatus"));
-		console.log(project.toJSON());
-
-		switch (file.get("buildStatus"))
-		{
-		case "verify":
-		{
-			toolchain.build(
-				[file.path()], 
-				file.get("name"),
-				project.get("path"),
-				function(err)
-				{
-					self._onBuildFinished(err, file);
-				});
-		}
-
-		}
-	});	
 },
 
-_onBuildFinished: function(err, file)
+_onBuildFinished: function(err, project, outputFile)
 {
-	var files = this.dataSync.collections.File;
-
 	if (err)
 	{
+		project.set("buildStatus", "errors");
 		// return all error messages to frontend
 		// also return lines where errors happened
 	}
 	else
 	{
-		file.set("buildStatus", "compiled");
+		project.set("buildStatus", "compiled");
+		project.set("binary", outputFile);
 	}
 },
+
+_onRun: function(project)
+{
+	// assume project is built for now, change this later
+	// to build the project if it isn't built
+	switch (project.get("buildStatus"))
+	{
+	case "compiled":
+	{
+		this.gdb.run(project.get("binary"));
+	}
+	}
+},
+
+_onStop: function(project)
+{
+	this.gdb.stop();
+}
 
 _bindProjectEvents: function()
 {
@@ -187,6 +186,57 @@ _bindProjectEvents: function()
 		// set active files to new project's file
 		files.reset([file]);
 	});
+
+	projects.on("change:buildStatus", function(project)
+	{
+		winston.debug("build status changed for project: " + project.get("name"));
+
+		winston.debug("build status: " + project.get("buildStatus"));
+		console.log(project.toJSON());
+
+		switch (project.get("buildStatus"))
+		{
+		case "verify":
+		{
+			toolchain.build(project,
+				function(err, outputFile)
+				{
+					self._onBuildFinished(err, project, outputFile);
+				});
+			break;
+		}
+
+		}
+	});
+
+	projects.on("change:runStatus", function(project)
+	{
+		winston.debug("run status changed for project: " + project.get("name"));
+
+		winston.debug("run status: " + project.get("runStatus"));
+		console.log(project.toJSON());
+
+		switch (project.get("runStatus"))
+		{
+		case "start":
+		{
+			self._onRun(project);
+			break;
+		}
+		case "stop":
+		{
+			self._onStop(project);
+			break;
+		}
+		}		
+
+	});
+},
+
+_bindGdbEvents: function()
+{
+	var self = this;
+	self.gdb.attachClient(this.socket);
 },
 
 _readFile: function(file)

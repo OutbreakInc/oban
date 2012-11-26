@@ -6,7 +6,7 @@ var fs = require("fs"),
 	utils = require("./utils"),
 	_ = require("underscore");
 
-var MS_BETWEEN_SAVES = 1000;
+var MS_BETWEEN_SAVES = 500;
 
 module.exports = {};
 
