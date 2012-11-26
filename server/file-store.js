@@ -12,7 +12,6 @@ module.exports = {};
 
 module.exports.middleware = function(collection)
 {
-	var recentlySaved = false;
 	var fileName = utils.settingsDir() + "/" + collection.name + ".json";
 
 	winston.debug("created file store middleware: " + collection.name);

@@ -43,6 +43,17 @@ load: function()
 	this.socket = backboneio.listen(this.app, this.backends);
 },
 
+// instantiate req.model as a Model
+_prepareModel: function(model)
+{
+	return function(req, res, next)
+	{
+		req.model = new model(req.model);
+		req.model.set("fromClient", { next: next });
+		next();
+	}
+},
+
 _loadModel: function(model)
 {
 	var backend = backboneio.createBackend();
@@ -52,6 +63,8 @@ _loadModel: function(model)
 
 	dataStore.collection.bindToBackend(backend);
 
+	// the middleware must be in this order
+	backend.use(this._prepareModel(model));
 	backend.use(dataStore.middleware());
 	backend.dataStore = dataStore;
 
