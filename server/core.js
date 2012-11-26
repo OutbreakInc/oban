@@ -7,7 +7,8 @@ var winston = require("winston"),
 	DataSync = require("./sync"),
 	DeviceServer = require("./device-server"),
 	toolchain = require("./toolchain"),
-	File = require("../client/models/file");
+	File = require("../client/models/file"),
+	Gdb = require("./gdb-client");
 
 function Core(app)
 {
