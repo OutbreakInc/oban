@@ -12,6 +12,8 @@ var $ = require("jquery"),
 
 require("ace/mode-c_cpp");
 
+var Range = ace.require("ace/range").Range;
+
 App.FileModel = require("app/models/file");
 App.DeviceModel = require("app/models/device");
 App.ProjectModel = require("app/models/project");
@@ -128,7 +130,12 @@ App.Devices = new App.DeviceCollection;
 
 App.DebugView = Backbone.View.extend(
 {
-	initialize: function()
+	events:
+	{
+		"click .continueButton": "onContinue"
+	},
+
+	initialize: function(options)
 	{
 		_.bindAll(this);
 
@@ -139,6 +146,7 @@ App.DebugView = Backbone.View.extend(
 		var self = this;
 
 		this.socket.on("gdb_message", this.onData);
+		this.socket.on("gdb_break", this.onBreakpoint);
 
 		this.model.save("runStatus", "stop");
 		this.model.save("runStatus", "start",
@@ -148,12 +156,46 @@ App.DebugView = Backbone.View.extend(
 				self.$el.removeClass("hiddenView");
 			}
 		});
+
+		this.editor = options.editor;
 	},
 
 	onData: function(data)
 	{
 		data = data.replace("\n", "<br>");
 		this.messageView.append(data + "<br>");		
+	},
+
+	setMarker: function(line)
+	{
+		var line = parseInt(line, 10);
+        var row = line - 1;
+		var range = new Range(row, 0, row, 100);
+
+		this.clearMarker();
+
+        this.breakPointMark = 
+        	this.editor.session.addMarker(range, "ace_selection", "background");
+	},
+
+	clearMarker: function()
+	{
+        if (this.breakPointMark)
+        {
+            this.editor.session.removeMarker(this.breakPointMark);
+            delete this.breakPointMark;
+        }
+	},
+
+	onBreakpoint: function(data)
+	{
+		this.setMarker(data.line);
+	},
+
+	onContinue: function()
+	{
+		this.socket.emit("gdb_command", "continue");
+		this.clearMarker();
 	},
 
 	unbindEvents: function()
@@ -259,7 +301,10 @@ App.EditorView = Backbone.View.extend(
 			this.debugView.unbindEvents();
 		}
 
-		this.debugView = new App.DebugView({ el: ".debugView", model: this.activeProject });
+		this.debugView = new App.DebugView({ 
+			el: ".debugView", 
+			model: this.activeProject,
+			editor: this.editor });
 	},
 
 	onBuildStatus: function(err)

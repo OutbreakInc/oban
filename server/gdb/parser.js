@@ -9,9 +9,12 @@ utils.getLineNumber = function(data)
 
 	for (var i = 0; i < lines.length; ++i)
 	{
-		var lineNumber = lines[i].match(/^[0-9]+/);
+		var lineNumber = lines[i].match(/line ([0-9])+./);
 
-		if (lineNumber) return lineNumber[0];
+		console.log("LINENUMBER");
+		console.log(lineNumber);
+
+		if (lineNumber) return lineNumber[1];
 	}
 
 	return -1;
@@ -85,7 +88,7 @@ Parser.prototype.setFakeBreakpoint = function(lineNumber)
 Parser.prototype.onHitBreakpoint = function(data, client)
 {
 	console.log("onHitBreakpoint");
-	console.log(this);
+	console.log(data);
 	var line = utils.getLineNumber(data);
 
 	if (!this.fakeBreakpoint && line == 0) return;

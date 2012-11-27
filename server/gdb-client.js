@@ -63,7 +63,7 @@ attachClient: function(client)
 	});
 
 	listener.on(/All defined variables/, parser.onShowVariables);
-	listener.on(/stopped/, parser.onHitBreakpoint);
+	listener.on(/Breakpoint [0-9]* at/, parser.onHitBreakpoint);
 
 	listener.on(/.*/, parser.onData);
 
