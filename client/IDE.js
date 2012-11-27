@@ -14,6 +14,7 @@ require("ace/mode-c_cpp");
 App.FileModel = require("app/models/file");
 App.DeviceModel = require("app/models/device");
 App.ProjectModel = require("app/models/project");
+App.IdeModel = require("app/models/ide");
 
 require("backbone.io");
 require("yui/treeview-min");
@@ -72,7 +73,16 @@ Date.prototype.toCompactString = function()
 ////////////////////////////////
 
 // model/collections
-App.EditorModel = Backbone.Model.extend();
+App.IdeCollection = Backbone.Collection.extend(
+{
+	backend: "Ide",
+	model: App.IdeModel,
+
+	initialize: function()
+	{
+		this.bindBackend();
+	}
+});
 
 App.ProjectCollection = Backbone.Collection.extend(
 {
@@ -129,7 +139,10 @@ App.EditorView = Backbone.View.extend(
 	{
 		_.bindAll(this);
 
-		this.model = new App.EditorModel();
+		this.collection = new App.IdeCollection;
+		this.collection.fetch();
+
+		this.collection.on("reset", this.setup);
 
 		this.deviceListView = new App.DeviceListView(
 		{
@@ -143,7 +156,7 @@ App.EditorView = Backbone.View.extend(
 		App.Files.on("add", this.addFile);
 		App.Files.on("reset", this.addAll);
 
-		this.model.on("change", this.render);
+		// this.model.on("change", this.render);
 		this.editor = ace.edit(this.$el.find(".documentView")[0]);
 		
 		this.editor.setTheme("ace/theme/chrome");
@@ -169,14 +182,46 @@ App.EditorView = Backbone.View.extend(
 		this.editor.on("guttermousedown", this.toggleBreakpoint);
 
 		$(".runcontrols #verifyButton").click(this.verifyBuild);
+		$(".runcontrols #runButton").click(this.run);
 		// this.fileView.model.on("change:buildStatus", this.onBuildStatus);
+	},
+
+	setup: function()
+	{
+		// set single instance of IDE model
+		this.model = this.collection.at(0);
+
+		// load currently active project
+		var id = this.model.get("activeProject");
+
+		if (id !== undefined)
+		{
+			this.activeProject = App.Projects.get(id);
+
+			// load active project's first file
+			App.Files.fetch();
+			this.activeFile = App.Files.at(0);
+		}
+		else
+		{
+			// show welcome screen and list of projects
+			// var view = new App.WelcomeView;
+		}
 	},
 
 	verifyBuild: function()
 	{
 		// tell backend to compile the file
-		this.fileView.model.set("buildStatus", "verify");
-		this.fileView.model.save();
+		this.activeProject.set("buildStatus", "verify");
+		this.activeProject.save();
+	},
+
+	run: function()
+	{
+		this.activeProject.set("runStatus", "stop");
+		this.activeProject.save();
+		this.activeProject.set("runStatus", "start");
+		this.activeProject.save();
 	},
 
 	onBuildStatus: function(err)
@@ -232,7 +277,17 @@ App.EditorView = Backbone.View.extend(
 	createProject: function()
 	{
 		console.log("create");
-		this.activeProject = App.Projects.create({ name: "hello-world" });
+		var projectName = prompt("Enter your project's name", "hello-world");
+
+		if (projectName)
+		{
+			this.activeProject = App.Projects.create({ name: projectName }, { wait: true });
+		}
+	},
+
+	openProject: function(project)
+	{
+		this.activeProject = project;
 	},
 	
 	update: function()
@@ -253,6 +308,26 @@ App.EditorView = Backbone.View.extend(
 	}
 });
 
+App.ProjectView = Backbone.View.extend(
+{
+	initialize: function(options)
+	{
+		_.bindAll(this);
+
+		this.session = options.session;
+
+		this.model.on("change:buildStatus", this.onBuildStatus);
+
+		this.session.on("change", this.save);		
+	},
+
+	onBuildStatus: function()
+	{
+		console.log("buildStatus");
+		console.log(arguments);
+	}
+});
+
 App.FileView = Backbone.View.extend(
 {
 	initialize: function(options)
@@ -264,15 +339,7 @@ App.FileView = Backbone.View.extend(
 		this.model.on("change", this.render);
 		this.model.on("destroy", this.remove);
 
-		this.model.on("change:buildStatus", this.onBuildStatus);
-
 		this.session.on("change", this.save);
-	},
-
-	onBuildStatus: function()
-	{
-		console.log("buildStatus");
-		console.log(arguments);
 	},
 
 	render: function()
@@ -357,7 +424,7 @@ $(document).ready(function()
 
 	Backbone.io.connect();
 
-	App.Files.fetch();
+	App.Projects.fetch();
 	
 	App.Editor = new App.EditorView({el: $(".editorView")});
 });

@@ -87,15 +87,9 @@ Gdb.prototype.run = function(symbolFile)
 
 		if (gdb.isDebugging)
 		{
-			console.log("gdb output:");
-			console.log(data);
+			console.log("gdb output: ", data);
 		}
 	});
-};
-
-Gdb.prototype.process = function() 
-{
-	return this.process;
 };
 
 Gdb.prototype.isRunning = function()
@@ -121,14 +115,20 @@ Gdb.prototype.resume = function()
 
 Gdb.prototype.pause = function()
 {
-	this.process.kill("SIGINT");
+	if (this.process)
+	{
+		this.process.kill("SIGINT");
+	}
 }
 
 Gdb.prototype.exit = function()
 {
-	this.pause();
-	this.process.stdin.write("quit\n");
-	this.process.stdin.end();
+	if (this.process)
+	{
+		this.pause();
+		this.process.stdin.write("quit\n");
+		this.process.stdin.end();
+	}
 }
 
 Gdb.prototype.getGlobalVariables = function()

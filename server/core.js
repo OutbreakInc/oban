@@ -43,14 +43,40 @@ init: function()
 	this._bindDeviceServerEvents();
 	this._bindFileEvents();
 	this._bindProjectEvents();
+	this._bindIdeEvents();
 
 	this._bindGdbEvents();
+
+	this._initIde();
 },
 
 _initDirectories: function()
 {
 	this._mkdirIfNotExist(utils.projectsDir());
 	this._mkdirIfNotExist(utils.settingsDir());
+},
+
+_initIde: function()
+{
+	var ides = this.dataSync.collections.Ide;
+	var projects = this.dataSync.collections.Project;
+	var files = this.dataSync.collections.File;
+
+	if (ides.length === 0)
+	{
+		ides.add({ activeProject: projects.at(0).id });
+	}
+
+	var ide = ides.at(0);
+
+	var project = projects.get(ide.get("activeProject"));
+
+	var file = new File({
+		name: "main.cpp", 
+		project: project.toJSON() });
+
+	// set active files to new project's file
+	files.reset([file]);
 },
 
 _mkdirIfNotExist: function(dir)
@@ -93,7 +119,7 @@ _bindFileEvents: function()
 	function loadFile(file)
 	{
 		// sync with existing file on disk, if possible
-		if (fs.exists(file.path()))
+		if (fs.existsSync(file.path()))
 		{
 			winston.debug("restoring " + file.path() + " from file");
 			self._readFile(file);
@@ -160,7 +186,7 @@ _onRun: function(project)
 _onStop: function(project)
 {
 	this.gdb.stop();
-}
+},
 
 _bindProjectEvents: function()
 {
@@ -232,6 +258,11 @@ _bindProjectEvents: function()
 		}		
 
 	});
+},
+
+_bindIdeEvents: function()
+{
+
 },
 
 _bindGdbEvents: function()

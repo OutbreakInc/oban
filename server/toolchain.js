@@ -18,10 +18,9 @@ build: function(project, callback)
 		name = project.get("name"),
 		path = project.get("path");
 
-
-	if (!fs.existsSync(outputPath))
+	if (!fs.existsSync(path))
 	{
-		fs.mkdirSync(outputPath);
+		fs.mkdirSync(path);
 	}
 
 	var buildDir = outputPath + "/build";
@@ -65,11 +64,11 @@ build: function(project, callback)
 
 		if (exitCode == 0)
 		{
-			callback(buildDir + "/a.out");
+			callback(null, buildDir + "/a.out");
 		}
 		else
 		{
-			callback("")
+			callback("Build failed");
 		}
 	});
 }
