@@ -58,11 +58,14 @@ attachClient: function(client)
 
 	client.on("disconnect", function()
 	{
-		self.gdb.exit();
+		self.gdb.removeListener();
+		self.stop();
 	});
 
 	listener.on(/All defined variables/, parser.onShowVariables);
 	listener.on(/stopped/, parser.onHitBreakpoint);
+
+	listener.on(/.*/, parser.onData);
 
 	this.gdb.setListener(listener);
 }

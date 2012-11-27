@@ -130,15 +130,36 @@ App.DebugView = Backbone.View.extend(
 {
 	initialize: function()
 	{
+		_.bindAll(this);
+
+		this.messageView = this.$(".messageView");
+		this.messageView.html("");
 		this.socket = io.connect();
 
-		this.socket.on("gdb_message", function(data)
+		var self = this;
+
+		this.socket.on("gdb_message", this.onData);
+
+		this.model.save("runStatus", "stop");
+		this.model.save("runStatus", "start",
 		{
-
+			success: function(project, response)
+			{
+				self.$el.removeClass("hiddenView");
+			}
 		});
+	},
 
+	onData: function(data)
+	{
+		data = data.replace("\n", "<br>");
+		this.messageView.append(data + "<br>");		
+	},
+
+	unbindEvents: function()
+	{
+		this.socket.removeListener("gdb_message", this.onData);
 	}
-
 });
 
 App.EditorView = Backbone.View.extend(
@@ -154,8 +175,6 @@ App.EditorView = Backbone.View.extend(
 	initialize: function()
 	{
 		_.bindAll(this);
-
-		this.debugView = new App.DebugView({ el: ".debugView" });
 
 		this.collection = new App.IdeCollection;
 		this.collection.fetch();
@@ -235,15 +254,12 @@ App.EditorView = Backbone.View.extend(
 
 	run: function()
 	{
-		this.activeProject.save("runStatus", "stop");
-		this.activeProject.save("runStatus", "start",
-			{
-				success: function(project, response)
-				{
-					console.log(arguments);
-					$(".debugView").removeClass("hiddenView");
-				}
-			});
+		if (this.debugView)
+		{
+			this.debugView.unbindEvents();
+		}
+
+		this.debugView = new App.DebugView({ el: ".debugView", model: this.activeProject });
 	},
 
 	onBuildStatus: function(err)

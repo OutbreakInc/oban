@@ -16,13 +16,13 @@ GdbListener.prototype.on = function(pattern, callback)
 
 GdbListener.prototype.emit = function(data)
 {	
-	var that = this;
+	var self = this;
 
 	this.listeners.forEach(function(listener)
 	{
 		if (listener.pattern.exec(data))
 		{
-			listener.callback(data, that.client);
+			listener.callback(data, self.client);
 		}
 	});
 }

@@ -268,7 +268,13 @@ _bindIdeEvents: function()
 _bindGdbEvents: function()
 {
 	var self = this;
-	self.gdb.attachClient(this.socket);
+
+	// todo: support multiple clients attaching to GDB
+	this.socket.on("connection", function(client)
+	{
+		console.log("ATTACH");
+		self.gdb.attachClient(client);
+	});
 },
 
 _readFile: function(file)
