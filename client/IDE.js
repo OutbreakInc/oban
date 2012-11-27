@@ -7,7 +7,8 @@ var $ = require("jquery"),
 	_ = require("underscore"),
 	Backbone = require("backbone"),
 	YAHOO = require("yui/yahoo-dom-event"),
-	ace = require("ace/ace");
+	ace = require("ace/ace"),
+	io = require("socket.io");
 
 require("ace/mode-c_cpp");
 
@@ -125,6 +126,21 @@ App.Devices = new App.DeviceCollection;
 
 // views
 
+App.DebugView = Backbone.View.extend(
+{
+	initialize: function()
+	{
+		this.socket = io.connect();
+
+		this.socket.on("gdb_message", function(data)
+		{
+
+		});
+
+	}
+
+});
+
 App.EditorView = Backbone.View.extend(
 {
 	addToProjectList: function(project)
@@ -138,6 +154,8 @@ App.EditorView = Backbone.View.extend(
 	initialize: function()
 	{
 		_.bindAll(this);
+
+		this.debugView = new App.DebugView({ el: ".debugView" });
 
 		this.collection = new App.IdeCollection;
 		this.collection.fetch();
@@ -183,7 +201,6 @@ App.EditorView = Backbone.View.extend(
 
 		$(".runcontrols #verifyButton").click(this.verifyBuild);
 		$(".runcontrols #runButton").click(this.run);
-		// this.fileView.model.on("change:buildStatus", this.onBuildStatus);
 	},
 
 	setup: function()
@@ -218,10 +235,15 @@ App.EditorView = Backbone.View.extend(
 
 	run: function()
 	{
-		this.activeProject.set("runStatus", "stop");
-		this.activeProject.save();
-		this.activeProject.set("runStatus", "start");
-		this.activeProject.save();
+		this.activeProject.save("runStatus", "stop");
+		this.activeProject.save("runStatus", "start",
+			{
+				success: function(project, response)
+				{
+					console.log(arguments);
+					$(".debugView").removeClass("hiddenView");
+				}
+			});
 	},
 
 	onBuildStatus: function(err)
@@ -297,7 +319,6 @@ App.EditorView = Backbone.View.extend(
 
 	addFile: function(file)
 	{
-		console.log(file);
 		this.fileView = new App.FileView({ model: file, session: this.session });
 		this.fileView.render();
 	},
@@ -346,7 +367,6 @@ App.FileView = Backbone.View.extend(
 	{
 		console.log("render");
 		var text = this.model.toJSON().text;
-		console.log(text);
 		this.session.setValue(text, { renderCall: true });
 		return this;
 	},

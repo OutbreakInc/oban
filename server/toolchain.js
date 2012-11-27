@@ -7,7 +7,8 @@ var spawn = require("child_process").spawn,
 
 module.exports = {};
 
-var BUILDER = "../SDK/scripts/build.sh";
+// var BUILDER = path.resolve("../SDK/scripts/build.sh");
+var BUILDER = "gcc";
 
 module.exports =
 {
@@ -23,7 +24,7 @@ build: function(project, callback)
 		fs.mkdirSync(path);
 	}
 
-	var buildDir = outputPath + "/build";
+	var buildDir = path; // + "/build";
 
 	if (!fs.existsSync(buildDir))
 	{
