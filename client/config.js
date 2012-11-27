@@ -22,6 +22,11 @@ requirejs.config(
 			exports: "_"
 		},
 
+		"socket.io":
+		{
+			exports: "io"
+		},
+
 		"backbone.io" : [ "backbone", "socket.io" ],
 
 		"yui/yahoo-dom-event":
