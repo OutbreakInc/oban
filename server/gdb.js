@@ -4,7 +4,6 @@
 var spawn = require("child_process").spawn,
 	fs = require("fs"),
 	path = require("path"),
-	GdbListener = require("./gdb/listener"),
 	Parser = require("./gdb/parser");
 
 function Gdb(binary)
@@ -27,11 +26,6 @@ Gdb.prototype.setDebugging = function(isEnabled)
 // sets up a listener which will be passed all GDB output
 Gdb.prototype.setListener = function(listener) 
 {
-	if (this.listener)
-	{
-		delete this.listener;
-	}
-
 	if (!listener)
 	{
 		console.warn("WARNING: listener is undefined");
@@ -40,6 +34,11 @@ Gdb.prototype.setListener = function(listener)
 
 	this.listener = listener;
 };
+
+Gdb.prototype.removeListener = function()
+{
+	delete this.listener;
+}
 
 // start gdb process and connect to our local gdb server
 Gdb.prototype.run = function(symbolFile)
@@ -104,13 +103,13 @@ Gdb.prototype.rawCommand = function(command)
 
 Gdb.prototype.setBreakpoint = function(line)
 {
-	this.process.stdin.write("b " + line + "\n");
+	this.rawCommand("b " + line);
 	// TODO: add to internal list of breakpoints to easily clear later
 }
 
 Gdb.prototype.resume = function()
 {
-	this.process.stdin.write("c\n");
+	this.rawCommand("c");
 }
 
 Gdb.prototype.pause = function()
@@ -126,14 +125,15 @@ Gdb.prototype.exit = function()
 	if (this.process)
 	{
 		this.pause();
-		this.process.stdin.write("quit\n");
+		this.rawCommand("quit");
 		this.process.stdin.end();
+		delete this.process;
 	}
 }
 
 Gdb.prototype.getGlobalVariables = function()
 {
-	this.process.stdin.write("info variables\n");
+	this.rawComand("info variables");
 }
 
 module.exports = Gdb;

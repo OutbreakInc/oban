@@ -98,6 +98,11 @@ Parser.prototype.onHitBreakpoint = function(data, client)
 	client.emit("gdb_break", {line: line});
 }
 
+Parser.prototype.onData = function(data, client)
+{
+	client.emit("gdb_message", data);
+}
+
 module.exports = Parser;
 
 }).call(this);
