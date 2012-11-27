@@ -18,15 +18,15 @@ GdbClient.prototype =
 
 run: function(file)
 {
-	gdb.run(file);
-	// gdb.setDebugging(true);
-	// gdb.run("demo.elf");
-	gdb.rawCommand("b main");
+	this.gdb.run(file);
+	// this.gdb.setDebugging(true);
+	// this.gdb.run("demo.elf");
+	this.gdb.rawCommand("b main");
 },
 
 stop: function()
 {
-	gdb.stop();
+	this.gdb.exit();
 },
 
 attachClient: function(client)
@@ -36,27 +36,29 @@ attachClient: function(client)
 
 	var listener = new GdbListener(client);
 
+	var self = this;
+
 	client.on("gdb_command", function(command, data)
 	{
 		console.log("client command: ", command);
-		gdb.rawCommand(command);
+		self.gdb.rawCommand(command);
 	});
 
 	client.on("gdb_break", function(line)
 	{
 		parser.setFakeBreakpoint(line);
-		gdb.setBreakpoint(line);
-		gdb.resume();
+		self.gdb.setBreakpoint(line);
+		self.gdb.resume();
 	});
 
 	client.on("gdb_sigint", function()
 	{
-		gdb.pause();
+		self.gdb.pause();
 	});
 
 	client.on("disconnect", function()
 	{
-		gdb.exit();
+		self.gdb.exit();
 	});
 
 	listener.on(/All defined variables/, parser.onShowVariables);
