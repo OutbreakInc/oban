@@ -21,7 +21,6 @@ run: function(file)
 	this.gdb.run(file);
 	// this.gdb.setDebugging(true);
 	// this.gdb.run("demo.elf");
-	this.gdb.rawCommand("b main");
 },
 
 stop: function()
@@ -63,7 +62,7 @@ attachClient: function(client)
 	});
 
 	listener.on(/All defined variables/, parser.onShowVariables);
-	listener.on(/Breakpoint [0-9]* at/, parser.onHitBreakpoint);
+	listener.on(/at.*[0-9]+/, parser.onHitBreakpoint);
 
 	listener.on(/.*/, parser.onData);
 
