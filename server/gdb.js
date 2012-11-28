@@ -47,7 +47,7 @@ Gdb.prototype.run = function(symbolFile)
 
 	this.rawCommand("file " + symbolFile);
 
-	// this.process.stdin.write("target remote localhost:1033\n");
+	this.rawCommand("target remote localhost:1033");
 
 	// if we don't set encoding, data will be given to us as Buffer objects
 	this.process.stdout.setEncoding("utf8");

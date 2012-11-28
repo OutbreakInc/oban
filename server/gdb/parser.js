@@ -9,7 +9,7 @@ utils.getLineNumber = function(data)
 
 	for (var i = 0; i < lines.length; ++i)
 	{
-		var lineNumber = lines[i].match(/line ([0-9])+./);
+		var lineNumber = lines[i].match(/at[^0-9]*([0-9]+)/);
 
 		console.log("LINENUMBER");
 		console.log(lineNumber);
