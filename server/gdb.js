@@ -11,7 +11,6 @@ var spawn = require("child_process").spawn,
 
 var PYTHON_SCRIPT = utils.scriptsDir() + "/gdb.py";
 var PYTHON_HOST = "127.0.0.1";
-var PYTHON_PORT = 34456;
 
 function Gdb(binary)
 {
@@ -52,53 +51,9 @@ Gdb.prototype.run = function(symbolFile)
 
 	this.isStopped = false;
 
-	setTimeout(function()
-	{
-	this.socket = net.connect({
-		host: PYTHON_HOST,
-		port: PYTHON_PORT }, function()
-		{
-			console.log("Connected to python GDB host");
-		});
+	var gdb = this;
 
-	this.socket.setEncoding("utf8");
-
-	this.socket.on("error", function(err)
-	{
-		console.log("Socket error:");
-		console.log(err);
-	});
-
-	this.socket.on("data", function(data)
-	{
-		if (gdb.isDebugging)
-		{
-			console.log("PYTHON GDB DATA:");
-			console.log(data);
-		}
-
-		data = JSON.parse(data);
-
-		if (data.event)
-		{
-			switch (data.event)
-			{
-			case Gdb.events.STOP:
-				gdb.isStopped = true;
-				break;
-			case Gdb.events.CONTINUE:
-				gdb.isStopped = false;
-				break;
-			}
-
-			gdb.emit(data.event, data.data);
-		}
-
-		gdb.isStopped = true;
-	});
-}, 1000);
-
-	setTimeout(function() { gdb.setBreakpoint(15); gdb.resume() }, 3000);
+	// setTimeout(function() { gdb.setBreakpoint(15); gdb.resume() }, 3000);
 
 	// if we don't set encoding, data will be given to us as Buffer objects
 	this.process.stdout.setEncoding("utf8");
@@ -107,16 +62,21 @@ Gdb.prototype.run = function(symbolFile)
 	this.process.stderr.on("data", function(err)
 	{
 		console.error("ERROR: " + err);
-		console.trace();
 	});
-
-	var gdb = this;
 
 	this.process.stdout.on("data", function(data)
 	{
 		if (gdb.isDebugging)
 		{
 			console.log("gdb output: ", data);
+		}
+
+		// look for special python marker
+		if (data.indexOf("python started on port") != -1)
+		{
+			var port = parseInt(data.split(" ")[4], 10);
+			gdb._connectAttempts = 0;
+			gdb._connectSocket(PYTHON_HOST, port);
 		}
 
 		gdb.emit(Gdb.events.RAW, data);
@@ -175,6 +135,86 @@ Gdb.prototype.getGlobalVariables = function()
 {
 	this.rawComand("info variables");
 }
+
+Gdb.prototype._connectSocket = function(host, port)
+{
+	var gdb = this;
+
+	this.socket = net.connect({
+		host: host,
+		port: port }, 
+		function()
+		{
+			console.log("Connected to python GDB host");
+			gdb._bindEvents();
+
+		});
+
+	this.socket.setEncoding("utf8");
+	this._bindReconnectEvent();
+}
+
+Gdb.prototype._bindReconnectEvent = function()
+{
+	var gdb = this;
+
+	this.socket.on("error", function(err)
+	{
+		// python server may take some time to start, try connecting up to 5 times
+		if (err.code == "ECONNREFUSED")
+		{
+			if (gdb._connectAttempts < 5)
+			{
+				setTimeout(function()
+				{
+					++gdb._connectAttempts;
+					// gdb.socket.destroy();
+					gdb._connectSocket();
+
+				}, 1000);
+			}
+			else
+			{
+				console.log("Exceeded connection attempts to python GDB host");
+			}
+		}
+
+		console.log("Socket error:");
+		console.log(err);
+	});	
+}
+
+Gdb.prototype._bindEvents = function()
+{
+	var gdb = this;
+
+	this.socket.on("data", function(data)
+	{
+		if (gdb.isDebugging)
+		{
+			console.log("PYTHON GDB DATA:");
+			console.log(data);
+		}
+
+		data = JSON.parse(data);
+
+		if (data.event)
+		{
+			switch (data.event)
+			{
+			case Gdb.events.STOP:
+				gdb.isStopped = true;
+				break;
+			case Gdb.events.CONTINUE:
+				gdb.isStopped = false;
+				break;
+			}
+
+			gdb.emit(data.event, data.data);
+		}
+	});	
+}
+
 
 module.exports = Gdb;
 
