@@ -2,13 +2,12 @@
 {
 var spawn = require("child_process").spawn,
 	_ = require("underscore"),
-	GdbListener = require("./gdb/listener"),
 	Parser = require("./gdb/parser"),
 	Gdb = require("./gdb");
 
 function GdbClient()
 {
-	this.gdb = new Gdb("gdb");
+	this.gdb = new Gdb("/usr/local/arm-none-eabi/bin/arm-none-eabi-gdb");
 }
 
 module.exports = GdbClient;
@@ -30,12 +29,17 @@ stop: function()
 
 attachClient: function(client)
 {
-	var parser = new Parser;
+	var parser = new Parser(client);
 	_.bindAll(parser);
 
-	var listener = new GdbListener(client);
-
 	var self = this;
+
+	var events =
+	[
+		{ name: Gdb.events.STOP, callback: parser.onStop },
+		{ name: Gdb.events.CONTINUE, callback: parser.onContinue },
+		{ name: Gdb.events.RAW, callback: parser.onData }
+	];
 
 	client.on("gdb_command", function(command, data)
 	{
@@ -51,22 +55,24 @@ attachClient: function(client)
 	});
 
 	client.on("gdb_sigint", function()
-	{
+	{	
 		self.gdb.pause();
 	});
 
 	client.on("disconnect", function()
 	{
-		self.gdb.removeListener();
+		events.forEach(function(event)
+		{
+			self.gdb.removeListener(event.name, event.callback);
+		});
+
 		self.stop();
 	});
 
-	listener.on(/All defined variables/, parser.onShowVariables);
-	listener.on(/at.*[0-9]+/, parser.onHitBreakpoint);
-
-	listener.on(/.*/, parser.onData);
-
-	this.gdb.setListener(listener);
+	events.forEach(function(event)
+	{
+		self.gdb.on(event.name, event.callback);
+	});
 }
 
 }

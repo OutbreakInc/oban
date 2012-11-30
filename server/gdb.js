@@ -4,10 +4,19 @@
 var spawn = require("child_process").spawn,
 	fs = require("fs"),
 	path = require("path"),
-	Parser = require("./gdb/parser");
+	net = require("net"),
+	EventEmitter = require("events").EventEmitter,
+	util = require("util"),	
+	utils = require("./utils");
+
+var PYTHON_SCRIPT = utils.scriptsDir() + "/gdb.py";
+var PYTHON_HOST = "127.0.0.1";
+var PYTHON_PORT = 34456;
 
 function Gdb(binary)
 {
+	EventEmitter.call(this);
+
 	console.assert(	binary, 
 					"GDB binary must be set");
 
@@ -17,37 +26,79 @@ function Gdb(binary)
 	this.binary = binary;
 }
 
+util.inherits(Gdb, EventEmitter);
+
+Gdb.events =
+{
+	STOP: "stop",
+	CONTINUE: "continue",
+	RAW: "raw"
+};
+
 Gdb.prototype.setDebugging = function(isEnabled) 
 {
 	console.log("set gdb debugging: " + isEnabled);
 	this.isDebugging = isEnabled;
 };
 
-// sets up a listener which will be passed all GDB output
-Gdb.prototype.setListener = function(listener) 
-{
-	if (!listener)
-	{
-		console.warn("WARNING: listener is undefined");
-		console.trace();
-	}
-
-	this.listener = listener;
-};
-
-Gdb.prototype.removeListener = function()
-{
-	delete this.listener;
-}
-
 // start gdb process and connect to our local gdb server
 Gdb.prototype.run = function(symbolFile)
 {
 	this.process = spawn(this.binary, [], {cwd: path.dirname(symbolFile)});
 
+	this.rawCommand("source " + PYTHON_SCRIPT);
 	this.rawCommand("file " + symbolFile);
-
 	this.rawCommand("target remote localhost:1033");
+
+	this.isStopped = false;
+
+	setTimeout(function()
+	{
+	this.socket = net.connect({
+		host: PYTHON_HOST,
+		port: PYTHON_PORT }, function()
+		{
+			console.log("Connected to python GDB host");
+		});
+
+	this.socket.setEncoding("utf8");
+
+	this.socket.on("error", function(err)
+	{
+		console.log("Socket error:");
+		console.log(err);
+	});
+
+	this.socket.on("data", function(data)
+	{
+		if (gdb.isDebugging)
+		{
+			console.log("PYTHON GDB DATA:");
+			console.log(data);
+		}
+
+		data = JSON.parse(data);
+
+		if (data.event)
+		{
+			switch (data.event)
+			{
+			case Gdb.events.STOP:
+				gdb.isStopped = true;
+				break;
+			case Gdb.events.CONTINUE:
+				gdb.isStopped = false;
+				break;
+			}
+
+			gdb.emit(data.event, data.data);
+		}
+
+		gdb.isStopped = true;
+	});
+}, 1000);
+
+	setTimeout(function() { gdb.setBreakpoint(15); gdb.resume() }, 3000);
 
 	// if we don't set encoding, data will be given to us as Buffer objects
 	this.process.stdout.setEncoding("utf8");
@@ -59,35 +110,16 @@ Gdb.prototype.run = function(symbolFile)
 		console.trace();
 	});
 
-	var buffer;
-
 	var gdb = this;
 
 	this.process.stdout.on("data", function(data)
 	{
-		// build up data in buffer until we see that the stream has "terminated"
-		// meaning, we saw a single line at the end with "(gdb)" on it
-
-		buffer += data;
-
-		if (/stopped/.exec(data))
-		{
-			gdb.getGlobalVariables();
-		}
-
-		if (Parser.utils.hasTerminator(data))
-		{
-			if (gdb.listener)
-			{
-				gdb.listener.emit(buffer);
-				buffer = "";
-			}
-		}
-
 		if (gdb.isDebugging)
 		{
 			console.log("gdb output: ", data);
 		}
+
+		gdb.emit(Gdb.events.RAW, data);
 	});
 };
 
@@ -96,13 +128,21 @@ Gdb.prototype.isRunning = function()
 	return !!this.process;
 }
 
-Gdb.prototype.rawCommand = function(command) 
+Gdb.prototype.rawCommand = function(command)
 {
 	this.process.stdin.write(command + "\n");
-};
+}
 
 Gdb.prototype.setBreakpoint = function(line)
 {
+	var convertedLine = parseInt(line, 10);
+
+	if (!convertedLine)
+	{
+		console.error("ERROR: invalid breakpoint line number: " + line);
+		return;
+	}
+
 	this.rawCommand("b " + line);
 	// TODO: add to internal list of breakpoints to easily clear later
 }
