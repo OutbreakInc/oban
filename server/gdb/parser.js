@@ -37,46 +37,24 @@ utils.hasTerminator = function(data)
 	return (lines[lines.length - 1].trim() == "(gdb)");
 }
 
-function Parser()
+function Parser(client)
 {
+	this.client = client;
 }
 
 Parser.utils = utils;
 
-Parser.prototype.onShowVariables = function(data, client) 
+Parser.prototype.onStop = function(data)
 {
-	// protocol:
-	// message: gdb_variables
-	// currently:
-	// data: list of strings containing variable type + name
-	// TODO:
-	// data: list of { type: <data type>, name: <variable name> }
-	var variables = [];
+	this.client.emit("gdb_break", data.location);
+	this.client.emit("gdb_stack", data.backtrace);
+	this.client.emit("gdb_variables", data.blockSymbols);
+}
 
-	var lines = utils.lineSplit(data);
-
-	// remove first two lines, which are just the regex match and file which
-	// we're in, and the last line, which is "(gdb)"
-	lines = lines.slice(3, lines.length - 2);
-
-	lines.forEach(function(line)
-	{
-		var lastSpace = line.lastIndexOf(" ");
-
-		// split up into name and type
-		var item =
-		{
-			name: line.slice(lastSpace, line.length - 1),
-			type: line.slice(0, lastSpace)
-		};
-
-		variables.push(item);
-	});
-
-	// console.log("Sending client list of variables");
-
-	// callback(variables);
-};
+Parser.prototype.onContinue = function(data)
+{
+	this.client.emit("gdb_continue");
+}
 
 Parser.prototype.setFakeBreakpoint = function(lineNumber)
 {
@@ -85,7 +63,7 @@ Parser.prototype.setFakeBreakpoint = function(lineNumber)
 	console.log(this);
 }
 
-Parser.prototype.onHitBreakpoint = function(data, client)
+Parser.prototype.onHitBreakpoint = function(data)
 {
 	console.log("onHitBreakpoint");
 	console.log(data);
@@ -98,12 +76,12 @@ Parser.prototype.onHitBreakpoint = function(data, client)
 
 	if (this.fakeBreakpoint) line = this.fakeBreakpoint;
 
-	client.emit("gdb_break", {line: line});
+	this.client.emit("gdb_break", {line: line});
 }
 
-Parser.prototype.onData = function(data, client)
+Parser.prototype.onData = function(data)
 {
-	client.emit("gdb_message", data);
+	this.client.emit("gdb_message", data);
 }
 
 module.exports = Parser;

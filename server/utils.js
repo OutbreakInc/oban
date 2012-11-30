@@ -29,6 +29,11 @@ projectsDir: function()
 	return projectsDir || module.exports.documentsDir() + "/outbreak-ide";
 },
 
+scriptsDir: function()
+{
+	return __dirname + "/../SDK/scripts";
+},
+
 setProjectsDir: function(dir)
 {
 	projectsDir = dir;

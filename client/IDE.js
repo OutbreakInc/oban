@@ -148,6 +148,8 @@ App.DebugView = Backbone.View.extend(
 
 		this.socket.on("gdb_message", this.onData);
 		this.socket.on("gdb_break", this.onBreakpoint);
+		this.socket.on("gdb_stack", this.onStack);
+		this.socket.on("gdb_variables", this.onVariables);
 
 		this.model.save("runStatus", "stop");
 		this.model.save("runStatus", "start",
@@ -197,6 +199,18 @@ App.DebugView = Backbone.View.extend(
 	{
 		this.socket.emit("gdb_command", "continue");
 		this.clearMarker();
+	},
+
+	onStack: function(stack)
+	{
+		console.log("stack");
+		console.log(stack);
+	},
+
+	onVariables: function(variables)
+	{
+		console.log("variables");
+		console.log(variables);
 	},
 
 	onPause: function()
