@@ -6,7 +6,8 @@ var spawn = require("child_process").spawn,
 	path = require("path"),
 	net = require("net"),
 	EventEmitter = require("events").EventEmitter,
-	util = require("util"),	
+	util = require("util"),
+	_ = require("underscore"),
 	utils = require("./utils");
 
 var PYTHON_SCRIPT = utils.scriptsDir() + "/gdb.py";
@@ -154,7 +155,7 @@ Gdb.prototype.exit = function()
 {
 	if (this.process)
 	{
-		this.pause();
+		this._pause();
 		this.rawCommand("quit");
 		this.process.stdin.end();
 		delete this.process;
@@ -251,7 +252,10 @@ Gdb.prototype._syncBreakpoints = function()
 	// clear all breakpoints first
 	this.rawCommand("delete");
 
-	this._breakpoints.lines.forEach(function(line)
+	console.log("breakpoints:");
+	console.log(this._breakpoints);
+
+	_.keys(this._breakpoints.lines, function(line)
 	{
 		this.rawCommand("b " + line);
 	});
@@ -302,7 +306,7 @@ Gdb.prototype._onStop = function()
 	{
 		this._processActions();	
 	}
-	else
+	else if (this._stopTriggered)
 	{
 		// if there were no actions, the stop was triggered just to
 		// sync breakpoints, so we should resume

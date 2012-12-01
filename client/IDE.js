@@ -144,6 +144,8 @@ App.DebugView = Backbone.View.extend(
 		this.messageView.html("");
 		this.socket = io.connect();
 
+		this.breakpoints = {};
+
 		var self = this;
 
 		this.socket.on("gdb_message", this.onData);
@@ -162,6 +164,39 @@ App.DebugView = Backbone.View.extend(
 		});
 
 		this.editor = options.editor;
+
+		this.editor.on("guttermousedown", this.onSetBreakpoint);
+	},
+
+	onSetBreakpoint: function(event)
+	{
+		var target = event.domEvent.target;
+			
+		if (target.className.indexOf("ace_gutter-cell") == -1) 
+			return; 
+		if (!event.editor.isFocused()) 
+			return; 
+		if (event.clientX > 25 + target.getBoundingClientRect().left) 
+			return; 
+
+		var row = event.getDocumentPosition().row;
+
+		if (this.breakpoints[row]) 
+		{
+			this.editor.session.clearBreakpoint(row);
+			delete this.breakpoints[row];
+		}
+		else 
+		{
+			this.editor.session.setBreakpoint(row);
+			this.breakpoints[row] = true;
+		}
+
+		// rows are zero-indexed, lines are not
+		var line = row + 1;	
+
+		this.socket.emit("gdb_break", line);
+		event.stop();
 	},
 
 	onData: function(data)
@@ -284,8 +319,6 @@ App.EditorView = Backbone.View.extend(
 			
 		}, this), 100);	//this should be done when ACE emits an event that I don't yet know about
 		
-		this.editor.on("guttermousedown", this.toggleBreakpoint);
-
 		$(".runcontrols #verifyButton").click(this.verifyBuild);
 		$(".runcontrols #runButton").click(this.run);
 	},
@@ -344,29 +377,6 @@ App.EditorView = Backbone.View.extend(
 
 		// if err is null, compilation succeeded
 		console.log(arguments);
-	},
-
-	toggleBreakpoint: function(e)
-	{
-		var target = e.domEvent.target;
-			
-		if (target.className.indexOf("ace_gutter-cell") == -1) 
-			return; 
-		if (!e.editor.isFocused()) 
-			return; 
-		if (e.clientX > 25 + target.getBoundingClientRect().left) 
-			return; 
-		var row = e.getDocumentPosition().row;
-		var line = row + 1;
-		if( e.editor.session.getBreakpoints()[row] ) {
-			e.editor.session.clearBreakpoint(row);
-			// setBreakpoint(line, false);
-		}
-		else {
-			e.editor.session.setBreakpoint(row);
-			// setBreakpoint(line, true);
-		}
-		e.stop();	
 	},
 
 	render: function()
