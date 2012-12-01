@@ -132,7 +132,7 @@ App.DebugView = Backbone.View.extend(
 {
 	events:
 	{
-		"click .continueButton": "onContinue",
+		"click .continueButton": "onUserContinue",
 		"click .pauseButton": "onPause"
 	},
 
@@ -150,6 +150,7 @@ App.DebugView = Backbone.View.extend(
 		this.socket.on("gdb_break", this.onBreakpoint);
 		this.socket.on("gdb_stack", this.onStack);
 		this.socket.on("gdb_variables", this.onVariables);
+		this.socket.on("gdb_continue", this.onContinue);
 
 		this.model.save("runStatus", "stop");
 		this.model.save("runStatus", "start",
@@ -196,6 +197,11 @@ App.DebugView = Backbone.View.extend(
 	},
 
 	onContinue: function()
+	{
+		this.clearMarker();
+	},
+
+	onUserContinue: function()
 	{
 		this.socket.emit("gdb_resume");
 		this.clearMarker();
