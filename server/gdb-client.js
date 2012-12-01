@@ -49,14 +49,17 @@ attachClient: function(client)
 
 	client.on("gdb_break", function(line)
 	{
-		parser.setFakeBreakpoint(line);
-		self.gdb.setBreakpoint(line);
-		self.gdb.resume();
+		self.gdb.toggleBreakpoint(line);
 	});
 
-	client.on("gdb_sigint", function()
+	client.on("gdb_pause", function()
 	{	
-		self.gdb.pause();
+		self.gdb.queueAction(Gdb.actions.PAUSE);
+	});
+
+	client.on("gdb_resume", function()
+	{
+		self.gdb.queueAction(Gdb.actions.RESUME);
 	});
 
 	client.on("disconnect", function()
