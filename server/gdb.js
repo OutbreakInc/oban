@@ -131,13 +131,12 @@ Gdb.prototype.toggleBreakpoint = function(line)
 
 Gdb.prototype.queueAction = function(action)
 {
-	if (!Gdb.actions.hasOwnProperty(action))
-	{
-		console.error("ERROR: invalid action: " + action);
-		return;
-	}
-
 	this._actions.push(action);
+
+	// console.log("actions: " + this._actions);
+	// console.log("isStopped: " + this.isStopped);
+	// console.log("stop triggered? " + this._stopTriggered);
+	// console.log("isPause? " + (this._actions[this._actions.length - 1] == Gdb.actions.PAUSE));
 
 	if (this.isStopped)
 	{
@@ -145,7 +144,7 @@ Gdb.prototype.queueAction = function(action)
 		return;
 	}
 
-	if (!this._stopTriggered && this._actions[0] == Gdb.actions.PAUSE)
+	if (!this._stopTriggered && this._actions[this._actions.length - 1] == Gdb.actions.PAUSE)
 	{
 		this._pause();
 	}
