@@ -197,7 +197,7 @@ App.DebugView = Backbone.View.extend(
 
 	onContinue: function()
 	{
-		this.socket.emit("gdb_command", "continue");
+		this.socket.emit("gdb_resume");
 		this.clearMarker();
 	},
 
@@ -215,7 +215,7 @@ App.DebugView = Backbone.View.extend(
 
 	onPause: function()
 	{
-		this.socket.emit("gdb_sigint");
+		this.socket.emit("gdb_pause");
 	},
 
 	unbindEvents: function()

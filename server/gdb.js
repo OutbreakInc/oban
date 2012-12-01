@@ -23,6 +23,8 @@ function Gdb(binary)
 					"GDB binary wasn't found on the file system");
 
 	this.binary = binary;
+	this._breakpoints = { isDirty: false, lines: {} };
+	this._actions = [];
 }
 
 util.inherits(Gdb, EventEmitter);
@@ -34,6 +36,12 @@ Gdb.events =
 	RAW: "raw"
 };
 
+Gdb.actions =
+{
+	RESUME: "resume",
+	PAUSE: "pause"
+}
+
 Gdb.prototype.setDebugging = function(isEnabled) 
 {
 	console.log("set gdb debugging: " + isEnabled);
@@ -44,6 +52,9 @@ Gdb.prototype.setDebugging = function(isEnabled)
 Gdb.prototype.run = function(symbolFile)
 {
 	this.process = spawn(this.binary, [], {cwd: path.dirname(symbolFile)});
+
+	// so GDB doesn't prompt us when we delete all breakpoints
+	this.rawCommand("set confirm off");
 
 	this.rawCommand("source " + PYTHON_SCRIPT);
 	this.rawCommand("file " + symbolFile);
@@ -93,30 +104,50 @@ Gdb.prototype.rawCommand = function(command)
 	this.process.stdin.write(command + "\n");
 }
 
-Gdb.prototype.setBreakpoint = function(line)
+Gdb.prototype.toggleBreakpoint = function(line)
 {
-	var convertedLine = parseInt(line, 10);
-
-	if (!convertedLine)
+	if (this._breakpoints.lines.hasOwnProperty(line))
 	{
-		console.error("ERROR: invalid breakpoint line number: " + line);
+		console.log("Removing breakpoint at line " + line);
+		delete this._breakpoints.lines[line];
+	}
+	else
+	{
+		console.log("Adding breakpoint at line: " + line);
+		this._breakpoints.lines[line] = true;
+	}
+
+	this._breakpoints.isDirty = true;
+
+	if (this.isStopped)
+	{
+		this._syncBreakpoints();
+	}
+	else
+	{
+		this._pause();
+	}
+}
+
+Gdb.prototype.queueAction = function(action)
+{
+	if (!Gdb.actions.hasOwnProperty(action))
+	{
+		console.error("ERROR: invalid action: " + action);
 		return;
 	}
 
-	this.rawCommand("b " + line);
-	// TODO: add to internal list of breakpoints to easily clear later
-}
+	this._actions.push(action);
 
-Gdb.prototype.resume = function()
-{
-	this.rawCommand("c");
-}
-
-Gdb.prototype.pause = function()
-{
-	if (this.process)
+	if (this.isStopped)
 	{
-		this.process.kill("SIGINT");
+		this._processActions();
+		return;
+	}
+
+	if (!this._stopTriggered && this._actions[0] == Gdb.actions.PAUSE)
+	{
+		this._pause();
 	}
 }
 
@@ -204,6 +235,7 @@ Gdb.prototype._bindEvents = function()
 			{
 			case Gdb.events.STOP:
 				gdb.isStopped = true;
+				gdb._onStop();
 				break;
 			case Gdb.events.CONTINUE:
 				gdb.isStopped = false;
@@ -215,6 +247,70 @@ Gdb.prototype._bindEvents = function()
 	});	
 }
 
+Gdb.prototype._syncBreakpoints = function()
+{
+	// clear all breakpoints first
+	this.rawCommand("delete");
+
+	this._breakpoints.lines.forEach(function(line)
+	{
+		this.rawCommand("b " + line);
+	});
+
+	this._breakpoints.isDirty = false;
+}
+
+Gdb.prototype._resume = function()
+{
+	this.rawCommand("c");
+	delete this._stopTriggered;
+}
+
+Gdb.prototype._pause = function()
+{
+	if (this.process)
+	{
+		this._stopTriggered = true;
+		this.process.kill("SIGINT");
+	}
+}
+
+Gdb.prototype._processActions = function()
+{
+	var action = this._actions[this._actions.length - 1];
+
+	// we only need to do something if the last action is a resume action
+	// if the last action was a pause action, we are already stopped,
+	// so nothing needs to be done
+	if (action == Gdb.actions.RESUME)
+	{
+		this._resume();
+	}
+
+	// empty out the actions array
+	this._actions.length = 0;
+}
+
+Gdb.prototype._onStop = function()
+{
+	if (this._breakpoints.isDirty)
+	{
+		this._syncBreakpoints();
+	}
+
+	// take last action in queue - that is the state we should leave GDB at
+	if (this._actions.length > 0)
+	{
+		this._processActions();	
+	}
+	else
+	{
+		// if there were no actions, the stop was triggered just to
+		// sync breakpoints, so we should resume
+
+		this._resume();
+	}
+}
 
 module.exports = Gdb;
 
