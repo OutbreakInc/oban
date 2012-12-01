@@ -71,8 +71,11 @@ _initIde: function()
 
 	var project = projects.get(ide.get("activeProject"));
 
+	var filePath = project.get("files")[0];
+	var fileName = filePath.slice(filePath.lastIndexOf("/") + 1);
+
 	var file = new File({
-		name: "main.cpp", 
+		name: fileName, 
 		project: project.toJSON() });
 
 	// set active files to new project's file
