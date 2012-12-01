@@ -93,6 +93,11 @@ Gdb.prototype.run = function(symbolFile)
 
 		gdb.emit(Gdb.events.RAW, data);
 	});
+
+	this.process.on("exit", function(code)
+	{
+		console.log("gdb has exited with code: " + code);
+	});
 };
 
 Gdb.prototype.isRunning = function()
@@ -255,9 +260,12 @@ Gdb.prototype._syncBreakpoints = function()
 	console.log("breakpoints:");
 	console.log(this._breakpoints);
 
-	_.keys(this._breakpoints.lines, function(line)
+	var gdb = this;
+
+	_.keys(this._breakpoints.lines).forEach(function(line)
 	{
-		this.rawCommand("b " + line);
+		console.log("b " + line);
+		gdb.rawCommand("b " + line);
 	});
 
 	this._breakpoints.isDirty = false;
