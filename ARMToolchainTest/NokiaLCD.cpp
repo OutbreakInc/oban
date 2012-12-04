@@ -164,7 +164,6 @@ public:
 				nCommandMode(commandPin),
 				spi(spiPort)
 	{
-		spi.setup();
 	}
 	
 	void	init(void)
@@ -261,6 +260,10 @@ int main(void)
 	//lcd.write("Nokia 3310 LCD");
 
 	IO.P5.setMode(IO::Pin::DigitalOutput);
+
+	IO.spi.start();	//2MHz master mode-0 SPI
+
+	IO.spi.write('G', 32);
 
 	int i = 0;
 	while(true)

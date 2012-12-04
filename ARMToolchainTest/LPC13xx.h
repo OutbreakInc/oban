@@ -962,6 +962,61 @@
 	REGISTER	WatchdogTimerValue =		REGISTER_ADDRESS(0x4000400C);
 
 
+	//ADC
+	REGISTER	ADCControl =				REGISTER_ADDRESS(0x4001C000);
+		enum ADCControl
+		{
+			ADCControl_BurstModeBitmask =			(0xFF),
+			
+			//This must be chosen so that PCLK / (ADCControl_ADCClockDividerBitmask + 1) is close to but less than 4.5MHz.
+			//  The clock rate may be decreased to better sample high-impedance analog sources.
+			ADCControl_ADCClockDividerBitmask =		(0xFF << 8),
+
+			//Burst Mode: if 0, conversion is performed according to the ADCControl_Start* setting.
+			//	If 1, hardware round-robins through the selected bits (7:0) to convert those channels
+			//  Important: ADCControl_Stop must be selected when ADCControl_EnableBurstMode is 1 or conversions will not start.
+			ADCControl_EnableBurstMode =			(0x01 << 16),
+			
+			//Resolution setting
+			ADCControl_10BitSample_11Clocks =		(0x00 << 17),
+			ADCControl_9BitSample_10Clocks =		(0x01 << 17),
+			ADCControl_8BitSample_9Clocks =			(0x02 << 17),
+			ADCControl_7BitSample_8Clocks =			(0x03 << 17),
+			ADCControl_6BitSample_7Clocks =			(0x04 << 17),
+			ADCControl_5BitSample_6Clocks =			(0x05 << 17),
+			ADCControl_4BitSample_5Clocks =			(0x06 << 17),
+			ADCControl_3BitSample_4Clocks =			(0x07 << 17),
+
+			//Note: one ADC sample on one channel takes 2.44us
+			ADCControl_Stop	=						(0x00 << 24),
+			ADCControl_StartNow	=					(0x01 << 24),
+			
+			//Start conversion on timer events:
+			ADCControl_StartOnTimer0Cap0 =			(0x02 << 24),
+			ADCControl_StartOnTimer2Cap0 =			(0x03 << 24),
+			ADCControl_StartOnTimer2Mat0 =			(0x04 << 24),
+			ADCControl_StartOnTimer2Mat1 =			(0x05 << 24),
+			ADCControl_StartOnTimer0Mat0 =			(0x06 << 24),
+			ADCControl_StartOnTimer0Mat1 =			(0x07 << 24),
+
+			ADCControl_StartOnTimerFallingEdge =	(0x01 << 27),	//else rising edge
+		};
+
+	REGISTER	ADCData =					REGISTER_ADDRESS(0x4001C004);
+	REGISTER	ADCInterrupt =				REGISTER_ADDRESS(0x4001C00C);
+
+	REGISTER	ADC0Data =					REGISTER_ADDRESS(0x4001C010);
+	REGISTER	ADC1Data =					REGISTER_ADDRESS(0x4001C014);
+	REGISTER	ADC2Data =					REGISTER_ADDRESS(0x4001C018);
+	REGISTER	ADC3Data =					REGISTER_ADDRESS(0x4001C01C);
+	REGISTER	ADC4Data =					REGISTER_ADDRESS(0x4001C020);
+	REGISTER	ADC5Data =					REGISTER_ADDRESS(0x4001C024);
+	REGISTER	ADC6Data =					REGISTER_ADDRESS(0x4001C028);
+	REGISTER	ADC7Data =					REGISTER_ADDRESS(0x4001C02C);
+
+	REGISTER	ADCStatus =					REGISTER_ADDRESS(0x4001C030);
+	
+
 	//Write 1 to set interrupts on InterruptSet, write 1 to clear interrupts on InterruptClear
 	REGISTER	InterruptEnableSet0 =		REGISTER_ADDRESS(0xE000E100);
 	REGISTER	InterruptEnableSet1 =		REGISTER_ADDRESS(0xE000E104);
