@@ -64,6 +64,11 @@ _initIde: function()
 
 	if (ides.length === 0)
 	{
+		if(projects.length === 0)
+		{
+			projects.add({name: "Untitled"});
+		}
+		
 		ides.add({ activeProject: projects.at(0).id });
 	}
 
