@@ -103,17 +103,6 @@ public:
 	private:
 		inline			Pin(unsigned int value): v(value)	{setMode(Default);}
 		
-		//bits 26-31:	part-specific data
-
-		//bit 25:		last digital input value
-		//bit 24:		digital output value
-		
-		//bits 16-23:	pin mode
-		
-		//bits 12-16:	(unallocated)
-
-		//bits 8-11:	IO bank
-		//bits 0-7:		pin number
 		unsigned int	v;
 	};
 
@@ -134,9 +123,13 @@ public:
 			Mode3,	//SCK idles high, data changed on SCK's rising edge, read on falling edge.
 		} Mode;
 
-		void			setup(int bitRate = 2e6, Role role = Master, Mode mode = Mode0);
+		void			start(int bitRate = 2000000, Role role = Master, Mode mode = Mode0);
+		inline void		stop(void)	{start(0);}
 
-		unsigned short	read(int length, unsigned short writeChar = 0);
+		bool			bytesAvailable(void) const;
+
+		void			read(int length, byte* bytesReadBack, unsigned short writeChar = 0);
+		void			read(int length, unsigned short* bytesReadBack, unsigned short writeChar = 0);
 		
 		inline void		readAndWrite(char const* s, int length, byte* bytesReadBack) {write((byte const*)s, length, bytesReadBack);}
 		inline void		readAndWrite(byte const* s, int length, byte* bytesReadBack) {write(s, length, bytesReadBack);}
@@ -161,57 +154,67 @@ public:
 	public:
 		typedef enum
 		{
-
+			Event_BytesReceived,
+			Event_ErrorReceived,
 		} Event;
 		
-		void			setup(int baudRate = 38400);
+		void			start(int baudRate = 38400);
+		inline void		stop(void)	{start(0);}
 		
-		typedef void (*UARTCallback)(UART& uart, Buffer bytes);
+		typedef void	(*UARTCallback)(void* receiver, UART& uart, Event event, Buffer bytes);
 		void			on(UARTCallback callback, void* receiver = 0);
 
-		inline void		write(char c, int length = 1)		{write((unsigned short)c, length);}
-		inline void		write(byte b, int length = 1)		{write((unsigned short)b, length);}
-		inline void		write(short h, int length = 1)		{write((unsigned short)h, length);}
-		void			write(unsigned short h, int length = 1);
-		
-		//inline void		write(char const* s, int length, byte* bytesReadBack = 0)	{write((byte const*)s, length, bytesReadBack);}
-		void			write(byte const* s, int length, byte* bytesReadBack = 0);
-		//void			write(unsigned short const* s, int length, byte* bytesReadBack = 0);
+		bool			bytesAvailable(void) const;
+
+		inline int		read(char* s, int length, bool readAll = false)	{read((byte*)s, length, readAll);}
+		int				read(byte* s, int length, bool readAll = false);
+		int				read(unsigned short* s, int length, bool readAll = false);
+
+		inline void		write(char c, int length = 1, bool writeAll = true)		{write((unsigned short)c, length, writeAll);}
+		inline void		write(byte b, int length = 1, bool writeAll = true)		{write((unsigned short)b, length, writeAll);}
+		inline void		write(short h, int length = 1, bool writeAll = true)	{write((unsigned short)h, length, writeAll);}
+		void			write(unsigned short h, int length = 1, bool writeAll = true);
+
+		inline void		write(char const* s, int length = -1, bool writeAll = true)	{write((byte const*)s, length, writeAll);}
+		void			write(byte const* s, int length = -1, bool writeAll = true);
+		void			write(unsigned short const* s, int length, byte* bytesReadBack = 0);
 	};
 
-	Pin			P0;
-	Pin			P1;
-	Pin			P2;
-	Pin			P3;
-	Pin			P4;
-	Pin			P5;
-	Pin			P6;
-	Pin			RTS;
-	Pin			CTS;
-	Pin			TXD;
-	Pin			RXD;
-	Pin			SDA;
-	Pin			SCL;
-	Pin			SCK;
-	Pin			SEL;
-	Pin			MISO;
-	Pin			MOSI;
-	Pin			A0;
-	Pin			A1;
-	Pin			A2;
-	Pin			A3;
-	Pin			A5;
-	Pin			A7;
+	Pin				P0;
+	Pin				P1;
+	Pin				P2;
+	Pin				P3;
+	Pin				P4;
+	Pin				P5;
+	Pin				P6;
+	Pin				RTS;
+	Pin				CTS;
+	Pin				TXD;
+	Pin				RXD;
+	Pin				SDA;
+	Pin				SCL;
+	Pin				SCK;
+	Pin				SEL;
+	Pin				MISO;
+	Pin				MOSI;
+	Pin				A0;
+	Pin				A1;
+	Pin				A2;
+	Pin				A3;
+	Pin				A5;
+	Pin				A7;
 	
-	Pin			led;
+	Pin				led;
+	
+	SPI				spi;
+	
+	I2C				i2c;
+	
+	UART			serial;
 
-	SPI			spi;
-	
-	I2C			i2c;
-
-	UART		serial;
-	
-				IO(void);
+					IO(void);
+private:
+	unsigned int	v;
 };
 
 class System
