@@ -5,8 +5,6 @@ using namespace Galago;
 
 				System::System(void)
 {
-	*LPC1300::ClockControl |= LPC1300::ClockControl_SPI0;
-
 	//@@ if the core reset due to a WDT interrupt, store the external clock kHz as "no crystal", else:
 		//@@ set up timer2 (32bit) to count up 1:1 with the core
 		//@@ set watchdog to a known interval: WatchdogControl_Frequency_4_0MHz * 4 * 1000
@@ -45,11 +43,31 @@ void			System::delay(int microseconds)
 }
 
 
+//IO Pins
+
+//on Galago 0BAB04xx, here is what the bits store:
+
+	//bits 26-31:	abbreviated memory address of the IO pin configuration register
+
+	//bit 25:		last digital input value
+	//bit 24:		digital output value
+	
+	//bits 16-23:	pin mode
+	
+	//bits 15-16:	(unallocated)
+
+	//bits 12-14:	analog channel number
+
+	//bits 8-11:	IO bank
+	//bits 0-7:		pin number
+
+
 #define PinID(port, pin) ((port << 3) | (port << 2) | pin)
 
-static unsigned int volatile* gpioAddress(unsigned int v)		{return((unsigned int volatile*)(0x50000000 | ((v & 0xF00) << 8) | (4 << (v & 0xFF))));}
-static unsigned int volatile* gpioDirAddress(unsigned int v)	{return((unsigned int volatile*)(0x50000000 | ((v & 0xF00) << 8) | 0x8000));}
-static unsigned int volatile* ioConfigAddress(unsigned int v)	{return((unsigned int volatile*)(0x40044000 | (v >> 24)));}
+static unsigned int volatile*	gpioAddress(unsigned int v)		{return((unsigned int volatile*)(0x50000000 | ((v & 0xF00) << 8) | (4 << (v & 0xFF))));}
+static unsigned int volatile*	gpioDirAddress(unsigned int v)	{return((unsigned int volatile*)(0x50000000 | ((v & 0xF00) << 8) | 0x8000));}
+static unsigned int volatile*	ioConfigAddress(unsigned int v)	{return((unsigned int volatile*)(0x40044000 | (v >> 24)));}
+static unsigned int 			analogChannel(unsigned int v)	{return((v >> 12) & 0x7);}
 
 static int pinID(unsigned int gpioID)
 {
@@ -72,7 +90,12 @@ static int pinID(unsigned int gpioID)
 
 int				IO::Pin::read(void)
 {
-	return(*gpioAddress(v) != 0);
+	if((v & 0xFF0000) == (IO::Pin::AnalogInput << 16))
+	{
+		*LPC1300::ADCControl = (*LPC1300::ADCControl & ~0xFF00) | LPC1300::ADCControl_StartNow | analogChannel(v);
+	}
+	else
+		return(*gpioAddress(v) != 0);
 }
 void			IO::Pin::write(int value)
 {
@@ -194,40 +217,40 @@ static unsigned char const pinDefaults[28] =
 };
 */
 
-#define PIN_STATE(partSpecificData, pinMode, ioBank, pinNumber)		(((partSpecificData) << 24) | ((pinMode) << 16) | ((ioBank) << 8) | ((pinNumber) << 0) )
+#define PIN_STATE(partSpecificData, pinMode, analogChannel, ioBank, pinNumber)		(((partSpecificData) << 24) | ((pinMode) << 16) | ((analogChannel) << 12) | ((ioBank) << 8) | ((pinNumber) << 0) )
 unsigned int const kIOPinInitialState[26] =
 {
-	PIN_STATE(0x0C, IO::Pin::Reset, 0, 0),			//P0
-	PIN_STATE(0x10, IO::Pin::DigitalInput, 0, 1),	//P1
-	PIN_STATE(0x14, IO::Pin::DigitalInput, 1, 8),	//P2
-	PIN_STATE(0x1C, IO::Pin::DigitalInput, 0, 2),	//P3
-	PIN_STATE(0x2C, IO::Pin::DigitalInput, 0, 3),	//P4
-	PIN_STATE(0x38, IO::Pin::DigitalInput, 1, 9),	//P5
-	PIN_STATE(0x3C, IO::Pin::USB, 3, 4),			//D-
-	PIN_STATE(0x48, IO::Pin::USB, 3, 5),			//D+
-	PIN_STATE(0x9C, IO::Pin::DigitalInput, 3, 2),	//P6
+	PIN_STATE(0x0C, IO::Pin::Reset, 0, 0, 0),			//P0
+	PIN_STATE(0x10, IO::Pin::DigitalInput, 0, 0, 1),	//P1
+	PIN_STATE(0x14, IO::Pin::DigitalInput, 0, 1, 8),	//P2
+	PIN_STATE(0x1C, IO::Pin::DigitalInput, 0, 0, 2),	//P3
+	PIN_STATE(0x2C, IO::Pin::DigitalInput, 0, 0, 3),	//P4
+	PIN_STATE(0x38, IO::Pin::DigitalInput, 0, 1, 9),	//P5
+	PIN_STATE(0x3C, IO::Pin::USB, 0, 3, 4),				//D-
+	PIN_STATE(0x48, IO::Pin::USB, 0, 3, 5),				//D+
+	PIN_STATE(0x9C, IO::Pin::DigitalInput, 0, 3, 2),	//P6
 
-	PIN_STATE(0xA0, IO::Pin::DigitalInput, 1, 5),	//RTS
-	PIN_STATE(0x50, IO::Pin::DigitalInput, 0, 7),	//CTS
-	PIN_STATE(0xA8, IO::Pin::DigitalInput, 1, 7),	//TXD
-	PIN_STATE(0xA4, IO::Pin::DigitalInput, 1, 6),	//RXD
+	PIN_STATE(0xA0, IO::Pin::DigitalInput, 0, 1, 5),	//RTS
+	PIN_STATE(0x50, IO::Pin::DigitalInput, 0, 0, 7),	//CTS
+	PIN_STATE(0xA8, IO::Pin::DigitalInput, 0, 1, 7),	//TXD
+	PIN_STATE(0xA4, IO::Pin::DigitalInput, 0, 1, 6),	//RXD
 
-	PIN_STATE(0x34, IO::Pin::DigitalInput, 0, 5),	//SDA
-	PIN_STATE(0x30, IO::Pin::DigitalInput, 0, 4),	//SCL
+	PIN_STATE(0x34, IO::Pin::DigitalInput, 0, 0, 5),	//SDA
+	PIN_STATE(0x30, IO::Pin::DigitalInput, 0, 0, 4),	//SCL
 
-	PIN_STATE(0x4C, IO::Pin::DigitalInput, 0, 6),	//SCK
-	PIN_STATE(0x0C, IO::Pin::DigitalInput, 2, 0),	//SEL
-	PIN_STATE(0x60, IO::Pin::DigitalInput, 0, 8),	//MISO
-	PIN_STATE(0x64, IO::Pin::DigitalInput, 0, 9),	//MOSI
+	PIN_STATE(0x4C, IO::Pin::DigitalInput, 0, 0, 6),	//SCK
+	PIN_STATE(0x0C, IO::Pin::DigitalInput, 0, 2, 0),	//SEL
+	PIN_STATE(0x60, IO::Pin::DigitalInput, 0, 0, 8),	//MISO
+	PIN_STATE(0x64, IO::Pin::DigitalInput, 0, 0, 9),	//MOSI
 
-	PIN_STATE(0x74, IO::Pin::DigitalInput, 0, 11),	//A0
-	PIN_STATE(0x78, IO::Pin::DigitalInput, 1, 0),
-	PIN_STATE(0x7C, IO::Pin::DigitalInput, 1, 1),
-	PIN_STATE(0x80, IO::Pin::DigitalInput, 1, 2),
-	PIN_STATE(0x94, IO::Pin::DigitalInput, 1, 4),
-	PIN_STATE(0x98, IO::Pin::DigitalInput, 1, 11),	//A7
+	PIN_STATE(0x74, IO::Pin::DigitalInput, 0, 0, 11),	//A0
+	PIN_STATE(0x78, IO::Pin::DigitalInput, 1, 1, 0),	//A1
+	PIN_STATE(0x7C, IO::Pin::DigitalInput, 2, 1, 1),	//A2
+	PIN_STATE(0x80, IO::Pin::DigitalInput, 3, 1, 2),	//A3
+	PIN_STATE(0x94, IO::Pin::DigitalInput, 5, 1, 4),	//A5
+	PIN_STATE(0x98, IO::Pin::DigitalInput, 7, 1, 11),	//A7
 
-	PIN_STATE(0x6C, IO::Pin::DigitalInput, 1, 10),	//led
+	PIN_STATE(0x6C, IO::Pin::DigitalInput, 0, 1, 10),	//led
 };
 
 				IO::IO(void)
@@ -318,18 +341,52 @@ void			IO::Pin::setMode(Mode mode, Feature feature)
 	}
 }
 
-void			IO::SPI::setup(int bitRate, Role role, Mode mode)
+
+void			IO::SPI::start(int bitRate, Role role, Mode mode)
 {
+	Galago::IO.SCK.setMode(IO::Pin::SPI);
 	Galago::IO.MOSI.setMode(IO::Pin::SPI);
+	Galago::IO.MISO.setMode(IO::Pin::SPI);
+
+	*LPC1300::PeripheralnReset &= ~LPC1300::PeripheralnReset_SPI0;	//assert reset
+	
+	if(bitRate > 0)
+	{
+		*LPC1300::ClockControl |= LPC1300::ClockControl_SPI0;	//enable SPI0 clock
+		*LPC1300::SPI0ClockPrescaler = 1;
+
+		//@@solve this to get as close as possible to x in: bitRate = Fahb/2/x
+		*LPC1300::SPI0ClockDivider = 6000000UL / bitRate;
+
+		*LPC1300::SPI0Control0 = LPC1300::SPI0Control0_8BitTransfer | LPC1300::SPI0Control0_FrameFormat_SPI | LPC1300::SPI0Control0_SPIMode0;
+		*LPC1300::SPI0Control1 = LPC1300::SPI0Control1_Enable;
+
+		*LPC1300::PeripheralnReset |= LPC1300::PeripheralnReset_SPI0;	//deassert reset
+	}
+	else
+		*LPC1300::ClockControl &= ~LPC1300::ClockControl_SPI0;	//disable SPI0 clock
 }
 
-unsigned short	IO::SPI::read(int length, unsigned short writeChar)
+
+void			IO::SPI::read(int length, byte* bytesReadBack, unsigned short writeChar)
 {
 	while(length-- > 0)
 	{
-		while(*LPC1300::SPI0Status & 0x02);	//spinwait until the hardware can supply at least one datum
+		while(!(*LPC1300::SPI0Status & LPC1300::SPI0Status_ReceiveFIFONotEmpty));	//spinwait until the hardware can supply at least one datum
 		
 		*LPC1300::SPI0Data = (unsigned int)writeChar;	//append the character
+		*bytesReadBack++ = (byte)*LPC1300::SPI0Data;
+	}
+}
+
+void			IO::SPI::read(int length, unsigned short* bytesReadBack, unsigned short writeChar)
+{
+	while(length-- > 0)
+	{
+		while(!(*LPC1300::SPI0Status & LPC1300::SPI0Status_ReceiveFIFONotEmpty));	//spinwait until the hardware can supply at least one datum
+		
+		*LPC1300::SPI0Data = (unsigned int)writeChar;	//append the character
+		*bytesReadBack++ = (unsigned short)*LPC1300::SPI0Data;
 	}
 }
 
@@ -338,7 +395,7 @@ void			IO::SPI::write(unsigned short h, int length)
 {
 	while(length-- > 0)
 	{
-		while(*LPC1300::SPI0Status & 0x02);	//spinwait until the hardware can fit at least one datum
+		while(!(*LPC1300::SPI0Status & LPC1300::SPI0Status_TransmitFIFONotFull));	//spinwait until the hardware can fit at least one datum
 		*LPC1300::SPI0Data = (unsigned int)h;	//append the same character
 	}
 }
@@ -347,7 +404,7 @@ void			IO::SPI::write(byte const* s, int length, byte* bytesReadBack)
 {
 	while(length-- > 0)
 	{
-		while(*LPC1300::SPI0Status & 0x02);	//spinwait until the hardware can fit at least one datum
+		while(!(*LPC1300::SPI0Status & LPC1300::SPI0Status_TransmitFIFONotFull));	//spinwait until the hardware can fit at least one datum
 		*LPC1300::SPI0Data = (unsigned int)*s++;	//append the next character
 		if(bytesReadBack != 0)
 			*bytesReadBack++ = (byte)*LPC1300::SPI0Data;
@@ -357,7 +414,7 @@ void			IO::SPI::write(unsigned short const* s, int length, byte* bytesReadBack)
 {
 	while(length-- > 0)
 	{
-		while(*LPC1300::SPI0Status & 0x02);	//spinwait until the hardware can fit at least one datum
+		while(!(*LPC1300::SPI0Status & LPC1300::SPI0Status_TransmitFIFONotFull));	//spinwait until the hardware can fit at least one datum
 		*LPC1300::SPI0Data = (unsigned int)*s++;	//append the next character
 		if(bytesReadBack != 0)
 			*bytesReadBack++ = (byte)*LPC1300::SPI0Data;
