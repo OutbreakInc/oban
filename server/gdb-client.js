@@ -7,7 +7,7 @@ var spawn = require("child_process").spawn,
 
 function GdbClient()
 {
-	this.gdb = new Gdb("/usr/local/arm-none-eabi/bin/arm-none-eabi-gdb");
+	this.gdb = new Gdb("/usr/local/arm-elf-mac32/bin/arm-elf-gdb");
 }
 
 module.exports = GdbClient;
