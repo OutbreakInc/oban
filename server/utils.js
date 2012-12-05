@@ -20,23 +20,33 @@ settingsDir: function()
 {
 	switch (os.platform())
 	{
-	case "darwin": return process.env["HOME"] + "/Library/Application Support/outbreak-ide";
+	case "darwin": return process.env["HOME"] + 
+		"/Library/Application Support/outbreak-ide";
+	}
+},
+
+settingsDirForPort: function(port)
+{
+	switch (os.platform())
+	{
+	case "darwin": return process.env["HOME"] + 
+		"/Library/Application Support/outbreak-ide-server/" + port;
 	}
 },
 
 projectsDir: function()
 {
-	return projectsDir || module.exports.documentsDir() + "/outbreak-ide";
+	return module.exports.documentsDir() + "/outbreak-ide";
+},
+
+projectsDirForPort: function(port)
+{
+	return module.exports.documentsDir() + "/outbreak-ide-server/" + port;
 },
 
 scriptsDir: function()
 {
 	return __dirname + "/../SDK/scripts";
-},
-
-setProjectsDir: function(dir)
-{
-	projectsDir = dir;
 }
 
 }

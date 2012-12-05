@@ -25,7 +25,13 @@ app.get("/", function(req, res)
 	res.sendfile("client/IDE.html");
 });
 
-var core = new Core(app);
+var config =
+{
+	nodePort: 8000,
+	mode: "app"
+};
+
+var core = new Core(app, config);
 core.init();
 
 }).call(this);

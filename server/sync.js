@@ -10,9 +10,10 @@ var backboneio = require("backbone.io"),
 
 var MODELS_DIR = __dirname + "/../client/models/";
 
-function DataSync(app)
+function DataSync(app, path)
 {
 	this.app = app;
+	this.path = path;
 	this.backends = {};
 	this.collections = {};
 }
@@ -22,7 +23,8 @@ module.exports = DataSync;
 DataSync.prototype =
 {
 
-load: function()
+// loads the data syncer with persistence of its settings to the specified path
+load: function(path)
 {
 	var modelFiles = fs.readdirSync(MODELS_DIR);
 
@@ -31,16 +33,23 @@ load: function()
 		return file.lastIndexOf(".js") == file.length - 3
 	});
 
+	var options = { path: this.path };
+
 	modelFiles.forEach(function(syncFile)
 	{
 		var model = require(MODELS_DIR + syncFile);
-		var backend = this._loadModel(model);
+		var backend = this._loadModel(model, options);
 
 		this.backends[model.meta.name] = backend;
 		this.collections[model.meta.name] = backend.dataStore.collection;
 	}, this);
 
 	this.socket = backboneio.listen(this.app, this.backends);
+},
+
+unload: function()
+{
+	this.socket.close();
 },
 
 // instantiate req.model as a Model
@@ -54,12 +63,14 @@ _prepareModel: function(model)
 	}
 },
 
-_loadModel: function(model)
+_loadModel: function(model, options)
 {
 	var backend = backboneio.createBackend();
+	
+	var options = _.extend(_.clone(options), model.meta.options);
 
 	var dataStore = new BackboneStore(
-		model, model.meta.name, model.meta.options);
+		model, model.meta.name, options);
 
 	dataStore.collection.bindToBackend(backend);
 
