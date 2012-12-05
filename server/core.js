@@ -302,7 +302,9 @@ _saveFile: function(file)
 {
 	var filePath = file.path();
 
-	fs.writeFile(filePath, file.get("text"), "utf8", 
+	var text = file.get("text") || "";
+
+	fs.writeFile(filePath, text, "utf8", 
 		function(err)
 	{
 		if (err) return winston.error("Couldn't save file to " + filePath + "!");
