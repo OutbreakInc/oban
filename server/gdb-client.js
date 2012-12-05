@@ -5,9 +5,28 @@ var spawn = require("child_process").spawn,
 	Parser = require("./gdb/parser"),
 	Gdb = require("./gdb");
 
-function GdbClient()
+function GdbClient(deviceServer)
 {
 	this.gdb = new Gdb("/usr/local/arm-none-eabi/bin/arm-none-eabi-gdb");
+	// this.gdb = new Gdb("/usr/local/gdb-7.5/bin/gdb-7.5");
+	this.gdb.setDebugging(true);
+	this.deviceServer = deviceServer;
+	this.deviceServerStatus = "stopped";
+
+	var self = this;
+
+	this.deviceServer.on("started", function(options)
+	{
+		console.log("DEVICE SERVER STARTED ", options);
+		self.deviceServerStatus = "started";
+		self.deviceServerPort = options.port;
+	});
+
+	this.deviceServer.on("stopped", function()
+	{
+		console.log("DEVICE SERVER STOPPED");
+		self.deviceServerStatus = "stopped";
+	});	
 }
 
 module.exports = GdbClient;
@@ -15,10 +34,15 @@ module.exports = GdbClient;
 GdbClient.prototype =
 {
 
-run: function(file)
+run: function(file, callback)
 {
-	this.gdb.run(file);
-	// this.gdb.setDebugging(true);
+	if (this.deviceServerStatus != "started")
+	{
+		return callback("Device server not started");
+	}
+
+	this.gdb.run(file, this.deviceServerPort);
+	this.gdb.setDebugging(true);
 	// this.gdb.run("demo.elf");
 },
 
@@ -49,6 +73,7 @@ attachClient: function(client)
 
 	client.on("gdb_break", function(line)
 	{
+		console.log("GDB_BREAK " + line);
 		self.gdb.toggleBreakpoint(line);
 	});
 
