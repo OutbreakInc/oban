@@ -31,7 +31,7 @@ DeviceServer.prototype.run = function()
 {
 	winston.debug("Starting device server...");	
 	
-	this.process = spawn(this.binary);
+	this.process = spawn(this.binary, [], {cwd: __dirname + "/../gdbServer"});
 
 	this.process.stdout.setEncoding("utf8");
 	this.process.stderr.setEncoding("utf8");
@@ -49,8 +49,7 @@ DeviceServer.prototype.run = function()
 
 			deviceServer.emit("connect", deviceId, deviceName);
 		}
-
-		else if (/removed/.exec(data))
+		if (/removed/.exec(data))
 		{
 			var matches = data.match(/Device '([^']*)' removed, id = ([^\.]*)/);
 
@@ -58,6 +57,22 @@ DeviceServer.prototype.run = function()
 			var deviceId = matches[2];
 
 			deviceServer.emit("disconnect", deviceId, deviceName);			
+		}
+		if (/Serving on port/.exec(data))
+		{
+			var matches = data.match(/Serving on port ([0-9]+)/);
+
+			var port = parseInt(matches[1], 10);
+
+			if (!port)
+			{
+				winston.debug("Couldn't parse port from device server data:");
+				winston.debug(data);
+			}
+			else
+			{
+				deviceServer.emit("started", {port: port});
+			}
 		}
 
 		if (/Exiting!/.exec(data))
@@ -72,6 +87,12 @@ DeviceServer.prototype.run = function()
 	this.process.stderr.on("data", function(data)
 	{
 		winston.error(data);
+	});
+
+	this.process.on("exit", function(code)
+	{
+		winston.debug("GalagoServer exited with code: " + code);
+		deviceServer.emit("stopped");
 	});
 }
 

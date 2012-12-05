@@ -8,7 +8,7 @@ var winston = require("winston"),
 	DeviceServer = require("./device-server"),
 	toolchain = require("./toolchain"),
 	File = require("../client/models/file"),
-	Gdb = require("./gdb-client");
+	GdbClient = require("./gdb-client");
 
 function Core(app, config)
 {
@@ -50,7 +50,7 @@ init: function()
 	this.deviceServer = new DeviceServer;
 	this.deviceServer.run();
 
-	this.gdb = new Gdb("gdb");
+	this.gdbClient = new GdbClient(this.deviceServer);
 
 	this._bindDeviceServerEvents();
 	this._bindFileEvents();
@@ -61,7 +61,7 @@ init: function()
 
 	this._initIde();
 
-	// this.gdb.run("/Users/exhaze/Documents/outbreak-ide/hello-world/BasicBlink.elf");
+	// this.gdbClient.run("/Users/exhaze/Documents/outbreak-ide/hello-world/BasicBlink.elf");
 },
 
 shutdown: function()
@@ -219,14 +219,21 @@ _onRun: function(project)
 	{
 	case "compiled":
 	{
-		this.gdb.run(project.get("binary"));
+		this.gdbClient.run(project.get("binary"), function(err)
+		{
+			if (err)
+			{
+				winston.error(err);
+				project.set("runStatus", "stop");
+			}
+		});
 	}
 	}
 },
 
 _onStop: function(project)
 {
-	this.gdb.stop();
+	this.gdbClient.stop();
 },
 
 _bindProjectEvents: function()
@@ -277,9 +284,7 @@ _bindProjectEvents: function()
 	projects.on("change:runStatus", function(project)
 	{
 		winston.debug("run status changed for project: " + project.get("name"));
-
 		winston.debug("run status: " + project.get("runStatus"));
-		console.log(project.toJSON());
 
 		switch (project.get("runStatus"))
 		{
@@ -310,8 +315,8 @@ _bindGdbEvents: function()
 	// todo: support multiple clients attaching to GDB
 	this.socket.on("connection", function(client)
 	{
-		console.log("ATTACH");
-		self.gdb.attachClient(client);
+		winston.debug("attaching client to GDB");
+		self.gdbClient.attachClient(client);
 	});
 },
 
