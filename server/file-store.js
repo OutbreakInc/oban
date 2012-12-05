@@ -10,9 +10,12 @@ var MS_BETWEEN_SAVES = 500;
 
 module.exports = {};
 
-module.exports.middleware = function(collection)
+module.exports.middleware = function(collection, path)
 {
-	var fileName = utils.settingsDir() + "/" + collection.name + ".json";
+	console.assert(	path.length > 0, 
+					"File store path must be non-empty");
+
+	var fileName = path + "/" + collection.name + ".json";
 
 	winston.debug("created file store middleware: " + collection.name);
 

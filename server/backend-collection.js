@@ -19,10 +19,9 @@ create: function(model, name)
 		initialize: function(models, options)
 		{
 			options = options || {};
-
 			if (options.dontSaveToFile) return;
 
-			this.on("all", FileStore.middleware(this), this);
+			this.on("all", FileStore.middleware(this, options.path), this);
 		},
 
 		_setId: function(model)

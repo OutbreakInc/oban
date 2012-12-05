@@ -10,9 +10,20 @@ var winston = require("winston"),
 	File = require("../client/models/file"),
 	Gdb = require("./gdb-client");
 
-function Core(app)
+function Core(app, config)
 {
+	console.assert(	config,
+					"Must pass a configuration");
+
+	console.assert( config.nodePort,
+					"Must pass a node port setting");
+
+	console.assert( config.mode || 
+					(config.mode != "server" && config.mode != "app"),
+					"Must have a mode (app or server)");
+
 	this.app = app;
+	this.config = config;
 }
 
 module.exports = Core;
@@ -26,7 +37,8 @@ init: function()
 	this._initDirectories();
 
 	winston.debug("loading data sync module");
-	this.dataSync = new DataSync(this.app);
+
+	this.dataSync = new DataSync(this.app, this.settingsDir);
 	this.dataSync.load();
 
 	// this.dataSync.socket.set("log level", 1);
@@ -48,12 +60,33 @@ init: function()
 	this._bindGdbEvents();
 
 	this._initIde();
+
+	// this.gdb.run("/Users/exhaze/Documents/outbreak-ide/hello-world/BasicBlink.elf");
+},
+
+shutdown: function()
+{
+	winston.debug("Shutting down...");
+
+	this.dataSync.unload();	
 },
 
 _initDirectories: function()
 {
-	this._mkdirIfNotExist(utils.projectsDir());
-	this._mkdirIfNotExist(utils.settingsDir());
+	switch (this.config.mode)
+	{
+	case "server":
+		this.settingsDir = utils.settingsDirForPort(this.config.nodePort);
+		this.projectsDir = utils.projectsDirForPort(this.config.nodePort);
+		break;
+	case "app":
+		this.settingsDir = utils.settingsDir();
+		this.projectsDir = utils.projectsDir();
+		break;
+	}
+
+	this._mkdirIfNotExist(this.projectsDir);
+	this._mkdirIfNotExist(this.settingsDir);
 },
 
 _initIde: function()
@@ -205,7 +238,7 @@ _bindProjectEvents: function()
 
 	projects.on("add", function(project)
 	{
-		var projectPath = utils.projectsDir() + "/" + project.get("name");
+		var projectPath = self.projectsDir + "/" + project.get("name");
 
 		project.set("path", projectPath);
 
@@ -217,9 +250,6 @@ _bindProjectEvents: function()
 			project: project.toJSON() });
 
 		project.addFile(file.path());
-
-		// set active files to new project's file
-		files.reset([file]);
 	});
 
 	projects.on("change:buildStatus", function(project)
