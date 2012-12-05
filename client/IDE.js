@@ -18,6 +18,7 @@ App.FileModel = require("app/models/file");
 App.DeviceModel = require("app/models/device");
 App.ProjectModel = require("app/models/project");
 App.IdeModel = require("app/models/ide");
+App.templates = require("app/templates");
 
 require("backbone.io");
 require("yui/treeview-min");
@@ -144,6 +145,8 @@ App.DebugView = Backbone.View.extend(
 		this.messageView.html("");
 		this.socket = io.connect();
 
+		this.stackView = new App.StackView({collection: App.stack});
+
 		this.breakpoints = {};
 
 		var self = this;
@@ -166,6 +169,10 @@ App.DebugView = Backbone.View.extend(
 		this.editor = options.editor;
 
 		this.editor.on("guttermousedown", this.onSetBreakpoint);
+
+		$(".varView").removeClass("hiddenView");
+		this.tree = new YAHOO.widget.TreeView(document.getElementById("varTree"));
+		this.tree.render();
 	},
 
 	onSetBreakpoint: function(event)
@@ -244,14 +251,27 @@ App.DebugView = Backbone.View.extend(
 
 	onStack: function(stack)
 	{
-		console.log("stack");
-		console.log(stack);
+		App.stack.reset(stack);
 	},
 
 	onVariables: function(variables)
 	{
 		console.log("variables");
 		console.log(variables);
+
+		var root = this.tree.getRoot();
+		this.tree.removeChildren(root);
+
+		for (var i = 0; i < variables.length; ++i)
+		{
+			var variable = variables[i];
+
+			var node = new YAHOO.widget.TextNode({ 
+				label: variable.name + ": " + variable.value + " ("+variable.type+")"
+			}, root);
+		}
+
+		this.tree.render();
 	},
 
 	onPause: function()
@@ -262,6 +282,68 @@ App.DebugView = Backbone.View.extend(
 	unbindEvents: function()
 	{
 		this.socket.removeListener("gdb_message", this.onData);
+	}
+});
+
+App.StackFrameModel = Backbone.Model.extend(
+{
+
+});
+
+App.StackCollection = Backbone.Collection.extend(
+{
+	model: App.StackFrameModel
+});
+
+App.stack = new App.StackCollection();
+
+App.StackView = Backbone.View.extend(
+{
+	el: ".callstack",
+
+	initialize: function()
+	{
+		App.stack.on("reset", this.updateStack, this);
+	},
+
+	updateStack: function()
+	{
+		console.log(this.collection);
+
+		this.$el.empty();
+
+		this.collection.forEach(function(frame)
+		{
+			this.addFrame(frame);
+		}, this);
+	},
+
+	addFrame: function(frame)
+	{
+		var view = new App.StackFrameView({model: frame});
+		this.$el.append(view.render().el);
+	}
+});
+
+App.StackFrameView = Backbone.View.extend(
+{
+	tagName: "li",
+	template: App.templates.stackItem,
+
+	events:
+	{
+		"click": "onClick"
+	},
+	
+	render: function()
+	{
+		this.$el.html(this.template(this.model.toJSON()));
+		return this;
+	},
+
+	onClick: function()
+	{
+		// navigate GDB to selected frame
 	}
 });
 
