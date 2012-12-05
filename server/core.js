@@ -66,6 +66,7 @@ _initIde: function()
 	{
 		if(projects.length === 0)
 		{
+			debugger;
 			projects.add({name: "Untitled"});
 		}
 		
