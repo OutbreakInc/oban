@@ -50,8 +50,14 @@ Gdb.prototype.setDebugging = function(isEnabled)
 };
 
 // start gdb process and connect to our local gdb server
-Gdb.prototype.run = function(symbolFile)
+Gdb.prototype.run = function(symbolFile, port)
 {
+	console.assert( symbolFile && symbolFile.length > 0,
+					"GDB symbol file must be specified");
+
+	console.assert( _.isNumber(port) && port > 0,
+					"Must specify valid device server port: " + port);
+
 	this.process = spawn(this.binary, [], {cwd: path.dirname(symbolFile)});
 
 	// so GDB doesn't prompt us when we delete all breakpoints
@@ -59,7 +65,9 @@ Gdb.prototype.run = function(symbolFile)
 
 	this.rawCommand("source " + PYTHON_SCRIPT);
 	this.rawCommand("file " + symbolFile);
-	this.rawCommand("target remote localhost:1033");
+	// this.rawCommand("b 20");
+	// this.rawCommand("run");
+	this.rawCommand("target remote localhost:" + port);
 
 	this.isStopped = false;
 
