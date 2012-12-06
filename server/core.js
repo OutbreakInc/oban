@@ -8,11 +8,22 @@ var winston = require("winston"),
 	DeviceServer = require("./device-server"),
 	toolchain = require("./toolchain"),
 	File = require("../client/models/file"),
-	Gdb = require("./gdb-client");
+	GdbClient = require("./gdb-client");
 
-function Core(app)
+function Core(app, config)
 {
+	console.assert(	config,
+					"Must pass a configuration");
+
+	console.assert( config.nodePort,
+					"Must pass a node port setting");
+
+	console.assert( config.mode || 
+					(config.mode != "server" && config.mode != "app"),
+					"Must have a mode (app or server)");
+
 	this.app = app;
+	this.config = config;
 }
 
 module.exports = Core;
@@ -26,7 +37,8 @@ init: function()
 	this._initDirectories();
 
 	winston.debug("loading data sync module");
-	this.dataSync = new DataSync(this.app);
+
+	this.dataSync = new DataSync(this.app, this.settingsDir);
 	this.dataSync.load();
 
 	// this.dataSync.socket.set("log level", 1);
@@ -38,7 +50,7 @@ init: function()
 	this.deviceServer = new DeviceServer;
 	this.deviceServer.run();
 
-	this.gdb = new Gdb("gdb");
+	this.gdbClient = new GdbClient(this.deviceServer);
 
 	this._bindDeviceServerEvents();
 	this._bindFileEvents();
@@ -48,12 +60,33 @@ init: function()
 	this._bindGdbEvents();
 
 	this._initIde();
+
+	// this.gdbClient.run("/Users/exhaze/Documents/outbreak-ide/hello-world/BasicBlink.elf");
+},
+
+shutdown: function()
+{
+	winston.debug("Shutting down...");
+
+	this.dataSync.unload();	
 },
 
 _initDirectories: function()
 {
-	this._mkdirIfNotExist(utils.projectsDir());
-	this._mkdirIfNotExist(utils.settingsDir());
+	switch (this.config.mode)
+	{
+	case "server":
+		this.settingsDir = utils.settingsDirForPort(this.config.nodePort);
+		this.projectsDir = utils.projectsDirForPort(this.config.nodePort);
+		break;
+	case "app":
+		this.settingsDir = utils.settingsDir();
+		this.projectsDir = utils.projectsDir();
+		break;
+	}
+
+	this._mkdirIfNotExist(this.projectsDir);
+	this._mkdirIfNotExist(this.settingsDir);
 },
 
 _initIde: function()
@@ -187,14 +220,21 @@ _onRun: function(project)
 	{
 	case "compiled":
 	{
-		this.gdb.run(project.get("binary"));
+		this.gdbClient.run(project.get("binary"), function(err)
+		{
+			if (err)
+			{
+				winston.error(err);
+				project.set("runStatus", "stop");
+			}
+		});
 	}
 	}
 },
 
 _onStop: function(project)
 {
-	this.gdb.stop();
+	this.gdbClient.stop();
 },
 
 _bindProjectEvents: function()
@@ -206,7 +246,7 @@ _bindProjectEvents: function()
 
 	projects.on("add", function(project)
 	{
-		var projectPath = utils.projectsDir() + "/" + project.get("name");
+		var projectPath = self.projectsDir + "/" + project.get("name");
 
 		project.set("path", projectPath);
 
@@ -218,9 +258,6 @@ _bindProjectEvents: function()
 			project: project.toJSON() });
 
 		project.addFile(file.path());
-
-		// set active files to new project's file
-		files.reset([file]);
 	});
 
 	projects.on("change:buildStatus", function(project)
@@ -248,9 +285,7 @@ _bindProjectEvents: function()
 	projects.on("change:runStatus", function(project)
 	{
 		winston.debug("run status changed for project: " + project.get("name"));
-
 		winston.debug("run status: " + project.get("runStatus"));
-		console.log(project.toJSON());
 
 		switch (project.get("runStatus"))
 		{
@@ -281,8 +316,8 @@ _bindGdbEvents: function()
 	// todo: support multiple clients attaching to GDB
 	this.socket.on("connection", function(client)
 	{
-		console.log("ATTACH");
-		self.gdb.attachClient(client);
+		winston.debug("attaching client to GDB");
+		self.gdbClient.attachClient(client);
 	});
 },
 
@@ -303,7 +338,9 @@ _saveFile: function(file)
 {
 	var filePath = file.path();
 
-	fs.writeFile(filePath, file.get("text"), "utf8", 
+	var text = file.get("text") || "";
+
+	fs.writeFile(filePath, text, "utf8", 
 		function(err)
 	{
 		if (err) return winston.error("Couldn't save file to " + filePath + "!");
