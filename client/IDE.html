@@ -1,12 +1,19 @@
-<html>
+<!DOCTYPE html>
+<!-- Based on Bootstrap from Twitter ( http://twitter.github.com/bootstrap/ ) - thanks, guys! -->
+<html lang="en">
 <head>
-	<title>Galago</title>
-	<link rel="stylesheet" type="text/css" href="shared/css/outbreak.css" media="screen"/>
-	<link rel="stylesheet" type="text/css" href="shared/css/bootstrap-responsive.min.css" media="screen"/>
-	<link rel="stylesheet" type="text/css" href="IDE.css" media="screen"/>
-	<link rel="stylesheet" type="text/css" href="lib/yui/treeview.css"/>
+	<meta charset="utf-8"/>
+	<title>Galago IDE</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	<meta name="description" content="{{description}}"/>
+	<meta name="author" content="Outbreak, Inc."/>
+	
+	<link rel="stylesheet" type="text/css" href="/shared/css/bootstrap.min.css" media="screen"/>
+	<link rel="stylesheet" type="text/css" href="/lib/yui/treeview.css"/>
+	<link rel="stylesheet" type="text/css" href="/shared/css/outbreak.css" media="screen"/>
+	<link rel="stylesheet" type="text/css" href="/IDE.css" media="screen"/>
 
-	<script src="lib/platform/require-jquery.js" type="application/javascript" charset="utf-8"></script>
+	<script src="/lib/platform/require-jquery.js" type="application/javascript" charset="utf-8"></script>
 
 	<script type="application/javascript" charset="utf-8">
 		require(["./config"], function(config)
@@ -14,94 +21,137 @@
 			require(["app/IDE"]);
 		});
 	</script>
-
+	
+	<style type="text/css">
+		body{ padding-top: 60px; padding-bottom: 40px;}
+	</style>
+	
+	<!-- IE6-8 support-->
+	<!--[if lt IE 9]>
+		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	
+	<link rel="icon" type="image/png" href="/images/outbreakFavicon.png"/>
 </head>
-<body>
-	<div class="editorView">
-		<div class="documentView"></div>
-		<div class="devView sidebar">
-			<div class="optionsView">
-				<div class="modulesView">
-					<hr/>
-					<div class="modulesHeader sidebarHeader">
-						Modules
-						<input class="settingsButton" type="button" value="+"></input>
-					</div>
-					<div class="modulesList"></div>
-				</div>
-				<div class="settingsView">
-					<hr/>
-					<div class="settingsHeader sidebarHeader">
-						Settings
-					</div>
-					<div class="settingsList"></div>
-				</div>
-				<div class="devicesView">
-					<hr/>
-					<div class="devicesHeader sidebarHeader">
-						Devices
-					</div>
-					<div class="devicesList"></div>					
-				</div>
-			</div>
-		</div>
-		<div class="debugView sidebar hiddenView">
-			<div class="controls">
-				<input class="continueButton" type="button" value="Continue"></input><br>
-				<input class="pauseButton" type="button" value="Pause"></input> 
-			</div>
-			<div class="messageView">
-				<ul>
 
+<body>
+	<div class="navbar navbar-fixed-top">
+		<div class="navbar-inner">
+		<div class="topbarContainer">
+			<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+				<span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
+			</a>
+			<a class="brand" href="/"><img class="outbreakIDELogo" src="/images/blank.gif"></img>GalagoIDE <em class="colorOrange">beta</em></a>
+			<div class="nav-collapse">
+				<ul id="topNavigation" class="nav">
+					<li class="active"><a href="#SPIEmitter">SPI Emitter</a></li>
+					<li><a href="#BasicBlink">Basic Blink</a></li>
+					<li><a href="#TestProject">Test Project</a></li>
+					<li><a href="#OneMoreProject">One More Pro...</a></li>
 				</ul>
-			</div>
-			<div class="varView yui-skin-sam hiddenView">
-				<div id="varTree" class="varTree">
-					<ul>
-						<li class="expanded"><span>this <em>const Object*</em></span>
-							<ul>
-								<li><span>owner: 0x10000246 <em>Thing*</em></span>
-									<ul>
-										<li><span>blah: 0 <em>int</em></span></li>
-										<li><span>name: 0x12345678 <em>"hello"</em></span></li>
-									</ul>
-								</li>
-							</ul>
-						</li>
-						<li class="expanded">Locals
-							<ul>
-								<li><span>i: 7 <em>int</em></span></li>
-								<li><span>buffer: 0x10001FF2 <em>char[128]</span></em>
-									<ul>
-										<li><span>buffer[0]: 'h' (104, 0x68) <em>char</em></span></li>
-										<li><span>buffer[1]: 'e' (101, 0x65) <em>char</em></span></li>
-									</ul>
-								</li>
-							</ul>
-						</li>
-					</ul>
-				</div>
-			</div>
-			<div class="callstackView">
-				<div>
-					<ul>
-						<li class="odd selected"><strong>Thing::delete</strong>(int, char const**) <em>main.cpp:53</em></li>
-						<li class="even"><strong>download</strong>() <em>main.cpp:72</em></li>
-						<li class="odd"><strong>main</strong>(int, char const**) <em>main.cpp:20</em></li>
-						<li class="even"><strong>_start</strong>() <em>LPC11xx.S:124</em></li>
-						<li class="odd"><strong>main</strong>(int, char const**) <em>main.cpp:20</em></li>
-						<li class="even"><strong>_start</strong>() <em>LPC11xx.S:124</em></li>
-						<li class="odd"><strong>main</strong>(int, char const**) <em>main.cpp:20</em></li>
-						<li class="even"><strong>_start</strong>() <em>LPC11xx.S:124</em></li>
-					</ul>
-				</div>
-			</div>
+			</div><!--/.nav-collapse -->
+			<!-- <div class="nav-collapse">
+				<ul class="nav">
+					<li><a class="btn btn-small" href="#"><i class="icon-check"></i> Build</a></li>
+					<li><a class="btn btn-small" href="#"><i class="icon-play"></i> Start</a></li>
+				</ul>
+			</div> -->
+		</div>
 		</div>
 	</div>
-	<div class="headerView">
-		<div class="navbutton"><a href="#">&laquo; &bull;</a></div>
-		<div class="projecttitle">Demo project</div>
-		<div class="runcontrols"><input id="verifyButton" type="button" value="Verify"></input><input id="runButton" type="button" value="Run"></input></div>
+	<div class="container">
+	
+		<div class="editorView">
+			<div class="documentView"></div>
+			<div class="devView sidebar">
+				<div class="optionsView">
+					<div class="modulesView">
+						<hr/>
+						<div class="modulesHeader sidebarHeader">
+							Modules
+							<!-- <input class="settingsButton" type="button" value="+"></input> -->
+							<!-- <button class="btn">+</button> -->
+							<!-- <form class="form-search" style="display:inline-block; width:200px; margin-bottom:0px;">
+								<input type="text" class="input-block-level search-query">
+									
+								</input>
+							</form> -->
+						</div>
+						<div class="modulesList"></div>
+					</div>
+					<div class="settingsView">
+						<hr/>
+						<div class="settingsHeader sidebarHeader">
+							Settings
+						</div>
+						<div class="settingsList"></div>
+					</div>
+					<div class="devicesView">
+						<hr/>
+						<div class="devicesHeader sidebarHeader">
+							Devices
+						</div>
+						<div class="devicesList"></div>					
+					</div>
+				</div>
+			</div>
+			<div class="debugView sidebar hiddenView">
+				<div class="controls">
+					<input class="continueButton" type="button" value="Continue"></input><br>
+					<input class="pauseButton" type="button" value="Pause"></input> 
+				</div>
+				<div class="messageView">
+					<ul>
+					</ul>
+				</div>
+				<div class="varView yui-skin-sam hiddenView">
+					<div id="varTree" class="varTree">
+						<ul>
+							<li class="expanded"><span>this <em>const Object*</em></span>
+								<ul>
+									<li><span>owner: 0x10000246 <em>Thing*</em></span>
+										<ul>
+											<li><span>blah: 0 <em>int</em></span></li>
+											<li><span>name: 0x12345678 <em>"hello"</em></span></li>
+										</ul>
+									</li>
+								</ul>
+							</li>
+							<li class="expanded">Locals
+								<ul>
+									<li><span>i: 7 <em>int</em></span></li>
+									<li><span>buffer: 0x10001FF2 <em>char[128]</span></em>
+										<ul>
+											<li><span>buffer[0]: 'h' (104, 0x68) <em>char</em></span></li>
+											<li><span>buffer[1]: 'e' (101, 0x65) <em>char</em></span></li>
+										</ul>
+									</li>
+								</ul>
+							</li>
+						</ul>
+					</div>
+				</div>
+				<div class="callstackView">
+					<div>
+						<ul>
+							<li class="odd selected"><strong>Thing::delete</strong>(int, char const**) <em>main.cpp:53</em></li>
+							<li class="even"><strong>download</strong>() <em>main.cpp:72</em></li>
+							<li class="odd"><strong>main</strong>(int, char const**) <em>main.cpp:20</em></li>
+							<li class="even"><strong>_start</strong>() <em>LPC11xx.S:124</em></li>
+							<li class="odd"><strong>main</strong>(int, char const**) <em>main.cpp:20</em></li>
+							<li class="even"><strong>_start</strong>() <em>LPC11xx.S:124</em></li>
+							<li class="odd"><strong>main</strong>(int, char const**) <em>main.cpp:20</em></li>
+							<li class="even"><strong>_start</strong>() <em>LPC11xx.S:124</em></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- <div class="headerView">
+			<div class="navbutton"><a href="#">&laquo; &bull;</a></div>
+			<div class="projecttitle">Demo project</div>
+			<div class="runcontrols"><input id="verifyButton" type="button" value="Verify"></input><input id="runButton" type="button" value="Run"></input></div>
+		</div> -->
 	</div>
 </body>
 </html>
