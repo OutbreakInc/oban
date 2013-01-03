@@ -38,6 +38,7 @@ run: function(file, callback)
 {
 	if (this.deviceServerStatus != "started")
 	{
+		console.log("Device server not started, can't connect to GDB");
 		return callback("Device server not started");
 	}
 

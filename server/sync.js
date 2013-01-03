@@ -5,6 +5,7 @@ var backboneio = require("backbone.io"),
 	fs = require("fs"),
 	winston = require("winston"),
 	BackboneStore = require("./backbone-store"),
+	BackboneMultiStore = require("./backbone-multi-store"),
 	FileStore = require("./file-store"),	
 	_ = require("underscore");
 
@@ -52,31 +53,27 @@ unload: function()
 	this.socket.close();
 },
 
-// instantiate req.model as a Model
-_prepareModel: function(model)
-{
-	return function(req, res, next)
-	{
-		req.model = new model(req.model);
-		req.model.set("fromClient", { next: next });
-		next();
-	}
-},
-
 _loadModel: function(model, options)
 {
 	var backend = backboneio.createBackend();
-	
+
 	var options = _.extend(_.clone(options), model.meta.options);
 
-	var dataStore = new BackboneStore(
-		model, model.meta.name, options);
+	console.log(model.meta);
 
-	dataStore.collection.bindToBackend(backend);
+	var dataStore;
 
-	// the middleware must be in this order
-	backend.use(this._prepareModel(model));
-	backend.use(dataStore.middleware());
+	if (options.singleClient)
+	{
+		dataStore = new BackboneMultiStore(model, model.meta.name, options);
+	}
+	else
+	{
+		dataStore = new BackboneStore(model, model.meta.name, options);
+		dataStore.collection.bindToBackend(backend);
+	}
+
+	backend.use(dataStore.middleware(backend));
 	backend.dataStore = dataStore;
 
 	winston.debug("loaded module: "+model.meta.name);
