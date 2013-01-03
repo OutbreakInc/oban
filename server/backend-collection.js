@@ -19,6 +19,7 @@ create: function(model, name)
 		initialize: function(models, options)
 		{
 			options = options || {};
+			
 			if (options.dontSaveToFile) return;
 
 			this.on("all", FileStore.middleware(this, options.path), this);
@@ -66,34 +67,42 @@ create: function(model, name)
 			return Backbone.Collection.prototype.reset.call(this, models, options);
 		},
 
-		bindToBackend: function(backend)
+		bindToBackend: function(backend, channel)
 		{
 			this.on("add", function(model, collection, options)
 			{
+				options = options || {};
+				
 				if (options.socketSilent) return;
 
-				backend.emit("created", model.toJSON());
+				backend.emit("create", model.toJSON(), channel);
 			});
 
 			this.on("change", function(model, options)
 			{
+				options = options || {};
+
 				if (options.socketSilent) return;
 
-				backend.emit("updated", model.toJSON());
+				backend.emit("updated", model.toJSON(), channel);
 			});
 
 			this.on("remove", function(model, collection, options)
 			{
+				options = options || {};
+				
 				if (options.socketSilent) return;
 
-				backend.emit("deleted", model.toJSON());
+				backend.emit("deleted", model.toJSON(), channel);
 			});
 
 			this.on("reset", function(collection, options)
 			{
+				options = options || {};
+				
 				if (options.socketSilent) return;
 
-				backend.emit("reset", collection.toJSON());
+				backend.emit("reset", collection.toJSON(), channel);
 			});
 		}
 	});

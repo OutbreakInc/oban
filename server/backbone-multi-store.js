@@ -42,26 +42,10 @@ BackboneMultiStore.prototype.middleware = function(backend)
 			{
 				console.log("removing store for disconnected socket");
 				delete self._collections[channel];
-
-				console.log("collections:");
-
-				_.values(self._collections).forEach(function(collection)
-				{
-					console.log(collection.toJSON());
-				});
 			});
 		}
 
 		self[req.method](self._collections[channel], req, res, next);
-
-		console.log("METHOD: " + req.method);
-		console.log("collections:");
-
-		_.values(self._collections).forEach(function(collection)
-		{
-			console.log(collection.toJSON());
-		});
-
 	};
 }
 
