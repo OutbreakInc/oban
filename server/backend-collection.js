@@ -75,7 +75,7 @@ create: function(model, name)
 				
 				if (options.socketSilent) return;
 
-				backend.emit("create", model.toJSON(), channel);
+				backend.emit("created", model.toJSON(), channel);
 			});
 
 			this.on("change", function(model, options)
