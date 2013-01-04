@@ -35,7 +35,31 @@
 </head>
 
 <body>
-	<div class="navbar navbar-fixed-top">
+	<div class="welcomeView">
+		<div class="container">
+			<div class="hero-unit">
+				<h1>GalagoIDE <em class="colorOrange">beta</em></h1>
+				<p class="lead">
+					Choose a project to open or create a new one
+				</p>
+				<p>
+					<button class="btn btn-large btn-primary newProjectBtn">Create a new project</button>
+				</p>
+			</div>
+			<div class="row">
+				<div class="span4">
+					<h2>Project 1</h2>
+				</div>
+				<div class="span4">
+					<h2>Project 2</h2>
+				</div>
+				<div class="span4">
+					<h2>Project 3</h2>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="navbar navbar-fixed-top" hidden="hidden">
 		<div class="navbar-inner">
 		<div class="topbarContainer">
 			<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
@@ -59,7 +83,7 @@
 		</div>
 		</div>
 	</div>
-	<div class="container">
+	<div class="container" hidden="hidden">
 		<div class="editorView">
 			<div class="documentView"></div>
 			<div class="devView sidebar">

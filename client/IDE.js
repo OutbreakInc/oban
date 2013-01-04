@@ -141,6 +141,60 @@ App.DeviceCollection = Backbone.Collection.extend(
 
 App.Devices = new App.DeviceCollection;
 
+App.DebuggerCollection = Backbone.Collection.extend(
+{
+	backend: { name: "Debugger", channel: idGen() },
+	model: App.DebuggerModel,
+
+	initialize: function()
+	{
+		this.bindBackend();
+	}
+});
+
+App.Debuggers = new App.DebuggerCollection;
+
+App.Debuggers.on("reset", function(collection)
+{
+});
+
+App.Debuggers.on("add", function(model, collection)
+{
+});
+
+App.ProjectItemView = Backbone.Marionette.ItemView.extend(
+{
+	template: App.Templates.projectItem,
+	tagName: "li",
+	className: "projectListItem"
+});
+
+App.ProjectListView = Backbone.Marionette.CompositeView.extend(
+{
+	template: App.Templates.projectList,
+	className: "projectList",
+	itemView: App.ProjectItemView,
+
+	appendHtml: function(collectionView, itemView)
+	{
+		collectionView.$("ul").append(itemView.el);
+	}
+});
+
+App.WelcomeApp = new Backbone.Marionette.Application();
+
+App.WelcomeApp.addRegions({ mainRegion: ".welcomeView .container .hero-unit" });
+
+App.WelcomeApp.addInitializer(function(options)
+{
+	var projectListView = new App.ProjectListView(
+	{
+		collection: options.projects
+	});
+
+	App.WelcomeApp.mainRegion.show(projectListView);
+});
+
 // views
 
 App.DebugView = Backbone.View.extend(
@@ -341,7 +395,7 @@ App.StackView = Backbone.View.extend(
 App.StackFrameView = Backbone.View.extend(
 {
 	tagName: "li",
-	template: App.templates.stackItem,
+	template: App.Templates.stackItem,
 
 	events:
 	{
