@@ -35,38 +35,14 @@
 </head>
 
 <body>
-	<div class="welcomeView">
-		<div class="container">
-			<div class="hero-unit">
-				<h1>GalagoIDE <em class="colorOrange">beta</em></h1>
-				<p class="lead">
-					Choose a project to open or create a new one
-				</p>
-				<p>
-					<button class="btn btn-large btn-primary newProjectBtn">Create a new project</button>
-				</p>
-			</div>
-			<div class="row">
-				<div class="span4">
-					<h2>Project 1</h2>
-				</div>
-				<div class="span4">
-					<h2>Project 2</h2>
-				</div>
-				<div class="span4">
-					<h2>Project 3</h2>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div class="navbar navbar-fixed-top" hidden="hidden">
+	<div class="navbar navbar-fixed-top">
 		<div class="navbar-inner">
 		<div class="topbarContainer">
 			<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
 				<span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
 			</a>
 			<a class="brand" href="/"><!-- <img class="outbreakIDELogo" src="/images/blank.gif"></img> -->GalagoIDE <em class="colorOrange">beta</em></a>
-			<div class="nav-collapse">
+			<div class="nav-collapse" hidden="hidden">
 				<ul id="topNavigation" class="nav">
 					<li class="active"><a href="#SPIEmitter">SPI Emitter</a></li>
 					<li><a href="#BasicBlink">Basic Blink</a></li>
@@ -74,7 +50,7 @@
 					<li><a href="#OneMoreProject">One More Bro...</a></li>
 				</ul>
 			</div><!-- /.nav-collapse  -->
-			<div class="nav-collapse">
+			<div class="nav-collapse" hidden="hidden">
 				<ul class="nav">
 					<li><button class="btn btn-small buildButton"><span class="icon-check"></span> Build</button></li>
 					<li><button class="btn btn-small runButton"><span class="icon-play"></span> Run</button></li>
@@ -83,8 +59,23 @@
 		</div>
 		</div>
 	</div>
-	<div class="container" hidden="hidden">
-		<div class="editorView">
+	<div class="container">
+		<div class="welcomeView">
+			<div class="hero-unit">
+				<h1>GalagoIDE <em class="colorOrange">beta</em></h1>
+				<p class="lead">
+					Create a new project or open an existing one
+				</p>
+				<p>
+					<button class="btn btn-large btn-primary newProjectBtn">Create a new project</button>
+				</p>
+			</div>
+			<div class="row">
+				<div class="projectList">
+				</div>
+			</div>
+		</div>
+		<div class="editorView" hidden="hidden">
 			<div class="documentView"></div>
 			<div class="devView sidebar">
 				<div class="optionsView">
@@ -170,11 +161,11 @@
 				</div>
 			</div>
 		</div>
+	</div>
 		<!-- <div class="headerView">
 			<div class="navbutton"><a href="#">&laquo; &bull;</a></div>
 			<div class="projecttitle">Demo project</div>
 			<div class="runcontrols"><input id="verifyButton" type="button" value="Verify"></input><input id="runButton" type="button" value="Run"></input></div>
 		</div> -->
-	</div>
 </body>
 </html>

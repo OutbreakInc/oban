@@ -166,13 +166,23 @@ App.ProjectItemView = Backbone.Marionette.ItemView.extend(
 {
 	template: App.Templates.projectItem,
 	tagName: "li",
-	className: "projectListItem"
+	className: "projectListItem",
+
+	events:
+	{
+		"click .openProjectBtn": "openProject"
+	},
+
+	openProject: function()
+	{
+		WelcomeApp.vent.trigger("project:open", this.model);
+	}
 });
 
 App.ProjectListView = Backbone.Marionette.CompositeView.extend(
 {
 	template: App.Templates.projectList,
-	className: "projectList",
+	className: "projectList span12",
 	itemView: App.ProjectItemView,
 
 	appendHtml: function(collectionView, itemView)
@@ -183,16 +193,31 @@ App.ProjectListView = Backbone.Marionette.CompositeView.extend(
 
 App.WelcomeApp = new Backbone.Marionette.Application();
 
-App.WelcomeApp.addRegions({ mainRegion: ".welcomeView .container .hero-unit" });
+App.WelcomeApp.addRegions({ mainRegion: ".welcomeView", projectList: ".welcomeView .projectList" });
 
 App.WelcomeApp.addInitializer(function(options)
 {
 	var projectListView = new App.ProjectListView(
 	{
-		collection: options.projects
+		collection: options.projects,
 	});
 
-	App.WelcomeApp.mainRegion.show(projectListView);
+	App.WelcomeApp.projectList.show(projectListView);
+
+	App.WelcomeApp.on("project:open", function(project)
+	{
+		$(".headerView").removeAttr("hidden");
+
+		App.activeProject = project;
+
+		App.projectView = new App.ProjectView({ model: project });
+		App.statusBarView = new App.StatusBarView({ el: "body" });
+	});
+
+	App.WelcomeApp.on("project:create", function(options)
+	{
+		App.Projects.create({ name: options.name });
+	});
 });
 
 // views
@@ -208,6 +233,9 @@ App.DebugView = Backbone.View.extend(
 	initialize: function(options)
 	{
 		_.bindAll(this);
+
+		var tree = new YAHOO.widget.TreeView(document.getElementById("varTree"));
+		tree.render();		
 
 		this.messageView = this.$(".messageView");
 		this.messageView.html("");
@@ -440,7 +468,7 @@ App.StatusBarView = Backbone.View.extend(
 		App.debugView = new App.DebugView({ 
 			el: ".debugView",
 			model: App.activeProject,
-			editor: App.Editor.editor });
+			editor: App.editorView.editor });
 	},
 
 	createProject: function()
@@ -449,40 +477,36 @@ App.StatusBarView = Backbone.View.extend(
 	}
 });
 
-App.EditorView = Backbone.View.extend(
+App.ProjectView = Backbone.View.extend(
 {
-	addToProjectList: function(project)
-	{
-	},
-
-	addAllProjects: function()
-	{
-	},
-
 	initialize: function()
 	{
-		this.editor = ace.edit(this.$el.find(".documentView")[0]);
-
-		_.bindAll(this);
-
-		this.collection = new App.IdeCollection;
-		this.collection.fetch();
-
-		this.collection.on("reset", this.setup);
+		this.editorView = new App.EditorView({ model: this.model, el: ".editorView" });
 
 		this.deviceListView = new App.DeviceListView(
 		{
 			el: ".devicesList",
 			collection: App.Devices
 		});
+	}
+
+});
+
+App.EditorView = Backbone.View.extend(
+{
+	initialize: function()
+	{
+		this.$el.removeAttr("hidden");
+
+		this.editor = ace.edit(this.$el.find(".documentView")[0]);
+
+		_.bindAll(this);
 
 		App.Projects.on("add", this.addToProjectList);
 		App.Projects.on("reset", this.addAllProjects);
 
 		App.Files.on("add", this.addFile);
 		App.Files.on("reset", this.addAll);
-
-		// this.model.on("change", this.render);
 		
 		this.editor.setTheme("ace/theme/chrome");
 		
@@ -690,16 +714,7 @@ $(document).ready(function()
 	App.Projects.fetch();
 
 	// initially, only load the welcome view
-	// App.WelcomeApp.start({ projects: App.Projects });
-
-	var tree = new YAHOO.widget.TreeView(document.getElementById("varTree"));
-	tree.render();
-
-	$(".editorView").removeAttr("hidden");
-	$(".headerView").removeAttr("hidden");
-	
-	App.Editor = new App.EditorView({el: $(".editorView")});
-	App.StatusBarView = new App.StatusBarView({el: $("body")});
+	App.WelcomeApp.start({ projects: App.Projects });
 });
 
 });
