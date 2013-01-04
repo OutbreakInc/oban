@@ -41,26 +41,25 @@
 			<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
 				<span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
 			</a>
-			<a class="brand" href="/"><img class="outbreakIDELogo" src="/images/blank.gif"></img>GalagoIDE <em class="colorOrange">beta</em></a>
+			<a class="brand" href="/"><!-- <img class="outbreakIDELogo" src="/images/blank.gif"></img> -->GalagoIDE <em class="colorOrange">beta</em></a>
 			<div class="nav-collapse">
 				<ul id="topNavigation" class="nav">
 					<li class="active"><a href="#SPIEmitter">SPI Emitter</a></li>
 					<li><a href="#BasicBlink">Basic Blink</a></li>
 					<li><a href="#TestProject">Test Project</a></li>
-					<li><a href="#OneMoreProject">One More Pro...</a></li>
+					<li><a href="#OneMoreProject">One More Bro...</a></li>
 				</ul>
-			</div><!--/.nav-collapse -->
-			<!-- <div class="nav-collapse">
+			</div><!-- /.nav-collapse  -->
+			<div class="nav-collapse">
 				<ul class="nav">
-					<li><a class="btn btn-small" href="#"><i class="icon-check"></i> Build</a></li>
-					<li><a class="btn btn-small" href="#"><i class="icon-play"></i> Start</a></li>
+					<li><button class="btn btn-small buildButton"><span class="icon-check"></span> Build</button></li>
+					<li><button class="btn btn-small runButton"><span class="icon-play"></span> Run</button></li>
 				</ul>
-			</div> -->
+			</div>
 		</div>
 		</div>
 	</div>
 	<div class="container">
-	
 		<div class="editorView">
 			<div class="documentView"></div>
 			<div class="devView sidebar">
@@ -97,8 +96,8 @@
 			</div>
 			<div class="debugView sidebar hiddenView">
 				<div class="controls">
-					<input class="continueButton" type="button" value="Continue"></input><br>
-					<input class="pauseButton" type="button" value="Pause"></input> 
+					<button class="btn btn-small continueButton">Continue</button><br>
+					<button class="btn btn-small pauseButton">Pause</button> 
 				</div>
 				<div class="messageView">
 					<ul>

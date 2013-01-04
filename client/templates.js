@@ -5,7 +5,11 @@ define(function(require)
 	var templates =
 	{
 		// stackItem: "<strong><%= name %></strong>(<%= args %>) <em><%= location %></em>"
-		stackItem: "<strong><%= name %></strong>"
+		stackItem: "<strong><%= name %></strong>",
+		projectItem: "<%= name %>",
+		projectList: 	"List of projects:<br>" +
+						"<ul>" +
+						"</ul>"
 	}
 
 	compiledTemplates = {};

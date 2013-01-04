@@ -59,8 +59,6 @@ _loadModel: function(model, options)
 
 	var options = _.extend(_.clone(options), model.meta.options);
 
-	console.log(model.meta);
-
 	var dataStore;
 
 	if (options.singleClient)
