@@ -11,19 +11,33 @@ var $ = require("jquery"),
 	io = require("socket.io");
 
 require("ace/mode-c_cpp");
+require("backbone.marionette");
 
 var Range = ace.require("ace/range").Range;
 
 App.FileModel = require("app/models/file");
 App.DeviceModel = require("app/models/device");
 App.ProjectModel = require("app/models/project");
+App.DebuggerModel = require("app/models/debugger");
 App.IdeModel = require("app/models/ide");
-App.templates = require("app/templates");
+App.Templates = require("app/templates");
 
 require("backbone.io");
 require("yui/treeview-min");
 
 ////////////////////////////////////////////////////////////////
+
+function idGen()
+{
+    var S4 = function()
+    {
+        return Math.floor(
+                Math.random() * 0x10000 /* 65536 */
+            ).toString(16);
+    };
+
+    return (S4() + S4() + S4());
+}
 
 Array.prototype.merge = function(appendage)
 {
@@ -287,7 +301,6 @@ App.DebugView = Backbone.View.extend(
 
 App.StackFrameModel = Backbone.Model.extend(
 {
-
 });
 
 App.StackCollection = Backbone.Collection.extend(
@@ -347,6 +360,41 @@ App.StackFrameView = Backbone.View.extend(
 	}
 });
 
+App.StatusBarView = Backbone.View.extend(
+{
+	events:
+	{
+		"click .buildButton": "build",
+		"click .runButton": "run",
+		"click .settingsButton": "createProject"		
+	},
+
+	build: function()
+	{
+		// tell backend to compile the file
+		App.activeProject.set("buildStatus", "verify");
+		App.activeProject.save();
+	},
+
+	run: function()
+	{
+		if (App.debugView)
+		{
+			App.debugView.unbindEvents();
+		}
+
+		App.debugView = new App.DebugView({ 
+			el: ".debugView",
+			model: App.activeProject,
+			editor: App.Editor.editor });
+	},
+
+	createProject: function()
+	{
+
+	}
+});
+
 App.EditorView = Backbone.View.extend(
 {
 	addToProjectList: function(project)
@@ -359,6 +407,8 @@ App.EditorView = Backbone.View.extend(
 
 	initialize: function()
 	{
+		this.editor = ace.edit(this.$el.find(".documentView")[0]);
+
 		_.bindAll(this);
 
 		this.collection = new App.IdeCollection;
@@ -379,7 +429,6 @@ App.EditorView = Backbone.View.extend(
 		App.Files.on("reset", this.addAll);
 
 		// this.model.on("change", this.render);
-		this.editor = ace.edit(this.$el.find(".documentView")[0]);
 		
 		this.editor.setTheme("ace/theme/chrome");
 		
@@ -400,9 +449,6 @@ App.EditorView = Backbone.View.extend(
 			this.editor.session.setUseSoftTabs(false);
 			
 		}, this), 100);	//this should be done when ACE emits an event that I don't yet know about
-		
-		$(".runcontrols #verifyButton").click(this.verifyBuild);
-		$(".runcontrols #runButton").click(this.run);
 	},
 
 	setup: function()
@@ -415,37 +461,17 @@ App.EditorView = Backbone.View.extend(
 
 		if (id !== undefined)
 		{
-			this.activeProject = App.Projects.get(id);
+			App.activeProject = App.Projects.get(id);
 
 			// load active project's first file
 			App.Files.fetch();
-			this.activeFile = App.Files.at(0);
+			App.activeFile = App.Files.at(0);
 		}
 		else
 		{
 			// show welcome screen and list of projects
 			// var view = new App.WelcomeView;
 		}
-	},
-
-	verifyBuild: function()
-	{
-		// tell backend to compile the file
-		this.activeProject.set("buildStatus", "verify");
-		this.activeProject.save();
-	},
-
-	run: function()
-	{
-		if (this.debugView)
-		{
-			this.debugView.unbindEvents();
-		}
-
-		this.debugView = new App.DebugView({ 
-			el: ".debugView", 
-			model: this.activeProject,
-			editor: this.editor });
 	},
 
 	onBuildStatus: function(err)
@@ -464,15 +490,7 @@ App.EditorView = Backbone.View.extend(
 	render: function()
 	{
 		//this.$el.html(Handlebars.partials.login(this.model.toJSON()));
-		var session = this.editor.getSession();
-		
-		// session.setValue("hello");	//this.model
-	},
-
-	events:
-	{
-		"change .documentView": "update",
-		"click .settingsButton" : "createProject"
+		var session = this.editor.getSession();		
 	},
 
 	createProject: function()
@@ -482,18 +500,13 @@ App.EditorView = Backbone.View.extend(
 
 		if (projectName)
 		{
-			this.activeProject = App.Projects.create({ name: projectName }, { wait: true });
+			App.activeProject = App.Projects.create({ name: projectName }, { wait: true });
 		}
 	},
 
 	openProject: function(project)
 	{
-		this.activeProject = project;
-	},
-	
-	update: function()
-	{
-		console.log("derp");
+		App.activeProject = project;
 	},
 
 	addFile: function(file)
@@ -618,14 +631,21 @@ function updateLocalVariables(tree, variables)
 
 $(document).ready(function()
 {
-	var tree = new YAHOO.widget.TreeView(document.getElementById("varTree"));
-	tree.render();
-
 	Backbone.io.connect();
 
 	App.Projects.fetch();
+
+	// initially, only load the welcome view
+	// App.WelcomeApp.start({ projects: App.Projects });
+
+	var tree = new YAHOO.widget.TreeView(document.getElementById("varTree"));
+	tree.render();
+
+	$(".editorView").removeAttr("hidden");
+	$(".headerView").removeAttr("hidden");
 	
 	App.Editor = new App.EditorView({el: $(".editorView")});
+	App.StatusBarView = new App.StatusBarView({el: $("body")});
 });
 
 });
