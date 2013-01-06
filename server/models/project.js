@@ -36,12 +36,14 @@ var Project = function(options)
 	this._attrs.name = options.name;
 	this._attrs.path = utils.projectsDir() + "/" + this._attrs.name + "/";
 
+	var self = this;
+
 	if (!this._attrs.name || this._attrs.name.length === 0)
 	{
 		return process.nextTick(
 		function()
 		{
-			this.emit("error", "Must provide a valid project name!");
+			self.emit("error", "Must provide a valid project name!");
 		});
 	}
 
@@ -56,10 +58,18 @@ var Project = function(options)
 		console.log("restoring project: " + this._attrs.name);
 		this._restore();
 	}
-	else
+	else if (options.create)
 	{
 		console.log("init project from scratch: " + this._attrs.name);
 		this._init();
+	}
+	else
+	{
+		process.nextTick(function()
+		{
+			self.emit("error", 	self._attrs.name + ": project directory " +
+								"missing project.json");
+		});
 	}
 
 	EventEmitter.call(this);
@@ -211,30 +221,32 @@ Project.prototype.toJSON = function()
 
 _.extend(Project.prototype, Mixins.Persistence);
 
-var project = new Project({ name: "Merp" });
+module.exports = Project;
 
-project.on("loaded", function()
-{
-	console.log("project loaded");
-	console.log(JSON.stringify(project, null, "\t"));
+// var project = new Project({ name: "Merp" });
 
-	console.log(project.files()[0]);
+// project.on("loaded", function()
+// {
+// 	console.log("project loaded");
+// 	console.log(JSON.stringify(project, null, "\t"));
 
-	project.openFile(project.files()[0].name(), function(err, file)
-	{
-		console.log("opened file:", file.name());
+// 	console.log(project.files()[0]);
 
-		file.setContents("Derp");
+// 	project.openFile(project.files()[0].name(), function(err, file)
+// 	{
+// 		console.log("opened file:", file.name());
 
-		project.closeFile(file.name(), function()
-		{
-			console.log("closed file:", file.name());
-			console.log(file);
-		})
-	});
-});
+// 		file.setContents("Derp");
 
-project.on("error", function(err)
-{
-	console.log("error: ", err);
-});
+// 		project.closeFile(file.name(), function()
+// 		{
+// 			console.log("closed file:", file.name());
+// 			console.log(file);
+// 		})
+// 	});
+// });
+
+// project.on("error", function(err)
+// {
+// 	console.log("error: ", err);
+// });
