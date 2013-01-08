@@ -1,7 +1,7 @@
 var EventEmitter = require("events").EventEmitter,
 	util = require("util");
 
-var File = function(options)
+var File = function(options, callback)
 {
 	options = options || {};
 
@@ -14,24 +14,17 @@ var File = function(options)
 
 	if (!this._attrs.name || this._attrs.name.length === 0)
 	{
-		process.nextTick(
-		function()
+		return process.nextTick(function()
 		{
-			self.emit("error", "Must provide a valid file name!");
-		});
-
-		return;
-	}
-	else
-	{
-		process.nextTick(
-		function()
-		{
-			self.emit("loaded");
+			callback("Must provide a valid file name!");
 		});
 	}
 
 	EventEmitter.call(this);
+	process.nextTick(function()
+	{
+		callback();
+	});
 }
 
 util.inherits(File, EventEmitter);
