@@ -6,6 +6,7 @@ var _ = require("underscore"),
 	fs = require("fs"),
 	Side = require("sidestep"),
 	async = require("async"),
+	idGen = require("../id-gen"),
 	File = require("./file");
 
 var DEFAULT_FILE_NAME = "main.cpp";
@@ -28,7 +29,8 @@ var Errors =
 {
 	INVALID_PROJECT_NAME: "Invalid project name",
 	INVALID_BASEDIR: "Invalid base directory",
-	NON_EXISTENT_BASEDIR: "Non-existent base directory"
+	NON_EXISTENT_BASEDIR: "Non-existent base directory",
+	NO_PROJECT_JSON: "Project directory missing project.json"
 };
 
 var Project = function(options, callback)
@@ -95,9 +97,8 @@ var Project = function(options, callback)
 	{
 		return process.nextTick(function()
 		{
-			callback(this._attrs.name + 
-					": project directory " +
-					"missing project.json");
+			callback(new Error(Errors.NO_PROJECT_JSON));
+
 		}.bind(this));
 	}
 
@@ -327,6 +328,7 @@ Project.prototype.toJSON = function()
 }
 
 Project.Errors = Errors;
+Project.DEFAULT_FILE_NAME = DEFAULT_FILE_NAME;
 
 module.exports = Project;
 
