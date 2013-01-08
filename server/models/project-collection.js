@@ -1,12 +1,12 @@
 var Project = require("./project"),
 	fs = require("fs"),
 	async = require("async"),
-	Step = require("step"),
+	Side = require("sidestep"),
 	EventEmitter = require("events").EventEmitter,
 	util = require("util"),
 	utils = require("../utils");
 
-function ProjectCollection()
+function ProjectCollection(callback)
 {
 	var self = this;
 	self._attrs = {};
@@ -15,32 +15,34 @@ function ProjectCollection()
 	// load all projects
 	fs.readdir(utils.projectsDir(), function(err, files)
 	{
-		if (err) return self.emit("error", err);
+		if (err) return callback(err);
 
 		async.forEachSeries(files, function(file, next)
 		{
-			var project = new Project({ name: file });
+			var project = new Project(
+				{ name: file, dir: utils.projectsDir() },
+				function(err)
+				{
+					if (err)
+					{
+						// just skip invalid project directories
+						// and go on
+						console.log("Error while loading project:");
+						console.log(err);
+					}
+					else
+					{
+						self._attrs.projects.push(project);
+					}
 
-			project.on("loaded", function()
-			{
-				self._attrs.projects.push(project);
-				next();
-			});
-
-			project.on("error", function(err)
-			{
-				// just skip invalid project directories
-				// and go on
-				console.log("Error while loading project:");
-				console.log(err);
-				next();
-			});
+					next();
+				});
 		},
 		function(err)
 		{
-			if (err) return self.emit("error", err);
+			if (err) return callback(err);
 
-			self.emit("loaded");
+			callback();
 		});
 	});
 
@@ -54,15 +56,14 @@ ProjectCollection.prototype.toJSON = function()
 	return this._attrs;
 }
 
-// var projects = new ProjectCollection;
-
-// projects.on("error", function(err)
+// var projects = new ProjectCollection(function(err)
 // {
-// 	console.log(err);
-// });
-
-// projects.on("loaded", function()
-// {
-// 	console.log(JSON.stringify(projects, null, "\t"));
-
+// 	if (err)
+// 	{
+// 		console.log("ERROR:", err);
+// 	}
+// 	else
+// 	{
+// 		console.log(JSON.stringify(projects, null, "\t"));		
+// 	}
 // });
