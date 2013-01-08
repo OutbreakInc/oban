@@ -1,6 +1,12 @@
 var EventEmitter = require("events").EventEmitter,
 	util = require("util");
 
+var Errors = 
+{
+	INVALID_FILE_NAME: "Invalid file name",
+	CANT_EDIT_CLOSED_FILE: "Can't edit closed file"
+};
+
 var File = function(options, callback)
 {
 	options = options || {};
@@ -14,7 +20,7 @@ var File = function(options, callback)
 	{
 		return process.nextTick(function()
 		{
-			callback("Must provide a valid file name!");
+			callback(new Error(Errors.INVALID_FILE_NAME));
 		});
 	}
 
@@ -59,7 +65,7 @@ File.prototype.setContents = function(contents, callback)
 
 	if (!this._attrs.isOpen)
 	{
-		return callback("File isn't open");
+		return callback(new Error(Errors.CANT_EDIT_CLOSED_FILE));
 	}
 
 	this._attrs.contents = contents;
@@ -72,5 +78,7 @@ File.prototype.toJSON = function()
 {
 	return this._attrs;
 }
+
+File.Errors = Errors;
 
 module.exports = File;

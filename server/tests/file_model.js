@@ -2,7 +2,8 @@
 {
 
 var assert = require("assert"),
-	File = require("../models/file");
+	File = require("../models/file"),
+	Errors = File.Errors;
 
 describe("File Model", function()
 {
@@ -12,7 +13,7 @@ describe("File Model", function()
 		{
 			var file = new File({}, function(err)
 			{
-				assert.notEqual(err, undefined);
+				assert.equal(err.message, Errors.INVALID_FILE_NAME);
 				done();
 			});
 		});
@@ -21,7 +22,7 @@ describe("File Model", function()
 		{
 			var file = new File({ name: "" }, function(err)
 			{
-				assert.notEqual(err, undefined);
+				assert.equal(err.message, Errors.INVALID_FILE_NAME);
 				done();
 			});				
 		});
@@ -71,7 +72,7 @@ describe("File Model", function()
 			{
 				file.setContents("foo", function(err)
 				{
-					assert.notEqual(err, undefined);
+					assert.equal(err.message, Errors.CANT_EDIT_CLOSED_FILE);
 					done();
 				});
 			});

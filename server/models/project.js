@@ -25,23 +25,46 @@ var BuildStatus =
 	ERRORS: "errors"
 };
 
+var Errors = 
+{
+	INVALID_PROJECT_NAME: "Invalid project name",
+	INVALID_BASEDIR: "Invalid base directory",
+	NON_EXISTENT_BASEDIR: "Non-existent base directory"
+};
+
 var Project = function(options, callback)
 {
 	options = options || {};
+
+	if (!options.name || options.name.length === 0)
+	{
+		return process.nextTick(function()
+		{
+			callback(new Error(Errors.INVALID_PROJECT_NAME));
+		});
+	}
+
+	if (!options.baseDir || options.baseDir.length === 0)
+	{
+		return process.nextTick(function()
+		{
+			callback(new Error(Errors.INVALID_BASEDIR));
+		});		
+	}
+
+	if (!fs.existsSync(options.baseDir))
+	{
+		return process.nextTick(function()
+		{
+			callback(new Error(Errors.NON_EXISTENT_BASEDIR));
+		});	
+	}
 
 	// this contains the serializable properties of the project
 	this._attrs = {};
 
 	this._attrs.name = options.name;
 	this._attrs.path = options.baseDir + "/" + this._attrs.name + "/";
-
-	if (!this._attrs.name || this._attrs.name.length === 0)
-	{
-		return process.nextTick(function()
-		{
-			callback("Must provide a valid project name!");
-		});
-	}
 
 	this._attrs.files = [];
 
@@ -303,6 +326,8 @@ Project.prototype.toJSON = function()
 {
 	return this._attrs;
 }
+
+Project.Errors = Errors;
 
 _.extend(Project.prototype, Mixins.Persistence);
 
