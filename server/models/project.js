@@ -6,7 +6,6 @@ var _ = require("underscore"),
 	fs = require("fs"),
 	Side = require("sidestep"),
 	async = require("async"),
-	Mixins = require("../mixins"),
 	File = require("./file");
 
 var DEFAULT_FILE_NAME = "main.cpp";
@@ -328,8 +327,6 @@ Project.prototype.toJSON = function()
 }
 
 Project.Errors = Errors;
-
-_.extend(Project.prototype, Mixins.Persistence);
 
 module.exports = Project;
 
