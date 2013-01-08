@@ -33,9 +33,7 @@ var Project = function(options, callback)
 	this._attrs = {};
 
 	this._attrs.name = options.name;
-	this._attrs.path = options.dir + "/" + this._attrs.name + "/";
-
-	var self = this;
+	this._attrs.path = options.baseDir + "/" + this._attrs.name + "/";
 
 	if (!this._attrs.name || this._attrs.name.length === 0)
 	{
@@ -57,8 +55,9 @@ var Project = function(options, callback)
 
 		process.nextTick(function()
 		{
-			self._restore(callback);
-		});
+			this._restore(callback);
+
+		}.bind(this));
 	}
 	else if (options.create)
 	{
@@ -66,17 +65,18 @@ var Project = function(options, callback)
 
 		process.nextTick(function()
 		{			
-			self._init(callback);
-		});
+			this._init(callback);
+
+		}.bind(this));
 	}
 	else
 	{
 		return process.nextTick(function()
 		{
-			callback(self._attrs.name + 
+			callback(this._attrs.name + 
 					": project directory " +
 					"missing project.json");
-		});
+		}.bind(this));
 	}
 
 	EventEmitter.call(this);
@@ -92,12 +92,12 @@ Project.prototype._init = function(callback)
 	this._attrs.buildStatus = BuildStatus.UNCOMPILED;
 	this._attrs.runStatus = RunStatus.STOPPED;
 
-	var self = this;
+	var step = new Side(this);
 
-	Side(
+	step.define(
 	function()
 	{
-		self.addFile(DEFAULT_FILE_NAME, this);
+		this.addFile(DEFAULT_FILE_NAME, step.next);
 	},
 	function(err)
 	{
@@ -106,23 +106,22 @@ Project.prototype._init = function(callback)
 	.error(function(err)
 	{
 		callback(err);
-	})();
+	})
+	.exec();
 }
 
 // restore an existing project
 Project.prototype._restore = function(callback)
 {
-	var self = this;
-
 	this._settingsIo.read(function(err, attrs)
 	{
 		if (err) return callback(err);
 
-		self._attrs = attrs;
+		this._attrs = attrs;
 
 		var fileObjects = [];
 
-		async.forEachSeries(self._attrs.files, function(fileAttrs, next)
+		async.forEachSeries(this._attrs.files, function(fileAttrs, next)
 		{
 			var file = new File(fileAttrs, function(err)
 			{
@@ -132,15 +131,16 @@ Project.prototype._restore = function(callback)
 				fileObjects.push(file);
 				next();	
 			});
-		},
+		}.bind(this),
 		function(err)
 		{
 			if (err) return callback(err);
 
-			self._attrs.files = fileObjects;
+			this._attrs.files = fileObjects;
 			callback();
-		});
-	});
+
+		}.bind(this));
+	}.bind(this));
 }
 
 Project.prototype._findFile = function(name)
@@ -160,32 +160,33 @@ Project.prototype.addFile = function(name, callback)
 {
 	if (this._findFile(name)) return callback("File already exists");
 
-	var self = this;
+	var step = new Side(this);
 
-	var file;
-
-	Side(
+	step.define(
 	function()
 	{
-		file = new File({ name: name }, this);
+		step.data.file = new File({ name: name }, step.next);
 	},
 	function(err)
 	{
-		self._attrs.files.push(file);
-		self._fileIo.create(file.name(), this);
+		var file = step.data.file;
+
+		this._attrs.files.push(file);
+		this._fileIo.create(file.name(), step.next);
 	},
 	function(err)
 	{
-		self._saveAttrs(this);
+		this._saveAttrs(step.next);
 	},
 	function(err)
 	{			
-		callback(null, file);
+		callback(null, step.data.file);
 	})
 	.error(function(err)
 	{
 		callback(err);
-	})();
+	})
+	.exec();
 }
 
 Project.prototype.removeFile = function(name, options, callback)
@@ -204,36 +205,36 @@ Project.prototype.removeFile = function(name, options, callback)
 		return file.name() !== otherFile.name();
 	});
 
-	var self = this;
+	var step = new Side(this);
 
-	Side(
+	step.define(
 	function()
 	{
 		if (options.removeFromSystem)
 		{
 			console.log("removing from system: " + file.name());
-			self._fileIo.remove(file.name(), this);
+			this._fileIo.remove(file.name(), step.next);
 		}
 		else
 		{
-			this();
+			step.next();
 		}
 	},
 	function(err)
 	{	
 		console.log("removed file, now updating project settings");
-		self._saveAttrs(this);
+		this._saveAttrs(step.next);
 	},
 	function(err)
 	{
 		console.log("updated project settings");
-		process.exit(0);
 		callback();
 	})
 	.error(function(err)
 	{
 		callback(err);	
-	})();
+	})
+	.exec();
 }
 
 Project.prototype.openFile = function(name, callback)
@@ -242,17 +243,17 @@ Project.prototype.openFile = function(name, callback)
 
 	if (!file) return callback("No such file");
 
-	var self = this;
+	var step = new Side(this);
 
-	Side(
+	step.define(
 	function()
 	{
-		self._fileIo.read(file.name(), this);
+		this._fileIo.read(file.name(), step.next);
 	}, 
 	function(err, contents)
 	{
 		file.open();
-		file.setContents(contents, this);
+		file.setContents(contents, step.next);
 	},
 	function(err)
 	{
@@ -261,7 +262,8 @@ Project.prototype.openFile = function(name, callback)
 	.error(function(err)
 	{
 		callback(err);
-	})();
+	})
+	.exec();
 }
 
 Project.prototype.closeFile = function(name, callback)

@@ -10,8 +10,6 @@ var File = function(options, callback)
 	this._attrs.name = options.name;
 	this._attrs.isOpen = false;
 
-	var self = this;
-
 	if (!this._attrs.name || this._attrs.name.length === 0)
 	{
 		return process.nextTick(function()
