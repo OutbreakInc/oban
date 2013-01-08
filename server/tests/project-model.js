@@ -15,6 +15,36 @@ describe("Project Model", function()
 			fs.rmdirSync("nonExistentDir");
 		}
 
+		if (!fs.existsSync("projectsDir"))
+		{
+			fs.mkdirSync("projectsDir");
+		}
+
+		if (!fs.existsSync("projectsDir/noProjectJson"))
+		{
+			fs.mkdirSync("projectsDir/noProjectJson");
+		}
+
+		done();
+	});
+
+	after(function(done)
+	{
+		if (fs.existsSync("projectsDir"))
+		{
+			if (fs.existsSync("projectsDir/noProjectJson"))
+			{
+				fs.rmdirSync("projectsDir/noProjectJson");
+			}
+
+			if (fs.existsSync("projectsDir/emptyProject"))
+			{
+				fs.unlink("projectsDir/emptyProject/project.json");
+				fs.unlink("projectsDir/emptyProject/main.cpp");
+				fs.rmdirSync("projectsDir/emptyProject");
+			}
+		}
+
 		done();
 	});
 
@@ -49,7 +79,9 @@ describe("Project Model", function()
 
 		it("should not allow empty base directories", function(done)
 		{
-			var project = new Project({ name: "derp", baseDir: "" }, function(err)
+			var project = new Project(
+				{ name: "derp", baseDir: "" }, 
+			function(err)
 			{
 				assert.equal(err.message, Errors.INVALID_BASEDIR);
 				done();
@@ -58,12 +90,40 @@ describe("Project Model", function()
 
 		it("should not allow non-existent base directories", function(done)
 		{
-			var project = new Project({ name: "derp", baseDir: "nonExistentDir" }, function(err)
+			var project = new Project(
+				{ name: "derp", baseDir: "nonExistentDir" }, 
+			function(err)
 			{
 				assert.equal(err.message, Errors.NON_EXISTENT_BASEDIR);
 				done();
 			});
-		});		
+		});
+
+		it("should not restore a project with no project.json file", function(done)
+		{
+			var project = new Project(
+				{ name: "noProjectJson", baseDir: "projectsDir" }, 
+			function(err)
+			{
+				assert.equal(err.message, Errors.NO_PROJECT_JSON);
+				done();
+			});
+		});
+
+		it("should correctly initialize a project from scratch", function(done)
+		{
+			var project = new Project(
+				{ name: "emptyProject", baseDir: "projectsDir", create: true }, 
+				function(err)
+				{
+					if (err) return done(err);
+
+					assert.equal(fs.existsSync(
+						"projectsDir/emptyProject/" + Project.DEFAULT_FILE_NAME), true);
+
+					done();
+				});
+		});
 	});
 
 	// describe("#methods", function()
