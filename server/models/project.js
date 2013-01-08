@@ -10,7 +10,7 @@ var _ = require("underscore"),
 	Mixins = require("../mixins"),
 	File = require("./file");
 
-var DEFAULT_FILE = { name: "main.cpp" };
+var DEFAULT_FILE_NAME = "main.cpp";
 
 var RunStatus =
 {
@@ -26,7 +26,7 @@ var BuildStatus =
 	ERRORS: "errors"
 };
 
-var Project = function(options)
+var Project = function(options, callback)
 {
 	options = options || {};
 
@@ -40,10 +40,9 @@ var Project = function(options)
 
 	if (!this._attrs.name || this._attrs.name.length === 0)
 	{
-		return process.nextTick(
-		function()
+		return process.nextTick(function()
 		{
-			self.emit("error", "Must provide a valid project name!");
+			callback("Must provide a valid project name!");
 		});
 	}
 
@@ -56,19 +55,28 @@ var Project = function(options)
 		fs.existsSync(this._settingsIo.path()))
 	{
 		console.log("restoring project: " + this._attrs.name);
-		this._restore();
+
+		process.nextTick(function()
+		{
+			self._restore(callback);
+		});
 	}
 	else if (options.create)
 	{
 		console.log("init project from scratch: " + this._attrs.name);
-		this._init();
+
+		process.nextTick(function()
+		{			
+			self._init(callback);
+		});
 	}
 	else
 	{
-		process.nextTick(function()
+		return process.nextTick(function()
 		{
-			self.emit("error", 	self._attrs.name + ": project directory " +
-								"missing project.json");
+			callback(self._attrs.name + 
+					": project directory " +
+					"missing project.json");
 		});
 	}
 
@@ -78,44 +86,38 @@ var Project = function(options)
 util.inherits(Project, EventEmitter);
 
 // initialize new project
-Project.prototype._init = function()
+Project.prototype._init = function(callback)
 {
 	this._attrs.id = idGen();
 
 	this._attrs.buildStatus = BuildStatus.UNCOMPILED;
 	this._attrs.runStatus = RunStatus.STOPPED;
 
-	this._attrs.files.push(new File(DEFAULT_FILE));
-
 	var self = this;
 
 	Side(
 	function()
 	{
-		self._fileIo.write(self._attrs.files[0].name, "", this);
+		self.addFile(DEFAULT_FILE_NAME, this);
 	},
 	function(err)
 	{
-		self._saveAttrs(this);
-	},
-	function(err)
-	{
-		self.emit("loaded");
+		callback();
 	})
 	.error(function(err)
 	{
-		self.emit("error", err);
+		callback(err);
 	})();
 }
 
 // restore an existing project
-Project.prototype._restore = function()
+Project.prototype._restore = function(callback)
 {
 	var self = this;
 
 	this._settingsIo.read(function(err, attrs)
 	{
-		if (err) return self.emit("error", err);
+		if (err) return callback(err);
 
 		self._attrs = attrs;
 
@@ -123,26 +125,21 @@ Project.prototype._restore = function()
 
 		async.forEachSeries(self._attrs.files, function(fileAttrs, next)
 		{
-			var file = new File(fileAttrs);
-
-			file.on("loaded", function()
+			var file = new File(fileAttrs, function(err)
 			{
+				if (err) return next(err);
+
 				console.log("loaded file: " + file.name());
 				fileObjects.push(file);
-				next();
-			});
-
-			file.on("error", function(err)
-			{
-				next(err);
+				next();	
 			});
 		},
 		function(err)
 		{
-			if (err) return self.emit("error", err);
+			if (err) return callback(err);
 
 			self._attrs.files = fileObjects;
-			self.emit("loaded");
+			callback();
 		});
 	});
 }
@@ -164,37 +161,32 @@ Project.prototype.addFile = function(name, callback)
 {
 	if (this._findFile(name)) return callback("File already exists");
 
-	var file = new File({ name: name });
-
-	file.on("error", function(err)
-	{
-		callback(err);
-	});
-
 	var self = this;
 
-	file.on("loaded", function()
+	var file;
+
+	Side(
+	function()
+	{
+		file = new File({ name: name }, this);
+	},
+	function(err)
 	{
 		self._attrs.files.push(file);
-
-		Side(
-		function()
-		{
-			self._fileIo.create(file.name(), this);
-		},
-		function(err)
-		{
-			self._saveAttrs(this);
-		},
-		function(err)
-		{			
-			callback(null, file);
-		})
-		.error(function(err)
-		{
-			callback(err);
-		})();
-	});
+		self._fileIo.create(file.name(), this);
+	},
+	function(err)
+	{
+		self._saveAttrs(this);
+	},
+	function(err)
+	{			
+		callback(null, file);
+	})
+	.error(function(err)
+	{
+		callback(err);
+	})();
 }
 
 Project.prototype.removeFile = function(name, options, callback)
