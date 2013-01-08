@@ -57,6 +57,11 @@ File.prototype.isOpen = function()
 	return this._attrs.isOpen;
 }
 
+File.prototype.contents = function()
+{
+	return this._attrs.contents;
+}
+
 File.prototype.setContents = function(contents, callback)
 {
 	callback = callback || function(){};
