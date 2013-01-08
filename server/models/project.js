@@ -1,7 +1,6 @@
 var _ = require("underscore"),
 	FileIo = require("../file-io"),
 	SettingsIo = require("../settings-io"),
-	utils = require("../utils"),
 	util = require("util"),
 	EventEmitter = require("events").EventEmitter,
 	fs = require("fs"),
@@ -34,7 +33,7 @@ var Project = function(options, callback)
 	this._attrs = {};
 
 	this._attrs.name = options.name;
-	this._attrs.path = utils.projectsDir() + "/" + this._attrs.name + "/";
+	this._attrs.path = options.dir + "/" + this._attrs.name + "/";
 
 	var self = this;
 
