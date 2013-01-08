@@ -5,7 +5,7 @@ var _ = require("underscore"),
 	util = require("util"),
 	EventEmitter = require("events").EventEmitter,
 	fs = require("fs"),
-	Step = require("step"),
+	Side = require("sidestep"),
 	async = require("async"),
 	Mixins = require("../mixins"),
 	File = require("./file");
@@ -80,6 +80,8 @@ util.inherits(Project, EventEmitter);
 // initialize new project
 Project.prototype._init = function()
 {
+	this._attrs.id = idGen();
+
 	this._attrs.buildStatus = BuildStatus.UNCOMPILED;
 	this._attrs.runStatus = RunStatus.STOPPED;
 
@@ -87,18 +89,23 @@ Project.prototype._init = function()
 
 	var self = this;
 
-	Step(
+	Side(
 	function()
 	{
-		self._fileIo.write(self._attrs.files[0].name, "", this.parallel());
-		self._settingsIo.write(self._attrs, this.parallel());
+		self._fileIo.write(self._attrs.files[0].name, "", this);
 	},
 	function(err)
 	{
-		if (err) return self.emit("error", err);
-
+		self._saveAttrs(this);
+	},
+	function(err)
+	{
 		self.emit("loaded");
-	});
+	})
+	.error(function(err)
+	{
+		self.emit("error", err);
+	})();
 }
 
 // restore an existing project
@@ -148,11 +155,94 @@ Project.prototype._findFile = function(name)
 	});
 }
 
-Project.prototype.addFile = function(name)
+Project.prototype._saveAttrs = function(callback)
+{
+	this._settingsIo.write(this._attrs, callback);
+}
+
+Project.prototype.addFile = function(name, callback)
 {
 	if (this._findFile(name)) return callback("File already exists");
 
-	this._attrs.files.push(new File({ name: name }));
+	var file = new File({ name: name });
+
+	file.on("error", function(err)
+	{
+		callback(err);
+	});
+
+	var self = this;
+
+	file.on("loaded", function()
+	{
+		self._attrs.files.push(file);
+
+		Side(
+		function()
+		{
+			self._fileIo.create(file.name(), this);
+		},
+		function(err)
+		{
+			self._saveAttrs(this);
+		},
+		function(err)
+		{			
+			callback(null, file);
+		})
+		.error(function(err)
+		{
+			callback(err);
+		})();
+	});
+}
+
+Project.prototype.removeFile = function(name, options, callback)
+{
+	var file = this._findFile(name);
+
+	if (!file) return callback("No such file");
+
+	if (typeof options == "function")
+	{
+		callback = options;
+	}
+
+	this._attrs.files = _.filter(this._attrs.files, function(otherFile)
+	{
+		return file.name() !== otherFile.name();
+	});
+
+	var self = this;
+
+	Side(
+	function()
+	{
+		if (options.removeFromSystem)
+		{
+			console.log("removing from system: " + file.name());
+			self._fileIo.remove(file.name(), this);
+		}
+		else
+		{
+			this();
+		}
+	},
+	function(err)
+	{	
+		console.log("removed file, now updating project settings");
+		self._saveAttrs(this);
+	},
+	function(err)
+	{
+		console.log("updated project settings");
+		process.exit(0);
+		callback();
+	})
+	.error(function(err)
+	{
+		callback(err);	
+	})();
 }
 
 Project.prototype.openFile = function(name, callback)
@@ -163,24 +253,24 @@ Project.prototype.openFile = function(name, callback)
 
 	var self = this;
 
-	file.open();
-
-	this._fileIo.read(file.name(), function(err, contents)
+	Side(
+	function()
 	{
-		if (err) return callback(err);
-
-		file.setContents(contents);
-
-		file.on("modified", function(contents)
-		{
-			self.saveFile(file.name(), function(err)
-			{
-				if (err) return self.emit("error", err);
-			});
-		});
-
+		self._fileIo.read(file.name(), this);
+	}, 
+	function(err, contents)
+	{
+		file.open();
+		file.setContents(contents, this);
+	},
+	function(err)
+	{
 		callback(null, file);
-	});
+	})
+	.error(function(err)
+	{
+		callback(err);
+	})();
 }
 
 Project.prototype.closeFile = function(name, callback)
@@ -197,18 +287,20 @@ Project.prototype.closeFile = function(name, callback)
 
 Project.prototype.saveFile = function(name, callback)
 {
+	console.log("saving " + name);
+
 	var file = this._findFile(name);
 
 	if (!file) return callback("No such file");
 
-	this._fileIo.write(file.name, file.contents, function(err)
+	this._fileIo.write(file.name(), file.contents(), function(err)
 	{
 		if (err) return callback(err);
 
 		callback();
 	});
 }
-
+ 
 Project.prototype.files = function()
 {
 	return this._attrs.files;
@@ -223,30 +315,3 @@ _.extend(Project.prototype, Mixins.Persistence);
 
 module.exports = Project;
 
-// var project = new Project({ name: "Merp" });
-
-// project.on("loaded", function()
-// {
-// 	console.log("project loaded");
-// 	console.log(JSON.stringify(project, null, "\t"));
-
-// 	console.log(project.files()[0]);
-
-// 	project.openFile(project.files()[0].name(), function(err, file)
-// 	{
-// 		console.log("opened file:", file.name());
-
-// 		file.setContents("Derp");
-
-// 		project.closeFile(file.name(), function()
-// 		{
-// 			console.log("closed file:", file.name());
-// 			console.log(file);
-// 		})
-// 	});
-// });
-
-// project.on("error", function(err)
-// {
-// 	console.log("error: ", err);
-// });
