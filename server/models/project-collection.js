@@ -6,45 +6,88 @@ var Project = require("./project"),
 	util = require("util"),
 	utils = require("../utils");
 
-function ProjectCollection(callback)
+var Errors =
 {
-	var self = this;
-	self._attrs = {};
-	self._attrs.projects = [];
+	INVALID_BASEDIR: "Invalid base directory",
+	NON_EXISTENT_BASEDIR: "Non-existent base directory",
+};
+
+function ProjectCollection(options, callback)
+{
+	options = options || {};
+
+	if (!options.baseDir || options.baseDir.length === 0)
+	{
+		return process.nextTick(function()
+		{
+			callback(new Error(Errors.INVALID_BASEDIR));
+		});
+	}
+
+	this._attrs = {};
+	this._attrs.projects = [];
+	this._attrs.baseDir = options.baseDir;
 
 	// load all projects
-	fs.readdir(utils.projectsDir(), function(err, files)
+	var step = new Side(this);
+
+	step.define(
+	function()
 	{
-		if (err) return callback(err);
-
-		async.forEachSeries(files, function(file, next)
+		fs.readdir(this._attrs.baseDir, step.next);
+	},
+	function(err, projectDirs)
+	{
+		async.forEachSeries(projectDirs, function(dir, next)
 		{
-			var project = new Project(
-				{ name: file, dir: utils.projectsDir() },
-				function(err)
-				{
-					if (err)
-					{
-						// just skip invalid project directories
-						// and go on
-						console.log("Error while loading project:");
-						console.log(err);
-					}
-					else
-					{
-						self._attrs.projects.push(project);
-					}
+			var path = this._attrs.baseDir + "/" + dir;
 
-					next();
-				});
-		},
+			fs.stat(path, function(err, stats)
+			{
+				if (err)
+				{
+					console.log(path + ":");
+					console.log(err);
+					return next();
+				}
+				// skip non-directories
+				else if (!stats.isDirectory())
+				{
+					return next();
+				}
+
+				console.log(path + ":");
+
+				var project = new Project(
+					{ name: dir, baseDir: this._attrs.baseDir },
+					function(err)
+					{
+						if (err)
+						{
+							// just skip invalid project directories
+							// and go on
+							console.log(err);
+						}
+						else
+						{
+							this._attrs.projects.push(project);
+						}
+
+						next();
+
+					}.bind(this));
+			}.bind(this));
+		}.bind(this),
 		function(err)
 		{
-			if (err) return callback(err);
-
 			callback();
 		});
-	});
+	})
+	.error(function(err)
+	{
+		callback(err);
+	})
+	.exec();
 
 	EventEmitter.call(this);
 }
