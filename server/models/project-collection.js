@@ -61,23 +61,24 @@ function ProjectCollection(options, callback)
 				var project = new Project(
 					{ name: dir, baseDir: this._attrs.baseDir },
 					function(err)
+				{
+					if (err)
 					{
-						if (err)
-						{
-							// just skip invalid project directories
-							// and go on
-							console.log(err);
-						}
-						else
-						{
-							this._attrs.projects.push(project);
-						}
+						// just skip invalid project directories
+						// and go on
+						console.log(err);
+					}
+					else
+					{
+						this._attrs.projects.push(project);
+					}
 
-						next();
+					next();
 
-					}.bind(this));
+				}.bind(this));
 			}.bind(this));
 		}.bind(this),
+
 		function(err)
 		{
 			callback();
