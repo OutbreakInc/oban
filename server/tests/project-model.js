@@ -142,6 +142,8 @@ describe("Project Model", function()
 						if (err) return done(err);
 
 						assert.equal(file.contents, "");
+						assert.equal(project._attrs.buildStatus, Project.BuildStatus.UNCOMPILED);
+						assert.equal(project._attrs.runStatus, Project.RunStatus.STOPPED);
 					});
 
 					done();
