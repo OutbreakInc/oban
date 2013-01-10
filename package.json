@@ -16,6 +16,10 @@
 		"sidestep": "0.1.0",
 		"async": "0.1.22"
 	},
+	"devDependencies":
+	{
+		"shelljs": "0.1.x"
+	},
 	"scripts":
 	{
 		"test": "echo \"Error: no test specified\" && exit 1",
