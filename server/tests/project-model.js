@@ -6,24 +6,28 @@ var assert = require("assert"),
 	Project = require("../models/project"),
 	Errors = Project.Errors;
 
+require("shelljs/global");
+
 describe("Project Model", function()
 {
 	before(function(done)
 	{
 		if (fs.existsSync("nonExistentDir"))
 		{
-			fs.rmdirSync("nonExistentDir");
+			rm("-r", "nonExistentDir");
 		}
 
 		if (!fs.existsSync("projectsDir"))
 		{
-			fs.mkdirSync("projectsDir");
+			mkdir("projectsDir");
 		}
 
 		if (!fs.existsSync("projectsDir/noProjectJson"))
 		{
-			fs.mkdirSync("projectsDir/noProjectJson");
+			mkdir("projectsDir/noProjectJson");
 		}
+
+		cp("-R", "fixtures/existingProject", "projectsDir");
 
 		done();
 	});
@@ -32,17 +36,7 @@ describe("Project Model", function()
 	{
 		if (fs.existsSync("projectsDir"))
 		{
-			if (fs.existsSync("projectsDir/noProjectJson"))
-			{
-				fs.rmdirSync("projectsDir/noProjectJson");
-			}
-
-			if (fs.existsSync("projectsDir/emptyProject"))
-			{
-				fs.unlink("projectsDir/emptyProject/project.json");
-				fs.unlink("projectsDir/emptyProject/main.cpp");
-				fs.rmdirSync("projectsDir/emptyProject");
-			}
+			rm("-r", "projectsDir");
 		}
 
 		done();
@@ -121,9 +115,38 @@ describe("Project Model", function()
 					assert.equal(fs.existsSync(
 						"projectsDir/emptyProject/" + Project.DEFAULT_FILE_NAME), true);
 
+					assert.equal(fs.existsSync(
+						"projectsDir/emptyProject/project.json"), true);
+
 					done();
 				});
 		});
+
+		it("should correctly restore an existing project", function(done)
+		{
+			var project = new Project(
+				{ name: "existingProject", baseDir: "projectsDir", create: true }, 
+				function(err)
+				{
+					if (err) return done(err);
+
+					assert.equal(fs.existsSync(
+						"projectsDir/existingProject/" + Project.DEFAULT_FILE_NAME), true);
+
+					assert.equal(fs.existsSync(
+						"projectsDir/existingProject/project.json"), true);
+
+					project.openFile(Project.DEFAULT_FILE_NAME, 
+						function(err, file)
+					{
+						if (err) return done(err);
+
+						assert.equal(file.contents, "");
+					});
+
+					done();
+				});
+		})
 	});
 
 	// describe("#methods", function()

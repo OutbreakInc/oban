@@ -1,5 +1,6 @@
 var EventEmitter = require("events").EventEmitter,
-	util = require("util");
+	util = require("util"),
+	_ = require("underscore");
 
 var Errors = 
 {
@@ -77,6 +78,11 @@ File.prototype.setContents = function(contents, callback)
 File.prototype.toJSON = function()
 {
 	return this._attrs;
+}
+
+File.prototype.toFile = function()
+{
+	return _.omit(this._attrs, "isOpen");
 }
 
 File.Errors = Errors;

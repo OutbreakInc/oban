@@ -30,7 +30,8 @@ var Errors =
 	INVALID_PROJECT_NAME: "Invalid project name",
 	INVALID_BASEDIR: "Invalid base directory",
 	NON_EXISTENT_BASEDIR: "Non-existent base directory",
-	NO_PROJECT_JSON: "Project directory missing project.json"
+	NO_PROJECT_JSON: "Project directory missing project.json",
+	INVALID_PROJECT_JSON: "Invalid project.json file"
 };
 
 var Project = function(options, callback)
@@ -139,8 +140,14 @@ Project.prototype._restore = function(callback)
 	this._settingsIo.read(function(err, attrs)
 	{
 		if (err) return callback(err);
+		else if (!attrs) return callback(new Error(Errors.INVALID_PROJECT_JSON));
 
 		this._attrs = attrs;
+
+		if (!this._attrs.id)
+		{
+			this._attrs.id = idGen();
+		}
 
 		var fileObjects = [];
 
@@ -324,7 +331,26 @@ Project.prototype.files = function()
 
 Project.prototype.toJSON = function()
 {
-	return this._attrs;
+	return _.omit(this._attrs, "path");
+}
+
+Project.prototype.toFile = function()
+{
+	var json = _.clone(this._attrs);
+
+	json = _.omit(this._attrs, "path");
+
+	var files = [];
+
+	// don't save isOpen attribute, because it's only used during runtime
+	json.files.forEach(function(file)
+	{
+		files.push(file.toFile());
+	});
+
+	json.files = files;
+
+	return json;
 }
 
 Project.Errors = Errors;
