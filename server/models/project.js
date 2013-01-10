@@ -354,6 +354,8 @@ Project.prototype.toFile = function()
 }
 
 Project.Errors = Errors;
+Project.BuildStatus = BuildStatus;
+Project.RunStatus = RunStatus;
 Project.DEFAULT_FILE_NAME = DEFAULT_FILE_NAME;
 
 module.exports = Project;
