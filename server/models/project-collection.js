@@ -60,7 +60,7 @@ function ProjectCollection(options, callback)
 
 				var project = new Project(
 					{ name: dir, baseDir: this._attrs.baseDir },
-					function(err)
+				function(err)
 				{
 					if (err)
 					{
