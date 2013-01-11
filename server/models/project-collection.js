@@ -44,19 +44,19 @@ function ProjectCollection(options, callback)
 
 			fs.stat(path, function(err, stats)
 			{
+				console.log(path + ":");
+
 				if (err)
 				{
-					console.log(path + ":");
 					console.log(err);
 					return next();
 				}
 				// skip non-directories
 				else if (!stats.isDirectory())
 				{
+					console.log("skipping (not a directory)");
 					return next();
 				}
-
-				console.log(path + ":");
 
 				var project = new Project(
 					{ name: dir, baseDir: this._attrs.baseDir },

@@ -12,24 +12,28 @@ var File = function(options, callback)
 {
 	options = options || {};
 
-	this._attrs = {};
+	var attrs = {};
 
-	this._attrs.name = options.name;
-	this._attrs.isOpen = false;
+	attrs.name = options.name;
+	attrs.isOpen = false;
 
-	if (!this._attrs.name || this._attrs.name.length === 0)
+	this._checkAttrs(attrs, function(err)
 	{
-		return process.nextTick(function()
+		if (err) return process.nextTick(function()
 		{
-			callback(new Error(Errors.INVALID_FILE_NAME));
+			callback(err);
 		});
-	}
 
-	EventEmitter.call(this);
-	process.nextTick(function()
-	{
-		callback();
-	});
+		this._attrs = attrs;
+
+		EventEmitter.call(this);
+
+		process.nextTick(function()
+		{
+			callback();
+		});
+
+	}.bind(this));
 }
 
 util.inherits(File, EventEmitter);
@@ -37,6 +41,22 @@ util.inherits(File, EventEmitter);
 File.prototype.name = function()
 {
 	return this._attrs.name;
+}
+
+File.prototype.setName = function(newName, callback)
+{
+	var attrs = _.clone(this._attrs);
+	attrs.name = newName;
+
+	this._checkAttrs(attrs, function(err)
+	{
+		if (err) return callback(err);
+
+		this._attrs = attrs;
+
+		callback();
+
+	}.bind(this));
 }
 
 File.prototype.open = function()
@@ -83,6 +103,16 @@ File.prototype.toJSON = function()
 File.prototype.toFile = function()
 {
 	return _.omit(this._attrs, "isOpen");
+}
+
+File.prototype._checkAttrs = function(attrs, callback)
+{
+	if (!attrs.name || attrs.name.length === 0)
+	{
+		return callback(new Error(Errors.INVALID_FILE_NAME));
+	}
+
+	callback();
 }
 
 File.Errors = Errors;

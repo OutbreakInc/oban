@@ -38,6 +38,19 @@ FileIo.prototype.remove = function(fileName, callback)
 	fs.unlink(this.path + fileName, callback);
 }
 
+FileIo.prototype.rename = function(oldName, newName, callback)
+{
+	fs.rename(this.path + oldName, this.path + newName, callback);
+}
+
+FileIo.prototype.exists = function(fileName, callback)
+{
+	fs.exists(this.path + fileName, function(exists)
+	{
+		callback(null, exists);
+	});
+}
+
 FileIo.prototype.watch = function(fileName, callback)
 {
 	fs.watchFile(this.path + fileName, function(curr, prev)
