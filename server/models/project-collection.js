@@ -100,7 +100,15 @@ ProjectCollection.prototype.toJSON = function()
 	return this._attrs;
 }
 
-// var projects = new ProjectCollection(function(err)
+ProjectCollection.Errors = Errors;
+
+module.exports = ProjectCollection;
+
+// var projects = new ProjectCollection(
+// 	{
+// 		baseDir: utils.projectsDir()
+// 	},
+// 	function(err)
 // {
 // 	if (err)
 // 	{

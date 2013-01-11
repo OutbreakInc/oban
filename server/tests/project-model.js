@@ -4,43 +4,15 @@
 var assert = require("assert"),
 	fs = require("fs"),
 	Project = require("../models/project"),
+	ProjectFixtures = require("./project-fixtures"),
 	Errors = Project.Errors;
 
 require("shelljs/global");
 
 describe("Project Model", function()
 {
-	before(function(done)
-	{
-		if (fs.existsSync("nonExistentDir"))
-		{
-			rm("-r", "nonExistentDir");
-		}
-
-		if (!fs.existsSync("projectsDir"))
-		{
-			mkdir("projectsDir");
-		}
-
-		if (!fs.existsSync("projectsDir/noProjectJson"))
-		{
-			mkdir("projectsDir/noProjectJson");
-		}
-
-		cp("-R", "fixtures/existingProject", "projectsDir");
-
-		done();
-	});
-
-	after(function(done)
-	{
-		if (fs.existsSync("projectsDir"))
-		{
-			rm("-r", "projectsDir");
-		}
-
-		done();
-	});
+	before(ProjectFixtures.load);
+	after(ProjectFixtures.unload);
 
 	describe("#Project()", function()
 	{
