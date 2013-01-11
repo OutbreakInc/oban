@@ -4,43 +4,15 @@
 var assert = require("assert"),
 	fs = require("fs"),
 	Project = require("../models/project"),
+	ProjectFixtures = require("./project-fixtures"),
 	Errors = Project.Errors;
 
 require("shelljs/global");
 
 describe("Project Model", function()
 {
-	before(function(done)
-	{
-		if (fs.existsSync("nonExistentDir"))
-		{
-			rm("-r", "nonExistentDir");
-		}
-
-		if (!fs.existsSync("projectsDir"))
-		{
-			mkdir("projectsDir");
-		}
-
-		if (!fs.existsSync("projectsDir/noProjectJson"))
-		{
-			mkdir("projectsDir/noProjectJson");
-		}
-
-		cp("-R", "fixtures/existingProject", "projectsDir");
-
-		done();
-	});
-
-	after(function(done)
-	{
-		if (fs.existsSync("projectsDir"))
-		{
-			rm("-r", "projectsDir");
-		}
-
-		done();
-	});
+	before(ProjectFixtures.load);
+	after(ProjectFixtures.unload);
 
 	describe("#Project()", function()
 	{
@@ -108,125 +80,48 @@ describe("Project Model", function()
 		{
 			var project = new Project(
 				{ name: "emptyProject", baseDir: "projectsDir", create: true }, 
-				function(err)
-				{
-					if (err) return done(err);
+			function(err)
+			{
+				if (err) return done(err);
 
-					assert.equal(fs.existsSync(
-						"projectsDir/emptyProject/" + Project.DEFAULT_FILE_NAME), true);
+				assert.equal(fs.existsSync(
+					"projectsDir/emptyProject/" + Project.DEFAULT_FILE_NAME), true);
 
-					assert.equal(fs.existsSync(
-						"projectsDir/emptyProject/project.json"), true);
+				assert.equal(fs.existsSync(
+					"projectsDir/emptyProject/project.json"), true);
 
-					done();
-				});
+				done();
+			});
 		});
 
 		it("should correctly restore an existing project", function(done)
 		{
 			var project = new Project(
 				{ name: "existingProject", baseDir: "projectsDir", create: true }, 
-				function(err)
+			function(err)
+			{
+				if (err) return done(err);
+
+				assert.equal(fs.existsSync(
+					"projectsDir/existingProject/" + Project.DEFAULT_FILE_NAME), true);
+
+				assert.equal(fs.existsSync(
+					"projectsDir/existingProject/project.json"), true);
+
+				project.openFile(Project.DEFAULT_FILE_NAME, 
+					function(err, file)
 				{
 					if (err) return done(err);
 
-					assert.equal(fs.existsSync(
-						"projectsDir/existingProject/" + Project.DEFAULT_FILE_NAME), true);
-
-					assert.equal(fs.existsSync(
-						"projectsDir/existingProject/project.json"), true);
-
-					project.openFile(Project.DEFAULT_FILE_NAME, 
-						function(err, file)
-					{
-						if (err) return done(err);
-
-						assert.equal(file.contents, "");
-						assert.equal(project._attrs.buildStatus, Project.BuildStatus.UNCOMPILED);
-						assert.equal(project._attrs.runStatus, Project.RunStatus.STOPPED);
-					});
-
-					done();
+					assert.equal(file.contents, "");
+					assert.equal(project._attrs.buildStatus, Project.BuildStatus.UNCOMPILED);
+					assert.equal(project._attrs.runStatus, Project.RunStatus.STOPPED);
 				});
-		})
+
+				done();
+			});
+		});
 	});
-
-	// describe("#methods", function()
-	// {
-	// 	var file;
-
-	// 	beforeEach(function(done)
-	// 	{
-	// 		file = new File({ name: "derp.cpp" }, function(err)
-	// 		{
-	// 			if (err) return done(err);
-	// 			done();
-	// 		});
-	// 	});
-
-	// 	describe("#open", function()
-	// 	{
-	// 		it("should mark the file as open", function(done)
-	// 		{
-	// 			file.open();
-	// 			assert.equal(file.isOpen(), true);
-	// 			done();
-	// 		});
-	// 	});
-
-	// 	describe("#close", function()
-	// 	{
-	// 		it("should mark an open file as closed and delete its contents", function()
-	// 		{
-	// 			file.open();
-	// 			assert.equal(file.isOpen(), true);
-
-	// 			file._attrs.contents = "foo";
-	// 			file.close();
-
-	// 			assert.equal(file.isOpen(), false);
-	// 			assert.equal(file.contents(), undefined);
-	// 		});
-	// 	});
-
-	// 	describe("#setContents", function()
-	// 	{
-	// 		it("should not allow editing a file that isn't open", function(done)
-	// 		{
-	// 			file.setContents("foo", function(err)
-	// 			{
-	// 				assert.notEqual(err, undefined);
-	// 				done();
-	// 			});
-	// 		});
-
-	// 		it("should allow setting contents correctly", function(done)
-	// 		{
-	// 			file.open();
-
-	// 			file.setContents("foo", function(err)
-	// 			{
-	// 				if (err) return done(err);
-
-	// 				assert.equal(file.contents(), "foo");
-	// 				done();
-	// 			});
-	// 		});
-
-	// 		it("should emit a modified event with the new contents", function(done)
-	// 		{
-	// 			file.open();
-
-	// 			file.on("modified", function(contents)
-	// 			{
-	// 				assert.equal(contents, "foo");
-	// 				done();
-	// 			});
-
-	// 			file.setContents("foo");
-	// 		});
-	// 	});
-	// });
 });
 
 }).call(this);
