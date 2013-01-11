@@ -6,21 +6,22 @@ A *project.json* file describes the contents of a Galago IDE project. All valid 
 
 ### name
 
-The name of the project. Since a project's name is also used for its directory name, names may only contain alphanumeric characters, spaces, dashes, and underscores.
+The name of the project. Since a project's name is also used for its directory name, names may only contain alphanumeric characters, spaces, hyphens, and underscores.
 
-Valid project name:
+
+Valid project names:
 	
-	"name": "foo_bar"
+	"name": "gps_test"
+	"name": "micro-watch v1"
 	
-Invalid project name:
+Invalid project names:
 	
-	"name": "eugene/servo-stuff"
+	"name": "push/pull driver"
+	"name": "Herbert's PuzzleBox"
 	
 ### files
 
-A list of file names that belong to the project. The files must all be inside of the project directory. Although the format allows a project to contain any amount of files, **it is strongly advised to only have one file per project.**
-
-New projects will, by default, have an empty file called *main.cpp*
+A list of file names that belong to the module. The files must all be inside of the module's directory. Although the format allows a module to contain any number of files, **it is strongly advised to only have one file per project.**  Modules created by the development tool will only contain one file named *main.cpp* by default.
 
 File names have the same naming restrictions as project names.
 
@@ -32,9 +33,64 @@ Example:
 			"name": "bar.cpp"
 		},
 		{
-			"name": "derp.cpp"
+			"name": "derp.cpp",
+			"definitions":
+			{
+				"": "anonymous coward",
+				"USER_WAKEUP_DELAY": 7
+			}
 		}
 	]
+
+#### files[ ].definitions
+
+Just like project-wide definitions, but applies only to one file.  If missing, defaults to an empty list.
+
+For the purposes of comparing project and file names (and to guarantee uniqueness) these names are treated as if uppercase letters have been converted to lowercase.  This is required for compatibility across various file systems on supported platforms.  As a result, no two projects may have a name that differs only by the case of letters therein.  Accordingly, no two files in a project may have names with the same similarity.
+
+### compatibleWith
+
+A dictionary of known hardware platforms that this project may be built for.
+
+Example:
+
+	"compatibleWith":
+	{
+		"Galago-0410",
+		"GalagoPro-0602"
+	}
+
+### require
+
+A dictionary of modules upon which this module depends.  Names must be absolute: i.e. they must contain the owner and module name joined by a slash ("/").
+
+Example:
+
+	"require":
+	{
+		"logiblock/gps",
+		"tyler/gps-waypoints",
+	},
+
+### definitions
+
+C preprocessor definitions, applied to all the files of the module.  Individual definitions can be applied on a per-file basis.
+
+	"definitions":
+	{
+		"USE_SOFTWARE_SPI": 1,
+		"BLINK_LED_ON_FIX": 1,
+	},
+
+### parameters
+
+Parameters are variables that are adjustable at runtime via the debugger.  The debugger can inspect these variables to determine their type and value, so only the minimum and maximum values need to be specified in the project file.
+
+	"parameters":
+	{
+		"$blinkInterval": {"min": 500, "max": 3000},
+		"$blinkOnDuration": {"min": 30, "max": 2000}
+	},
 
 ## Runtime elements
 	
