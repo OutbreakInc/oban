@@ -31,7 +31,9 @@ var Errors =
 	INVALID_BASEDIR: "Invalid base directory",
 	NON_EXISTENT_BASEDIR: "Non-existent base directory",
 	NO_PROJECT_JSON: "Project directory missing project.json",
-	INVALID_PROJECT_JSON: "Invalid project.json file"
+	INVALID_PROJECT_JSON: "Invalid project.json file",
+	FILE_RENAME_EXISTS: "The new name of the file being renamed already exists",
+	NO_SUCH_FILE: "No such file"
 };
 
 var Project = function(options, callback)
@@ -183,7 +185,7 @@ Project.prototype._findFile = function(name)
 
 Project.prototype._saveAttrs = function(callback)
 {
-	this._settingsIo.write(this._attrs, callback);
+	this._settingsIo.write(this.toFile(), callback);
 }
 
 Project.prototype.addFile = function(name, callback)
@@ -223,7 +225,7 @@ Project.prototype.removeFile = function(name, options, callback)
 {
 	var file = this._findFile(name);
 
-	if (!file) return callback("No such file");
+	if (!file) return callback(new Error(Errors.NO_SUCH_FILE));
 
 	if (typeof options == "function")
 	{
@@ -267,11 +269,51 @@ Project.prototype.removeFile = function(name, options, callback)
 	.exec();
 }
 
+Project.prototype.renameFile = function(oldName, newName, callback)
+{
+	var file = this._findFile(oldName);
+
+	if (!file) return callback(new Error(Errors.NO_SUCH_FILE));
+
+	if (oldName == newName) return callback();
+
+	var step = new Side(this);
+
+	step.define(
+	function()
+	{
+		this._fileIo.exists(newName, step.next);
+	},
+	function(err, exists)
+	{
+		if (exists) return callback(Errors.FILE_RENAME_EXISTS);
+
+		this._fileIo.rename(oldName, newName, step.next);
+	},
+	function(err)
+	{
+		file.setName(newName, step.next);
+	},
+	function(err)
+	{
+		this._saveAttrs(step.next);
+	},
+	function(err)
+	{
+		callback();
+	})
+	.error(function(err)
+	{
+		callback(err);
+	})
+	.exec();
+}
+
 Project.prototype.openFile = function(name, callback)
 {
 	var file = this._findFile(name);
 
-	if (!file) return callback("No such file");
+	if (!file) return callback(new Error(Errors.NO_SUCH_FILE));
 
 	var step = new Side(this);
 
@@ -300,7 +342,7 @@ Project.prototype.closeFile = function(name, callback)
 {
 	var file = this._findFile(name);
 
-	if (!file) return callback("No such file");
+	if (!file) return callback(new Error(Errors.NO_SUCH_FILE));
 
 	file.close();
 	file.removeAllListeners();
@@ -314,7 +356,7 @@ Project.prototype.saveFile = function(name, callback)
 
 	var file = this._findFile(name);
 
-	if (!file) return callback("No such file");
+	if (!file) return callback(new Error(Errors.NO_SUCH_FILE));
 
 	this._fileIo.write(file.name(), file.contents(), function(err)
 	{
@@ -338,7 +380,7 @@ Project.prototype.toFile = function()
 {
 	var json = _.clone(this._attrs);
 
-	json = _.omit(this._attrs, "path");
+	json = _.omit(this._attrs, [ "path", "buildStatus", "runStatus" ]);
 
 	var files = [];
 

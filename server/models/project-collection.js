@@ -6,45 +6,89 @@ var Project = require("./project"),
 	util = require("util"),
 	utils = require("../utils");
 
-function ProjectCollection(callback)
+var Errors =
 {
-	var self = this;
-	self._attrs = {};
-	self._attrs.projects = [];
+	INVALID_BASEDIR: "Invalid base directory",
+	NON_EXISTENT_BASEDIR: "Non-existent base directory",
+};
+
+function ProjectCollection(options, callback)
+{
+	options = options || {};
+
+	if (!options.baseDir || options.baseDir.length === 0)
+	{
+		return process.nextTick(function()
+		{
+			callback(new Error(Errors.INVALID_BASEDIR));
+		});
+	}
+
+	this._attrs = {};
+	this._attrs.projects = [];
+	this._attrs.baseDir = options.baseDir;
 
 	// load all projects
-	fs.readdir(utils.projectsDir(), function(err, files)
-	{
-		if (err) return callback(err);
+	var step = new Side(this);
 
-		async.forEachSeries(files, function(file, next)
+	step.define(
+	function()
+	{
+		fs.readdir(this._attrs.baseDir, step.next);
+	},
+	function(err, projectDirs)
+	{
+		async.forEachSeries(projectDirs, function(dir, next)
 		{
-			var project = new Project(
-				{ name: file, dir: utils.projectsDir() },
+			var path = this._attrs.baseDir + "/" + dir;
+
+			fs.stat(path, function(err, stats)
+			{
+				console.log(path + ":");
+
+				if (err)
+				{
+					console.log(err);
+					return next();
+				}
+				// skip non-directories
+				else if (!stats.isDirectory())
+				{
+					console.log("skipping (not a directory)");
+					return next();
+				}
+
+				var project = new Project(
+					{ name: dir, baseDir: this._attrs.baseDir },
 				function(err)
 				{
 					if (err)
 					{
 						// just skip invalid project directories
 						// and go on
-						console.log("Error while loading project:");
 						console.log(err);
 					}
 					else
 					{
-						self._attrs.projects.push(project);
+						this._attrs.projects.push(project);
 					}
 
 					next();
-				});
-		},
+
+				}.bind(this));
+			}.bind(this));
+		}.bind(this),
+
 		function(err)
 		{
-			if (err) return callback(err);
-
 			callback();
 		});
-	});
+	})
+	.error(function(err)
+	{
+		callback(err);
+	})
+	.exec();
 
 	EventEmitter.call(this);
 }
@@ -56,7 +100,15 @@ ProjectCollection.prototype.toJSON = function()
 	return this._attrs;
 }
 
-// var projects = new ProjectCollection(function(err)
+ProjectCollection.Errors = Errors;
+
+module.exports = ProjectCollection;
+
+// var projects = new ProjectCollection(
+// 	{
+// 		baseDir: utils.projectsDir()
+// 	},
+// 	function(err)
 // {
 // 	if (err)
 // 	{
