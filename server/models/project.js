@@ -36,32 +36,31 @@ var Errors =
 	NO_SUCH_FILE: "No such file"
 };
 
+var nextTickError = function(err, callback)
+{
+	return process.nextTick(function()
+	{
+		callback(err);
+	});
+}
+
 var Project = function(options, callback)
 {
 	options = options || {};
 
-	if (!options.name || options.name.length === 0)
+	if (!this._checkName(options.name))
 	{
-		return process.nextTick(function()
-		{
-			callback(new Error(Errors.INVALID_PROJECT_NAME));
-		});
+		return nextTickError(new Error(Errors.INVALID_PROJECT_NAME), callback);
 	}
 
 	if (!options.baseDir || options.baseDir.length === 0)
 	{
-		return process.nextTick(function()
-		{
-			callback(new Error(Errors.INVALID_BASEDIR));
-		});		
+		return nextTickError(new Error(Errors.INVALID_BASEDIR), callback);
 	}
 
 	if (!fs.existsSync(options.baseDir))
 	{
-		return process.nextTick(function()
-		{
-			callback(new Error(Errors.NON_EXISTENT_BASEDIR));
-		});	
+		return nextTickError(new Error(Errors.NON_EXISTENT_BASEDIR), callback);
 	}
 
 	// this contains the serializable properties of the project
@@ -144,7 +143,7 @@ Project.prototype._restore = function(callback)
 		if (err) return callback(err);
 		else if (!attrs) return callback(new Error(Errors.INVALID_PROJECT_JSON));
 
-		this._attrs = attrs;
+		_.extend(this._attrs, attrs);
 
 		if (!this._attrs.id)
 		{
@@ -173,6 +172,11 @@ Project.prototype._restore = function(callback)
 
 		}.bind(this));
 	}.bind(this));
+}
+
+Project.prototype._checkName = function(name, callback)
+{
+	return !(!name || name.length === 0);
 }
 
 Project.prototype._findFile = function(name)
@@ -365,10 +369,63 @@ Project.prototype.saveFile = function(name, callback)
 		callback();
 	});
 }
- 
-Project.prototype.files = function()
+
+Project.prototype.name = function()
 {
-	return this._attrs.files;
+	return this._attrs.name;
+}
+
+Project.prototype.setName = function(newName, callback)
+{
+	var step = new Side(this);
+
+	step.define(
+	function()
+	{
+		if (!this._checkName(newName))
+		{
+			step.next(new Error(Errors.INVALID_PROJECT_NAME));
+		}
+		else
+		{
+			step.next();
+		}
+	},
+	function(err)
+	{
+		this._attrs.name = newName;
+		this._saveAttrs(step.next);
+	},
+	function(err)
+	{
+		console.log("moo");
+		callback();
+	})
+	.error(function(err)
+	{
+		callback(err);
+	})
+	.exec();
+}
+
+Project.prototype.path = function()
+{
+	return this._attrs.path;
+}
+
+Project.prototype.buildStatus = function()
+{
+	return this._attrs.buildStatus;
+}
+
+Project.prototype.runStatus = function()
+{
+	return this._attrs.runStatus;
+}
+
+Project.prototype.id = function()
+{
+	return this._attrs.id;
 }
 
 Project.prototype.toJSON = function()
@@ -378,9 +435,7 @@ Project.prototype.toJSON = function()
 
 Project.prototype.toFile = function()
 {
-	var json = _.clone(this._attrs);
-
-	json = _.omit(this._attrs, [ "path", "buildStatus", "runStatus" ]);
+	var json = _.omit(this._attrs, [ "path", "buildStatus", "runStatus" ]);
 
 	var files = [];
 
