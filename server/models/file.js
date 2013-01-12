@@ -8,6 +8,14 @@ var Errors =
 	CANT_EDIT_CLOSED_FILE: "Can't edit closed file"
 };
 
+var nextTickError = function(err, callback)
+{
+	return process.nextTick(function()
+	{
+		callback(err);
+	});
+}
+
 var File = function(options, callback)
 {
 	options = options || {};
@@ -19,10 +27,7 @@ var File = function(options, callback)
 
 	this._checkAttrs(attrs, function(err)
 	{
-		if (err) return process.nextTick(function()
-		{
-			callback(err);
-		});
+		if (err) return nextTickError(err, callback);
 
 		this._attrs = attrs;
 

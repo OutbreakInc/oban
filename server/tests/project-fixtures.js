@@ -1,4 +1,5 @@
 var fs = require("fs");
+require("shelljs/global");
 
 module.exports = {};
 

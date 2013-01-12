@@ -97,7 +97,7 @@ describe("Project Model", function()
 		it("should correctly restore an existing project", function(done)
 		{
 			var project = new Project(
-				{ name: "existingProject", baseDir: "projectsDir", create: true }, 
+				{ name: "existingProject", baseDir: "projectsDir" }, 
 			function(err)
 			{
 				if (err) return done(err);
@@ -113,12 +113,30 @@ describe("Project Model", function()
 				{
 					if (err) return done(err);
 
-					assert.equal(file.contents, "");
-					assert.equal(project._attrs.buildStatus, Project.BuildStatus.UNCOMPILED);
-					assert.equal(project._attrs.runStatus, Project.RunStatus.STOPPED);
+					assert.equal(file.contents(), "int main() { return 0; }\n");
+					assert.equal(project.buildStatus(), Project.BuildStatus.UNCOMPILED);
+					assert.equal(project.runStatus(), Project.RunStatus.STOPPED);
 				});
 
 				done();
+			});
+		});
+
+		it("should correctly rename a project", function(done)
+		{
+			var project = new Project(
+				{ name: "existingProject", baseDir: "projectsDir" }, 
+			function(err)
+			{
+				if (err) return done(err);
+
+				project.setName("renamedProject", function(err)
+				{
+					if (err) return done(err);
+
+					assert.equal(project.name(), "renamedProject");
+					done();
+				});
 			});
 		});
 	});
