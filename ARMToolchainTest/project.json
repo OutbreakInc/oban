@@ -1,0 +1,31 @@
+{
+	"name":	"BasicBlinkTest",
+	"compatibleWith":
+	{
+		"logiblock/gps",
+		"tyler/gps-waypoints",
+	},
+	"require":
+	{
+		"tyler/basicIO",
+	},
+	"definitions":
+	{
+		"EXAMPLE_DEFINITION": "hello"
+	},
+	"debugging": true,
+	"optimize": "size",
+	"stdlib": false,
+	"files":
+	[
+		{
+			"name": "GalagoAPI.cpp",
+			"definitions":
+			{
+				"TEST_1": "string",
+				"TEST_2": 7
+			}
+		},
+		{"name": "BasicBlink.cpp"},
+	]
+}
