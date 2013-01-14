@@ -123,7 +123,7 @@ public:
 			Mode3,	//SCK idles high, data changed on SCK's rising edge, read on falling edge.
 		} Mode;
 
-		void			start(int bitRate = 2000000, Role role = Master, Mode mode = Mode0);
+		void			start(int bitRate = 2000000UL, Role role = Master, Mode mode = Mode0);
 		inline void		stop(void)	{start(0);}
 
 		bool			bytesAvailable(void) const;
@@ -223,6 +223,7 @@ public:
 	unsigned int	getCoreFrequency(void) const;
 	void			sleep(void);
 	void			delay(int microseconds);
+	void			addTimedTask(int period, void (*task)(void*), void* ref = 0);
 
 					System(void);
 };
