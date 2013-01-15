@@ -47,7 +47,7 @@ int main(void)
 }
 */
 
-int $defaultEmitPeriod = 1000;
+int defaultEmitPeriod$ = 1000;
 
 struct NumberEmitter
 {
@@ -56,7 +56,7 @@ struct NumberEmitter
 	NumberEmitter(void)
 	{
 		counter = 0;
-		System.addTimedTask($defaultEmitPeriod, onTimer, this);
+		System.addTimedTask(defaultEmitPeriod$, onTimer, this);
 	}
 	
 	static void	onTimer(void* s)
