@@ -33,7 +33,8 @@ var Errors =
 	NO_PROJECT_JSON: "Project directory missing project.json",
 	INVALID_PROJECT_JSON: "Invalid project.json file",
 	FILE_RENAME_EXISTS: "The new name of the file being renamed already exists",
-	NO_SUCH_FILE: "No such file"
+	NO_SUCH_FILE: "No such file",
+	ALREADY_OPEN: "Project is already open by someone else"
 };
 
 var nextTickError = function(err, callback)
@@ -71,7 +72,7 @@ var Project = function(options, callback)
 
 	this._attrs.buildStatus = BuildStatus.UNCOMPILED;
 	this._attrs.runStatus = RunStatus.STOPPED;
-	this._attrs.isOpen = false;	
+	this._attrs.isOpenBy = undefined;
 
 	this._attrs.files = [];
 
@@ -217,6 +218,18 @@ Project.prototype._saveAttrs = function(callback)
 		callback(err);
 	})
 	.exec();
+}
+
+Project.prototype.setOpen = function(userId, isOpen, callback)
+{
+	if (this._attrs.isOpenBy &&
+		this._attrs.isOpenBy != userId) 
+	{
+		return callback(new Error(Errors.ALREADY_OPEN));
+	}
+
+	this._attrs.isOpenBy = isOpen ? userId : undefined;
+	callback();
 }
 
 Project.prototype.addFile = function(name, callback)
