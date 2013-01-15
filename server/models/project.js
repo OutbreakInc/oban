@@ -69,10 +69,16 @@ var Project = function(options, callback)
 	this._attrs.name = options.name;
 	this._attrs.path = options.baseDir + "/" + this._attrs.name + "/";
 
+	this._attrs.buildStatus = BuildStatus.UNCOMPILED;
+	this._attrs.runStatus = RunStatus.STOPPED;
+	this._attrs.isOpen = false;	
+
 	this._attrs.files = [];
 
 	this._fileIo = new FileIo(this._attrs.path);
 	this._settingsIo = new SettingsIo(this._attrs.path, "project");
+
+	this.step = new Side(this);
 
 	if (fs.existsSync(this._attrs.path) && 
 		fs.existsSync(this._settingsIo.path()))
@@ -114,10 +120,7 @@ Project.prototype._init = function(callback)
 {
 	this._attrs.id = idGen();
 
-	this._attrs.buildStatus = BuildStatus.UNCOMPILED;
-	this._attrs.runStatus = RunStatus.STOPPED;
-
-	var step = new Side(this);
+	var step = this.step;
 
 	step.define(
 	function()
@@ -126,6 +129,7 @@ Project.prototype._init = function(callback)
 	},
 	function(err)
 	{
+		step.next();
 		callback();
 	})
 	.error(function(err)
@@ -196,7 +200,7 @@ Project.prototype.addFile = function(name, callback)
 {
 	if (this._findFile(name)) return callback("File already exists");
 
-	var step = new Side(this);
+	var step = this.step;
 
 	step.define(
 	function()
@@ -215,7 +219,8 @@ Project.prototype.addFile = function(name, callback)
 		this._saveAttrs(step.next);
 	},
 	function(err)
-	{			
+	{
+		step.next();
 		callback(null, step.data.file);
 	})
 	.error(function(err)
@@ -241,7 +246,7 @@ Project.prototype.removeFile = function(name, options, callback)
 		return file.name() !== otherFile.name();
 	});
 
-	var step = new Side(this);
+	var step = this.step;
 
 	step.define(
 	function()
@@ -264,6 +269,7 @@ Project.prototype.removeFile = function(name, options, callback)
 	function(err)
 	{
 		console.log("updated project settings");
+		step.next();		
 		callback();
 	})
 	.error(function(err)
@@ -281,7 +287,7 @@ Project.prototype.renameFile = function(oldName, newName, callback)
 
 	if (oldName == newName) return callback();
 
-	var step = new Side(this);
+	var step = this.step;
 
 	step.define(
 	function()
@@ -304,6 +310,7 @@ Project.prototype.renameFile = function(oldName, newName, callback)
 	},
 	function(err)
 	{
+		step.next();
 		callback();
 	})
 	.error(function(err)
@@ -319,7 +326,7 @@ Project.prototype.openFile = function(name, callback)
 
 	if (!file) return callback(new Error(Errors.NO_SUCH_FILE));
 
-	var step = new Side(this);
+	var step = this.step;
 
 	step.define(
 	function()
@@ -333,6 +340,7 @@ Project.prototype.openFile = function(name, callback)
 	},
 	function(err)
 	{
+		step.next();
 		callback(null, file);
 	})
 	.error(function(err)
@@ -377,7 +385,7 @@ Project.prototype.name = function()
 
 Project.prototype.setName = function(newName, callback)
 {
-	var step = new Side(this);
+	var step = this.step;
 
 	step.define(
 	function()
@@ -398,7 +406,7 @@ Project.prototype.setName = function(newName, callback)
 	},
 	function(err)
 	{
-		console.log("moo");
+		step.next();
 		callback();
 	})
 	.error(function(err)
@@ -411,6 +419,11 @@ Project.prototype.setName = function(newName, callback)
 Project.prototype.path = function()
 {
 	return this._attrs.path;
+}
+
+Project.prototype.files = function()
+{
+	return this._attrs.files;
 }
 
 Project.prototype.buildStatus = function()
