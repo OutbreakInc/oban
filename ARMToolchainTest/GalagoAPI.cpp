@@ -42,6 +42,10 @@ void			System::delay(int microseconds)
 
 }
 
+void			System::addTimedTask(int period, void (*task)(void*), void* ref)
+{
+	
+}
 
 //IO Pins
 
@@ -90,7 +94,8 @@ static int pinID(unsigned int gpioID)
 
 int				IO::Pin::read(void)
 {
-	if((v & 0xFF0000) == (IO::Pin::AnalogInput << 16))
+	//if((v & 0xFF0000) == (IO::Pin::AnalogInput << 16))
+	if((v >> 16) == IO::Pin::AnalogInput)
 	{
 		*LPC1300::ADCControl = (*LPC1300::ADCControl & ~0xFF00) | LPC1300::ADCControl_StartNow | analogChannel(v);
 	}
