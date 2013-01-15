@@ -225,21 +225,15 @@ Project.prototype.addFile = function(name, callback)
 
 	var step = this.step;
 
-	console.log("addfile");
-
 	var file;
 
 	step.define(
 	function()
 	{
-		console.log("a");
 		file = new File({ name: name }, step.next);
 	},
 	function(err)
 	{
-		console.log("b");
-		console.log(file);
-
 		this._attrs.files.push(file);
 		this._fileIo.create(file.name(), step.next);
 	})
@@ -254,7 +248,6 @@ Project.prototype.addFile = function(name, callback)
 	{
 		if (err) return callback(err);
 
-		console.log("attrs saved");
 		callback(null, file);
 	});
 }
