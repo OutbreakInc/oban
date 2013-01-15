@@ -35,7 +35,9 @@ function ProjectCollection(options, callback)
 	this._attrs.baseDir = options.baseDir;
 
 	// load all projects
-	var step = new Side(this);
+	this.step = new Side(this);
+
+	var step = this.step;
 
 	step.define(
 	function()
@@ -96,6 +98,7 @@ function ProjectCollection(options, callback)
 
 		function(err)
 		{
+			step.next();
 			callback();
 		});
 	})
