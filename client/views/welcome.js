@@ -1,7 +1,8 @@
 define(function(require)
 {
 
-var Backbone = require("backbone");
+var Backbone = require("backbone"),
+	App = require("app/app");
 
 var WelcomeView = Backbone.View.extend(
 {
@@ -14,7 +15,6 @@ var WelcomeView = Backbone.View.extend(
 
 	initialize: function(options)
 	{
-		this.projectsSocket = options.projectsSocket;
 		this.projects = options.collection;
 	},
 
@@ -58,6 +58,7 @@ var WelcomeView = Backbone.View.extend(
 				dialog.modal("hide");
 
 				// now open this project
+				App.vent.trigger("openProject", project);
 				// something.emit("open", project);
 
 			}.bind(this));

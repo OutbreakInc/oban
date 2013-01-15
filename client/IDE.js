@@ -1,19 +1,33 @@
 define(function(require)
 {
 
-var io = require("socket.io"),
-	$ = require("jquery"),
+var $ = require("jquery"),
 	ProjectCollection = require("app/models/project-collection"),
 	Dashboard = require("app/views/dashboard"),
-	WelcomeView = require("app/views/welcome");
+	WelcomeView = require("app/views/welcome"),
+	App = require("app/app");
 
 require("bootstrap");
+require("backbone.marionette");
 
-var sockets = {};
+App.addInitializer(function(options)
+{
+	this.vent.on("openProject", function(project)
+	{
+		project.open(function(err)
+		{
+			if (err) return alert("ERROR: " + err);
 
-sockets.projects = io.connect("http://localhost:8000/projectCollection");
+			
+		});
 
-var projects = new ProjectCollection({ socket: sockets.projects });
+		// alert("opening project " + project.get("name"));
+	});
+});
+
+App.start();
+
+var projects = new ProjectCollection();
 
 var dashboard = new Dashboard(
 {
@@ -22,7 +36,6 @@ var dashboard = new Dashboard(
 
 var welcomeView = new WelcomeView(
 {
-	projectsSocket: sockets.projects,
 	collection: projects
 });
 

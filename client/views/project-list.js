@@ -2,7 +2,8 @@ define(function(require)
 {
 
 var Backbone = require("backbone"),
-	_ = require("underscore");
+	_ = require("underscore"),
+	App = require("app/app");
 
 var ProjectListItem = Backbone.View.extend(
 {
@@ -36,8 +37,7 @@ var ProjectListItem = Backbone.View.extend(
 
 	openProject: function()
 	{
-		
-
+		App.vent.trigger("openProject", this.project);
 	}
 });
 

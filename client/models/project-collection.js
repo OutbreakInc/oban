@@ -2,7 +2,8 @@ define(function(require)
 {
 
 var Backbone = require("backbone"),
-	Project = require("app/models/project");
+	Project = require("app/models/project"),
+	io = require("socket.io");
 
 var ProjectCollection = Backbone.Collection.extend(
 {
@@ -10,7 +11,7 @@ var ProjectCollection = Backbone.Collection.extend(
 
 	initialize: function(options)
 	{
-		this.socket = options.socket;
+		this.socket = io.connect("http://localhost:8000/projectCollection");
 	},
 
 	create: function(name, callback)
