@@ -1,33 +1,29 @@
-if (typeof define !== 'function') {
-    var define = require('amdefine')(module);
-}
-
 define(function(require)
 {
-	var Backbone = require("backbone");
+	var Backbone = require("backbone"),
+		io = require("socket.io");
 
 	var ProjectModel = Backbone.Model.extend(
 	{
-		defaults:
+		initialize: function()
 		{
-			files: [],
+			this.socket = io.connect("http://localhost:8000/project");
 		},
 
-		validate: function(attrs)
+		open: function(callback)
 		{
-			if (!attrs.name) return "must have a name";
-		},
+			if (this.get("isOpen")) return callback("Project already open");
 
-		addFile: function(path)
-		{
-			this.get("files").push(path);
+			this.socket.emit("open", this.id, function(err)
+			{
+				if (err) return callback(err);
+
+				callback();
+
+			}.bind(this));
 		}
-	});
 
-	ProjectModel.meta =
-	{
-		name: "Project"
-	};
+	});
 
 	return ProjectModel;
 });
