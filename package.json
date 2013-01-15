@@ -13,7 +13,7 @@
 		"underscore": "1.4.3",
 		"winston": "0.6.x",
 		"amdefine": "0.0.4",
-		"sidestep": "0.1.0",
+		"sidestep": "0.1.1",
 		"async": "0.1.22"
 	},
 	"devDependencies":
