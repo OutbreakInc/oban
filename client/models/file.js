@@ -13,18 +13,6 @@ define(function(require)
 			buildStatus: "unverified"
 		},
 
-		path: function()
-		{
-			if (!this.get("project"))
-			{
-				console.log(this.toJSON());
-				console.log("file doesn't have a project associated with it:");
-				return;
-			}
-
-			return this.get("project").path + "/" + this.get("name");
-		},
-
 		validate: function(attrs)
 		{
 			if (!attrs.name) return "must have a name";
@@ -33,7 +21,12 @@ define(function(require)
 
 	FileModel.meta =
 	{
-		name: "File"
+		name: "File",
+		options:
+		{
+			singleClient: true,
+			dontSaveToFile: true
+		}
 	};
 
 	return FileModel;

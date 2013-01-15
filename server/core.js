@@ -4,11 +4,14 @@
 var winston = require("winston"),
 	fs = require("fs"),
 	utils = require("./utils"),
-	DataSync = require("./sync"),
+	// DataSync = require("./sync"),
 	DeviceServer = require("./device-server"),
 	toolchain = require("./toolchain"),
-	File = require("../client/models/file"),
-	GdbClient = require("./gdb-client");
+	// File = require("../client/models/file"),
+	ProjectCollection = require("./models/project-collection"),
+	ProjectCollectionController = require("./controllers/project-collection"),
+	GdbClient = require("./gdb-client"),
+	socketIo = require("socket.io");
 
 function Core(app, config)
 {
@@ -33,33 +36,47 @@ Core.prototype =
 
 init: function()
 {
-	winston.debug("initializing directories");
-	this._initDirectories();
+	var sockets = socketIo.listen(this.app);
 
-	winston.debug("loading data sync module");
+	var projects = new ProjectCollection(
+	{
+		baseDir: utils.projectsDir()
+	},
+	function(err)
+	{
+		if (err) console.log(err);
 
-	this.dataSync = new DataSync(this.app, this.settingsDir);
-	this.dataSync.load();
+		var pcController = new ProjectCollectionController(
+			projects, sockets);
+	});
+
+	// winston.debug("initializing directories");
+	// this._initDirectories();
+
+	// winston.debug("loading data sync module");
+
+	// this.dataSync = new DataSync(this.app, this.settingsDir);
+	// this.dataSync.load();
 
 	// this.dataSync.socket.set("log level", 1);
 
-	this.socket = this.dataSync.socket;
+	// this.socket = this.dataSync.socket;
 
-	winston.debug("loading device server module");
+	// winston.debug("loading device server module");
 
-	this.deviceServer = new DeviceServer;
-	this.deviceServer.run();
+	// this.deviceServer = new DeviceServer;
+	// this.deviceServer.run();
 
-	this.gdbClient = new GdbClient(this.deviceServer);
+	// this.gdbClient = new GdbClient(this.deviceServer);
 
-	this._bindDeviceServerEvents();
-	this._bindFileEvents();
-	this._bindProjectEvents();
-	this._bindIdeEvents();
+	// this._bindDeviceServerEvents();
+	// this._bindFileEvents();
+	// this._bindProjectEvents();
+	// this._bindIdeEvents();
 
-	this._bindGdbEvents();
+	// this._bindGdbEvents();
 
-	this._initIde();
+	// this._initIde();
 
 	// this.gdbClient.run("/Users/exhaze/Documents/outbreak-ide/hello-world/BasicBlink.elf");
 },
