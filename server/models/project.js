@@ -120,17 +120,24 @@ Project.prototype._init = function(callback)
 {
 	this._attrs.id = idGen();
 
+	var error;
+
+	this.addFile(DEFAULT_FILE_NAME, function(err)
+	{
+		err = error;
+	});
+
 	var step = this.step;
 
 	step.define(
 	function()
 	{
-		this.addFile(DEFAULT_FILE_NAME, step.next);
-	},
-	function(err)
-	{
+		console.log("next step of init");
+
+		if (error) return step.next(error);
+
 		step.next();
-		callback();
+		callback(null, this);
 	})
 	.error(function(err)
 	{
@@ -172,7 +179,7 @@ Project.prototype._restore = function(callback)
 			if (err) return callback(err);
 
 			this._attrs.files = fileObjects;
-			callback();
+			callback(null, this);
 
 		}.bind(this));
 	}.bind(this));
@@ -193,7 +200,23 @@ Project.prototype._findFile = function(name)
 
 Project.prototype._saveAttrs = function(callback)
 {
-	this._settingsIo.write(this.toFile(), callback);
+	var step = this.step;
+
+	step.define(
+	function()
+	{
+		this._settingsIo.write(this.toFile(), step.next);
+	},
+	function(err)
+	{
+		step.next();
+		callback();
+	})
+	.error(function(err)
+	{
+		callback(err);
+	})
+	.exec();
 }
 
 Project.prototype.addFile = function(name, callback)
@@ -202,32 +225,38 @@ Project.prototype.addFile = function(name, callback)
 
 	var step = this.step;
 
+	console.log("addfile");
+
+	var file;
+
 	step.define(
 	function()
 	{
-		step.data.file = new File({ name: name }, step.next);
+		console.log("a");
+		file = new File({ name: name }, step.next);
 	},
 	function(err)
 	{
-		var file = step.data.file;
+		console.log("b");
+		console.log(file);
 
 		this._attrs.files.push(file);
 		this._fileIo.create(file.name(), step.next);
-	},
-	function(err)
-	{
-		this._saveAttrs(step.next);
-	},
-	function(err)
-	{
-		step.next();
-		callback(null, step.data.file);
 	})
 	.error(function(err)
 	{
-		callback(err);
+		// cancel _saveAttrs task
+		step.removeNextTask();
 	})
 	.exec();
+
+	this._saveAttrs(function(err)
+	{
+		if (err) return callback(err);
+
+		console.log("attrs saved");
+		callback(null, file);
+	});
 }
 
 Project.prototype.removeFile = function(name, options, callback)
@@ -269,7 +298,7 @@ Project.prototype.removeFile = function(name, options, callback)
 	function(err)
 	{
 		console.log("updated project settings");
-		step.next();		
+		step.next();
 		callback();
 	})
 	.error(function(err)

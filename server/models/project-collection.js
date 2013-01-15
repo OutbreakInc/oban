@@ -81,7 +81,7 @@ function ProjectCollection(options, callback)
 						// don't allow duplicate IDs
 						console.log("skipping (duplicate project id)");
 					}
-					else if (this.findByName(project.get("name")))
+					else if (this.findByName(project.name()))
 					{
 						console.log("skipping (duplicate project name)");
 					}
@@ -113,16 +113,11 @@ function ProjectCollection(options, callback)
 
 util.inherits(ProjectCollection, EventEmitter);
 
-ProjectCollection.prototype.projects = function()
-{
-	return this._attrs.projects;
-}
-
 ProjectCollection.prototype.findByName = function(name)
 {
 	return _.find(this._attrs.projects, function(project)
 	{
-		return _.stricmp(project.get("name"), name);
+		return _.stricmp(project.name(), name);
 	});
 }
 
@@ -139,21 +134,33 @@ ProjectCollection.prototype.addProject = function(name, callback)
 	// don't allow duplicate project names
 	if (this.findByName(name))
 	{
+		console.log("DUPLICATE");
 		return callback(new Error(Errors.DUPLICATE_NAME));
 	}
 
-	var project = new Project(
-	{
-		name: name,
-		baseDir: this._attrs.baseDir
-	},
-	function(err)
-	{
-		if (err) return callback(err);
+	var step = this.step;
 
+	step.define(
+	function()
+	{
+		var project = new Project(
+		{
+			name: name,
+			baseDir: this._attrs.baseDir,
+			create: true
+		}, step.next);
+	},
+	function(err, project)
+	{
+		step.next();
 		this._attrs.projects.push(project);
-		callback();
-	});
+		callback(null, project);
+	}).
+	error(function(err)
+	{
+		callback(err);
+	})
+	.exec();
 }
 
 // this also deletes the project from disk
@@ -177,22 +184,27 @@ ProjectCollection.prototype.removeProject = function(id, callback)
 		return callback(new Error(Errors.NO_SUCH_PROJECT));
 	}
 
-	// remove project from disk
-	exec(
-		"rm -rf " + removedProject.get("path"), 
-		{ async: true },
-		function(errCode, output)
+	var step = this.step;
+
+	step.define(
+	function()
 	{
-		if (errCode !== 0)
-		{
-			console.log("ERROR");
-			return callback("ERROR");
-		}
-		else
-		{
-			callback();
-		}
-	});
+		// remove project from disk
+		exec(
+			"rm -rf " + removedProject.path(),
+			{ async: true },
+			step.next);
+	},
+	function(errCode, output)
+	{
+		step.next();
+		callback();
+	})
+	.error(function(err)
+	{
+		callback("Error code: " + err);
+	})
+	.exec();
 }
 
 ProjectCollection.prototype.renameProject = function(id, newName, callback)
@@ -223,17 +235,28 @@ ProjectCollection.prototype.renameProject = function(id, newName, callback)
 
 	project.set("name", newName);
 
-	project._saveAttrs(function(err)
-	{
-		if (err) return callback(err);
+	var step = this.step;
 
+	step.define(
+	function()
+	{
+		project._saveAttrs(step.next);
+	},
+	function(err)
+	{
+		step.next();
 		callback();
-	});
+	})
+	.error(function(err)
+	{
+		callback(err);
+	})
+	.exec();
 }
 
 ProjectCollection.prototype.toJSON = function()
 {
-	return this._attrs;
+	return this._attrs.projects;
 }
 
 ProjectCollection.Errors = Errors;
@@ -252,22 +275,23 @@ module.exports = ProjectCollection;
 // 	}
 // 	else
 // 	{
-// 		var project = projects.findById("e8a0c7fb913");
+// 		console.log(JSON.stringify(projects));
+// 		// var project = projects.findById("e8a0c7fb913");
 
-// 		if (project)
-// 		{
-// 			console.log("trying to rename project: " + project.get("name"));
+// 		// if (project)
+// 		// {
+// 		// 	console.log("trying to rename project: " + project.get("name"));
 
-// 			// console.log(JSON.stringify(projects, null, "\t"));
-// 			projects.renameProject("e8a0c7fb913", "hi", function(err)
-// 			{
-// 				if (err) console.log(err);
-// 				else console.log("renamed!");
-// 			});
-// 		}
-// 		else
-// 		{
-// 			console.log("no projects to rename");
-// 		}
+// 		// 	// console.log(JSON.stringify(projects, null, "\t"));
+// 		// 	projects.renameProject("e8a0c7fb913", "hi", function(err)
+// 		// 	{
+// 		// 		if (err) console.log(err);
+// 		// 		else console.log("renamed!");
+// 		// 	});
+// 		// }
+// 		// else
+// 		// {
+// 		// 	console.log("no projects to rename");
+// 		// }
 // 	}
 // });
