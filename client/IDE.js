@@ -16,13 +16,33 @@ App.addInitializer(function(options)
 	{
 		project.open(function(err)
 		{
-			if (err) return alert("ERROR: " + err);
+			if (err) return alert("Open project error: " + err);
 
-			
-		});
+			this.vent.trigger("openProjectSuccess");
+			this.activeProject = project;
 
-		// alert("opening project " + project.get("name"));
-	});
+		}.bind(this));
+
+	}.bind(this));
+
+	this.vent.on("closeProject", function()
+	{
+		if (!this.activeProject)
+		{
+			return console.log(	"error: tried to close a project when no " +
+								" project was open");
+		}
+
+		this.activeProject.close(function(err)
+		{
+			if (err) return alert("Close project error: " + err);
+
+			this.vent.trigger("closeProjectSuccess");
+			delete this.activeProject;
+
+		}.bind(this));
+
+	}.bind(this));
 });
 
 App.start();

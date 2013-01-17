@@ -1,33 +1,37 @@
-if (typeof define !== 'function') {
-    var define = require('amdefine')(module);
-}
-
 define(function(require)
 {
-	var Backbone = require("backbone");
 
-	var FileModel = Backbone.Model.extend(
+var Backbone = require("backbone"),
+	io = require("socket.io");
+
+var FileModel = Backbone.Model.extend(
+{
+	initialize: function(options)
 	{
-		defaults:
-		{
-			buildStatus: "unverified"
-		},
+		this.name = options.name;
+		this.socket = io.connect("http://localhost:8000/file");
 
-		validate: function(attrs)
-		{
-			if (!attrs.name) return "must have a name";
-		}
-	});
+		this._bindEvents();
+	},
 
-	FileModel.meta =
+	open: function()
 	{
-		name: "File",
-		options:
+		if (this.has("isOpenBy"))
 		{
-			singleClient: true,
-			dontSaveToFile: true
+			if (this._isOpenByMe()) return;
+			else return callback("File already open");
 		}
-	};
 
-	return FileModel;
-})
+		this.socket.emit("open", this.id, )
+	},
+
+	_isOpenByMe: function()
+	{
+		var openBy = this.get("isOpenBy");
+		return (openBy && openBy == this.socket.socket.sessionid);
+	}
+});
+
+return FileModel;
+
+});
