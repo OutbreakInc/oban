@@ -1,29 +1,83 @@
 define(function(require)
 {
-	var Backbone = require("backbone"),
-		io = require("socket.io");
 
-	var ProjectModel = Backbone.Model.extend(
+var Backbone = require("backbone"),
+	io = require("socket.io");
+
+var ProjectModel = Backbone.Model.extend(
+{
+	initialize: function()
 	{
-		initialize: function()
+		this.socket = io.connect("http://localhost:8000/project");
+
+		this._bindEvents();
+	},
+
+	_bindEvents: function()
+	{
+		var setIfIdMatches = function(project)
 		{
-			this.socket = io.connect("http://localhost:8000/project");
-		},
+			if (project.id != this.id) return;
 
-		open: function(callback)
+			this.clear({ silent: true });
+			this.set(project);
+
+		}.bind(this);
+
+		this.socket.on("open", setIfIdMatches);
+		this.socket.on("close", setIfIdMatches);
+	},
+
+	open: function(callback)
+	{
+		if (this.has("isOpenBy"))
 		{
-			if (this.get("isOpen")) return callback("Project already open");
-
-			this.socket.emit("open", this.id, function(err)
-			{
-				if (err) return callback(err);
-
-				callback();
-
-			}.bind(this));
+			if (this._isOpenByMe()) return;
+			else return callback("Project already open");
 		}
 
-	});
+		this.socket.emit("open", this.id, function(err)
+		{
+			if (err) return callback(err);
+			callback();
 
-	return ProjectModel;
+		}.bind(this));
+	},
+
+	close: function(callback)
+	{
+		if (!this.has("isOpenBy")) return;
+		else if (!this._isOpenByMe()) 
+		{
+			return callback("Project is open by someone else");
+		}
+
+		this.socket.emit("close", this.id, function(err)
+		{
+			if (err) return callback(err);
+			callback();
+
+		}.bind(this));
+	},
+
+	openFile: function(name, callback)
+	{
+		if (!this._isOpenByMe())
+		{
+			return callback("Can't open files on a project not open by you");
+		}
+
+				
+	},
+
+	_isOpenByMe: function()
+	{
+		var openBy = this.get("isOpenBy");
+		return (openBy && openBy == this.socket.socket.sessionid);
+	}
+
+});
+
+return ProjectModel;
+
 });

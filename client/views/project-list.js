@@ -19,17 +19,19 @@ var ProjectListItem = Backbone.View.extend(
 	initialize: function(options)
 	{
 		this.project = options.model;
-		this.listenTo(this.project, "all", this.render);
+		this.listenTo(this.project, "change", this.render);
 		this.listenTo(this.project, "destroy", this.remove);
 	},
 
 	render: function()
 	{
 		this.$el.html(this.template(this.project.toJSON()));
+		console.log("render!");
 
-		if (this.project.get("isOpen"))
+		if (this.project.has("isOpenBy"))
 		{
-			this.$el.addClass("text-error");
+			console.log("isOpenBy");
+			this.$(".projectListItem").text(this.project.get("name") + "*");
 		}
 
 		return this;
