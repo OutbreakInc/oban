@@ -10,6 +10,8 @@ var ProjectModel = Backbone.Model.extend(
 	{
 		this.socket = io.connect("http://localhost:8000/project");
 
+		_.bindAll(this);
+
 		this._bindEvents();
 	},
 
