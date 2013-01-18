@@ -46,6 +46,8 @@ var ProjectView = Backbone.View.extend(
 				model: this.activeFile, el: ".editorView" 
 			});
 
+			this.editorView.render();
+
 		}.bind(this));
 	},
 
