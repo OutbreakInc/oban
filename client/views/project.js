@@ -4,7 +4,9 @@ define(function(require)
 var Backbone = require("backbone"),
 	_ = require("underscore"),
 	EditorView = require("app/views/editor"),
-	File = require("app/models/file");
+	DeviceListView = require("app/views/device-list"),
+	File = require("app/models/file"),
+	DeviceCollection = require("app/models/device-collection");
 
 var ProjectView = Backbone.View.extend(
 {
@@ -12,11 +14,13 @@ var ProjectView = Backbone.View.extend(
 	{
 		this.project = this.model;
 
-		// this.deviceListView = new App.DeviceListView(
-		// {
-		// 	el: ".devicesList",
-		// 	collection: App.Devices
-		// });
+		this.devices = new DeviceCollection();
+
+		this.deviceListView = new DeviceListView(
+		{
+			el: ".devicesList",
+			collection: this.devices
+		});
 
 		// check if project has any files
 		if (this.project.get("files").length === 0)
@@ -29,6 +33,8 @@ var ProjectView = Backbone.View.extend(
 			var fileName = this.project.get("files")[0].name;
 			this.openFile(fileName);			
 		}
+
+		this.devices.fetch();
 	},
 
 	openFile: function(fileName)
