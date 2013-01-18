@@ -1,10 +1,12 @@
-var Project = require("../models/project"),
+ var Project = require("../models/project"),
 	CollectionErrors = require("../models/project-collection").Errors,
+	Mixins = require("./mixins"),
 	_ = require("underscore");
 
 var Errors =
 {
-	CLIENT_HAS_OPEN_PROJECT: "You already have a project open"
+	CLIENT_HAS_OPEN_PROJECT: "You already have a project open",
+	NOT_CLIENTS_PROJECT: "You don't own this project"
 };
 
 function ProjectController(projectCollection, sockets)
@@ -26,7 +28,6 @@ function ProjectController(projectCollection, sockets)
 	this._socketOpenProjects = {};
 
 	// all functions must have a valid project
-
 }
 
 ProjectController.prototype.callbackTable =
@@ -70,7 +71,7 @@ ProjectController.prototype.onOpen = function(socket, project, callback)
 		if (err) return callback(err.message);
 
 		callback(null, project);
-		this.sockets.emit("open", project);
+		socket.broadcast.emit("open", project);
 
 		var closeProjectFn = function()
 		{
@@ -102,7 +103,7 @@ ProjectController.prototype.onClose = function(socket, project, callback)
 		if (err) return callback(err.message);
 
 		callback(null, project);
-		this.sockets.emit("close", project);
+		socket.broadcast.emit("close", project);
 
 		delete this._socketOpenProjects[socket.id];
 
@@ -117,6 +118,27 @@ ProjectController.prototype.onClose = function(socket, project, callback)
 		}
 
 	}.bind(this));
+}
+
+ProjectController.prototype.onOpenFile = function(socket, project, fileName, callback)
+{
+	if (!this._isOpenBy(project, socket))
+	{
+		return callback(Errors.NOT_CLIENTS_PROJECT);
+	}
+	
+	project.openFile(fileName, function(err, file)
+	{
+		if (err) return callback(err.message);
+
+		callback(null, file);
+
+	}.bind(this));
+}
+
+ProjectController.prototype._isOpenBy = function(project, socket)
+{
+	return project.isOpenBy() == socket.id;
 }
 
 module.exports = ProjectController;

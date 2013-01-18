@@ -5,6 +5,7 @@ var $ = require("jquery"),
 	ProjectCollection = require("app/models/project-collection"),
 	Dashboard = require("app/views/dashboard"),
 	WelcomeView = require("app/views/welcome"),
+	ProjectView = require("app/views/project"),
 	App = require("app/app");
 
 require("bootstrap");
@@ -20,6 +21,11 @@ App.addInitializer(function(options)
 
 			this.vent.trigger("openProjectSuccess");
 			this.activeProject = project;
+
+			this.activeProjectView = new ProjectView(
+			{
+				model: this.activeProject
+			});
 
 		}.bind(this));
 
@@ -39,6 +45,8 @@ App.addInitializer(function(options)
 
 			this.vent.trigger("closeProjectSuccess");
 			delete this.activeProject;
+
+			this.activeProjectView.close();
 
 		}.bind(this));
 
