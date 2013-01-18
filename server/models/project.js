@@ -191,7 +191,7 @@ Project.prototype._checkName = function(name, callback)
 	return !(!name || name.length === 0);
 }
 
-Project.prototype._findFile = function(name)
+Project.prototype.findFile = function(name)
 {
 	return _.find(this._attrs.files, function(file)
 	{
@@ -234,7 +234,7 @@ Project.prototype.setOpen = function(userId, isOpen, callback)
 
 Project.prototype.addFile = function(name, callback)
 {
-	if (this._findFile(name)) return callback("File already exists");
+	if (this.findFile(name)) return callback("File already exists");
 
 	var step = this.step;
 
@@ -267,7 +267,7 @@ Project.prototype.addFile = function(name, callback)
 
 Project.prototype.removeFile = function(name, options, callback)
 {
-	var file = this._findFile(name);
+	var file = this.findFile(name);
 
 	if (!file) return callback(new Error(Errors.NO_SUCH_FILE));
 
@@ -316,7 +316,7 @@ Project.prototype.removeFile = function(name, options, callback)
 
 Project.prototype.renameFile = function(oldName, newName, callback)
 {
-	var file = this._findFile(oldName);
+	var file = this.findFile(oldName);
 
 	if (!file) return callback(new Error(Errors.NO_SUCH_FILE));
 
@@ -357,7 +357,7 @@ Project.prototype.renameFile = function(oldName, newName, callback)
 
 Project.prototype.openFile = function(name, callback)
 {
-	var file = this._findFile(name);
+	var file = this.findFile(name);
 
 	if (!file) return callback(new Error(Errors.NO_SUCH_FILE));
 
@@ -387,7 +387,7 @@ Project.prototype.openFile = function(name, callback)
 
 Project.prototype.closeFile = function(name, callback)
 {
-	var file = this._findFile(name);
+	var file = this.findFile(name);
 
 	if (!file) return callback(new Error(Errors.NO_SUCH_FILE));
 
@@ -401,7 +401,7 @@ Project.prototype.saveFile = function(name, callback)
 {
 	console.log("saving " + name);
 
-	var file = this._findFile(name);
+	var file = this.findFile(name);
 
 	if (!file) return callback(new Error(Errors.NO_SUCH_FILE));
 
@@ -469,6 +469,11 @@ Project.prototype.buildStatus = function()
 Project.prototype.runStatus = function()
 {
 	return this._attrs.runStatus;
+}
+
+Project.prototype.isOpenBy = function()
+{
+	return this._attrs.isOpenBy;
 }
 
 Project.prototype.id = function()

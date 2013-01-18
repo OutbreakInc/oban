@@ -8,27 +8,24 @@ var FileModel = Backbone.Model.extend(
 {
 	initialize: function(options)
 	{
-		this.name = options.name;
+		this.project = options.project;
 		this.socket = io.connect("http://localhost:8000/file");
-
-		this._bindEvents();
 	},
 
-	open: function()
+	setContents: function(contents, callback)
 	{
-		if (this.has("isOpenBy"))
+		this.socket.emit(	"setContents", 
+							this.get("project").id,
+							this.get("name"),
+							contents,
+		function(err)
 		{
-			if (this._isOpenByMe()) return;
-			else return callback("File already open");
-		}
+			if (err) return callback(err);
 
-		this.socket.emit("open", this.id, )
-	},
+			this.set("contents", contents, { silent: true });
+			callback();
 
-	_isOpenByMe: function()
-	{
-		var openBy = this.get("isOpenBy");
-		return (openBy && openBy == this.socket.socket.sessionid);
+		}.bind(this));
 	}
 });
 

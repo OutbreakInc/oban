@@ -11,6 +11,7 @@ var winston = require("winston"),
 	ProjectCollection = require("./models/project-collection"),
 	ProjectCollectionController = require("./controllers/project-collection"),
 	ProjectController = require("./controllers/project"),
+	FileController = require("./controllers/file"),
 	GdbClient = require("./gdb-client"),
 	socketIo = require("socket.io");
 
@@ -49,6 +50,7 @@ init: function()
 
 		var pcController = new ProjectCollectionController(projects, sockets);
 		var projectController = new ProjectController(projects, sockets);
+		var fileController = new FileController(projects, sockets);
 	});
 
 	// winston.debug("initializing directories");

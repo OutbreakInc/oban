@@ -15,17 +15,17 @@ var ProjectModel = Backbone.Model.extend(
 
 	_bindEvents: function()
 	{
-		var setIfIdMatches = function(project)
-		{
-			if (project.id != this.id) return;
+		this.socket.on("open", this._setIfIdMatches);
+		this.socket.on("close", this._setIfIdMatches);
+	},
 
-			this.clear({ silent: true });
-			this.set(project);
+	_setIfIdMatches: function(project)
+	{
+		if (project.id != this.id) return;
 
-		}.bind(this);
+		this.clear({ silent: true });
+		this.set(project);
 
-		this.socket.on("open", setIfIdMatches);
-		this.socket.on("close", setIfIdMatches);
 	},
 
 	open: function(callback)
@@ -36,10 +36,12 @@ var ProjectModel = Backbone.Model.extend(
 			else return callback("Project already open");
 		}
 
-		this.socket.emit("open", this.id, function(err)
+		this.socket.emit("open", this.id, function(err, project)
 		{
 			if (err) return callback(err);
-			callback();
+
+			this._setIfIdMatches(project);
+			callback(null, project);
 
 		}.bind(this));
 	},
@@ -52,22 +54,29 @@ var ProjectModel = Backbone.Model.extend(
 			return callback("Project is open by someone else");
 		}
 
-		this.socket.emit("close", this.id, function(err)
+		this.socket.emit("close", this.id, function(err, project)
 		{
 			if (err) return callback(err);
-			callback();
+
+			this._setIfIdMatches(project);
+			callback(null, project);
 
 		}.bind(this));
 	},
 
-	openFile: function(name, callback)
+	openFile: function(fileName, callback)
 	{
 		if (!this._isOpenByMe())
 		{
 			return callback("Can't open files on a project not open by you");
 		}
 
-				
+		this.socket.emit("openFile", this.id, fileName, function(err, file)
+		{
+			if (err) return callback(err);
+
+			callback(null, file);
+		});	
 	},
 
 	_isOpenByMe: function()
