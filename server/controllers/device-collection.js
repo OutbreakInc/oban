@@ -1,21 +1,12 @@
+var _ = require("underscore");
+
 function DeviceCollectionController(deviceCollection, sockets)
 {
-	// this.devices = deviceCollection;
+	_.bindAll(this);
+	
 	this.sockets = sockets.of("/deviceCollection");
 
-	this.devices = 
-	[
-		{
-			id: "1",
-			deviceId: "0x1234",
-			name: "Galago"
-		},
-		{
-			id: "2",
-			deviceId: "0xDEAD",
-			name: "Blacksheep"
-		}
-	];
+	this.devices = deviceCollection;
 
 	this._init();
 }
@@ -30,20 +21,20 @@ DeviceCollectionController.prototype._init = function()
 
 		}.bind(this));
 
-		setTimeout(function()
-		{
-			socket.emit("remove", this.devices[0]);
-
-			setTimeout(function()
-			{
-				socket.emit("add", this.devices[0]);
-
-			}.bind(this), 1000);
-
-		}.bind(this), 1000);
-
-
 	}.bind(this));
+
+	this.devices.on("add", this._onAdd);
+	this.devices.on("remove", this._onRemove);
+}
+
+DeviceCollectionController.prototype._onAdd = function(device)
+{
+	this.sockets.emit("add", device);
+}
+
+DeviceCollectionController.prototype._onRemove = function(device)
+{
+	this.sockets.emit("remove", device);
 }
 
 module.exports = DeviceCollectionController;

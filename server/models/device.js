@@ -1,3 +1,5 @@
+var idGen = require("../id-gen");
+
 var Errors =
 {
 	INVALID_DEVICE_ID: "Invalid device id",	
@@ -32,11 +34,18 @@ var Device = function(options, callback)
 	this._attrs.deviceId = options.deviceId;
 	this._attrs.name = options.name;
 	this._attrs.isOpenBy = undefined;
+
+	this._attrs.id = idGen();
 }
 
 Device.prototype._isValidStr = function(name)
 {
 	return !(!name || name.length === 0);
+}
+
+Device.prototype.deviceId = function()
+{
+	return this._attrs.deviceId;
 }
 
 Device.prototype.setOpen = function(userId, isOpen, callback)
