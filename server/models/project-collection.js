@@ -155,6 +155,7 @@ ProjectCollection.prototype.addProject = function(name, callback)
 		step.next();
 		this._attrs.projects.push(project);
 		callback(null, project);
+		this.emit("add", project);
 	}).
 	error(function(err)
 	{

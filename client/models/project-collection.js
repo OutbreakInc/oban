@@ -12,6 +12,10 @@ var ProjectCollection = Backbone.Collection.extend(
 	initialize: function(options)
 	{
 		this.socket = io.connect("http://localhost:8000/projectCollection");
+
+		_.bindAll(this);
+
+		this._bindEvents();
 	},
 
 	create: function(name, callback)
@@ -35,8 +39,13 @@ var ProjectCollection = Backbone.Collection.extend(
 			this.reset(projects);
 
 		}.bind(this));
-	}
+	},
 
+	_bindEvents: function()
+	{
+		this.socket.on("add", this.add);
+		this.socket.on("remove", this.remove);
+	}
 });
 
 return ProjectCollection;
