@@ -28,6 +28,11 @@ var WelcomeView = Backbone.View.extend(
 		var errorField = $("#newProjectModal .error");
 		var createBtn = $(".createProject");
 
+		dialog.on("shown", function()
+		{
+			inputField.focus();
+		});
+
 		var enableControls = function(isEnabled)
 		{
 			inputField.prop("disabled", !isEnabled);
