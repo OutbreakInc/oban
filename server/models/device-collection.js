@@ -22,14 +22,13 @@ function DeviceCollection(options, callback)
 	this._deviceServer.on("connect", this._add);
 	this._deviceServer.on("disconnect", this._remove);
 
-	// TODO: add a timeout for waiting for the device server to
-	// start
-	this._deviceServer.on("started", function()
+	this._deviceServer.on("started", this._onServerStart);
+	this._deviceServer.on("stopped", this._onServerStop);
+
+	process.nextTick(function()
 	{
 		callback();
 	});
-
-	this._deviceServer.on("stopped", this._onServerStop);
 
 	EventEmitter.call(this);
 }
@@ -72,6 +71,11 @@ DeviceCollection.prototype._remove = function(id, name)
 	}
 
 	this.emit("remove", removedDevice);
+}
+
+DeviceCollection.prototype._onServerStart = function()
+{
+	this.emit("started");
 }
 
 DeviceCollection.prototype._onServerStop = function()
