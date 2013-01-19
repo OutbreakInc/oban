@@ -34,7 +34,8 @@ ProjectController.prototype.callbackTable =
 {
 	"open": "onOpen",
 	"close": "onClose",
-	"openFile": "onOpenFile"
+	"openFile": "onOpenFile",
+	"build": "onBuild"
 }
 
 ProjectController.prototype.findProject = function(socket, callback)
@@ -132,6 +133,22 @@ ProjectController.prototype.onOpenFile = function(socket, project, fileName, cal
 		if (err) return callback(err.message);
 
 		callback(null, file);
+
+	}.bind(this));
+}
+
+ProjectController.prototype.onBuild = function(socket, project, callback)
+{
+	if (!this._isOpenBy(project, socket))
+	{
+		return callback(Errors.NOT_CLIENTS_PROJECT);
+	}
+
+	project.build(function(err)
+	{
+		if (err) return callback(err.message);
+
+		callback(null, project);
 
 	}.bind(this));
 }

@@ -409,8 +409,10 @@ Project.prototype.saveFile = function(name, callback)
 	{
 		if (err) return callback(err);
 
+		this._attrs.buildStatus = BuildStatus.UNCOMPILED;
 		callback();
-	});
+
+	}.bind(this));
 }
 
 Project.prototype.name = function()
@@ -451,6 +453,22 @@ Project.prototype.setName = function(newName, callback)
 	.exec();
 }
 
+Project.prototype.build = function(callback)
+{
+	// tell build system to build
+	// magicalBuildSystem.build(function(err))
+
+	var err;
+	var binary = "main.elf";
+
+	if (err) return callback(err);
+
+	this._attrs.buildStatus = BuildStatus.COMPILED;
+	this._attrs.binary = binary;
+
+	callback();
+}
+
 Project.prototype.path = function()
 {
 	return this._attrs.path;
@@ -483,12 +501,12 @@ Project.prototype.id = function()
 
 Project.prototype.toJSON = function()
 {
-	return _.omit(this._attrs, "path");
+	return _.omit(this._attrs, [ "path", "binary" ]);
 }
 
 Project.prototype.toFile = function()
 {
-	var json = _.omit(this._attrs, [ "path", "buildStatus", "runStatus" ]);
+	var json = _.omit(this._attrs, [ "path", "buildStatus", "runStatus", "binary" ]);
 
 	var files = [];
 

@@ -10,6 +10,13 @@ var Backbone = require("backbone"),
 
 var ProjectView = Backbone.View.extend(
 {
+	el: "body",
+
+	events:
+	{
+		"click .buildButton": "onBuild"
+	},
+
 	initialize: function()
 	{
 		this.project = this.model;
@@ -55,6 +62,16 @@ var ProjectView = Backbone.View.extend(
 			this.editorView.render();
 
 		}.bind(this));
+	},
+
+	onBuild: function()
+	{
+		this.project.build(function(err)
+		{
+			if (err) alert(err);
+
+			alert("Build success!");
+		});
 	},
 
 	close: function()

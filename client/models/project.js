@@ -81,6 +81,18 @@ var ProjectModel = Backbone.Model.extend(
 		});	
 	},
 
+	build: function(callback)
+	{
+		this.socket.emit("build", this.id, function(err, project)
+		{
+			if (err) return callback(err);
+
+			this._setIfIdMatches(project);
+			callback(null, project);
+
+		}.bind(this));
+	},
+
 	_isOpenByMe: function()
 	{
 		var openBy = this.get("isOpenBy");
