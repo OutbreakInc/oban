@@ -47,6 +47,16 @@ projectsDirForPort: function(port)
 scriptsDir: function()
 {
 	return __dirname + "/../SDK/scripts";
+},
+
+sdkDir: function()
+{
+	return __dirname + "/../SDK6/";
+},
+
+platformDir: function()
+{
+	return __dirname + "/../Platform/";
 }
 
 }
