@@ -7,7 +7,9 @@ var _ = require("underscore"),
 	Side = require("sidestep"),
 	async = require("async"),
 	idGen = require("../id-gen"),
-	File = require("./file");
+	File = require("./file"),
+	utils = require("../utils"),
+	Compiler = require("../../ARMToolchainTest/toolchain").Compiler;
 
 var DEFAULT_FILE_NAME = "main.cpp";
 
@@ -23,6 +25,11 @@ var BuildStatus =
 	UNCOMPILED: "uncompiled",
 	COMPILED: "compiled",
 	ERRORS: "errors"
+};
+
+var Compatibility =
+{
+	GALAGO_4: "Galago4"
 };
 
 var Errors = 
@@ -120,6 +127,8 @@ util.inherits(Project, EventEmitter);
 Project.prototype._init = function(callback)
 {
 	this._attrs.id = idGen();
+
+	this._attrs.compatibleWith = [ Compatibility.GALAGO_4 ];
 
 	var error;
 
@@ -461,12 +470,29 @@ Project.prototype.build = function(callback)
 	var err;
 	var binary = "main.elf";
 
-	if (err) return callback(err);
+	var compiler = new Compiler;
 
-	this._attrs.buildStatus = BuildStatus.COMPILED;
-	this._attrs.binary = binary;
+	console.log("about to compile");
 
-	callback();
+	compiler.compile(
+	{
+		sdk: utils.sdkDir(), 
+		platform: utils.platformDir(), 
+		module: this._attrs.path
+	}, function()
+	{
+		console.log("onboarded, bro");
+
+		console.log(arguments);
+
+		if (err) return callback(err);
+
+		this._attrs.buildStatus = BuildStatus.COMPILED;
+		this._attrs.binary = binary;
+		
+		callback();
+
+	}.bind(this));
 }
 
 Project.prototype.path = function()
