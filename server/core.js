@@ -4,11 +4,17 @@
 var winston = require("winston"),
 	fs = require("fs"),
 	utils = require("./utils"),
-	DataSync = require("./sync"),
-	DeviceServer = require("./device-server"),
+	// DataSync = require("./sync"),
 	toolchain = require("./toolchain"),
-	File = require("../client/models/file"),
-	GdbClient = require("./gdb-client");
+	// File = require("../client/models/file"),
+	ProjectCollection = require("./models/project-collection"),
+	DeviceCollection = require("./models/device-collection"),
+	ProjectCollectionController = require("./controllers/project-collection"),
+	ProjectController = require("./controllers/project"),
+	FileController = require("./controllers/file"),
+	DeviceCollectionController = require("./controllers/device-collection"),
+	GdbClient = require("./gdb-client"),
+	socketIo = require("socket.io");
 
 function Core(app, config)
 {
@@ -36,30 +42,52 @@ init: function()
 	winston.debug("initializing directories");
 	this._initDirectories();
 
-	winston.debug("loading data sync module");
+	var sockets = socketIo.listen(this.app);
 
-	this.dataSync = new DataSync(this.app, this.settingsDir);
-	this.dataSync.load();
+	var devices;
+
+	var projects = new ProjectCollection(
+	{
+		baseDir: utils.projectsDir()
+	},
+	function(err)
+	{
+		if (err) console.log(err);
+
+		devices = new DeviceCollection({},
+		function()
+		{
+			var pcController = new ProjectCollectionController(projects, sockets);
+			var projectController = new ProjectController(projects, sockets);
+			var fileController = new FileController(projects, sockets);
+			var dcController = new DeviceCollectionController(devices, sockets);
+		});
+	});
+
+	// winston.debug("loading data sync module");
+
+	// this.dataSync = new DataSync(this.app, this.settingsDir);
+	// this.dataSync.load();
 
 	// this.dataSync.socket.set("log level", 1);
 
-	this.socket = this.dataSync.socket;
+	// this.socket = this.dataSync.socket;
 
-	winston.debug("loading device server module");
+	// winston.debug("loading device server module");
 
-	this.deviceServer = new DeviceServer;
-	this.deviceServer.run();
+	// this.deviceServer = new DeviceServer;
+	// this.deviceServer.run();
 
-	this.gdbClient = new GdbClient(this.deviceServer);
+	// this.gdbClient = new GdbClient(this.deviceServer);
 
-	this._bindDeviceServerEvents();
-	this._bindFileEvents();
-	this._bindProjectEvents();
-	this._bindIdeEvents();
+	// this._bindDeviceServerEvents();
+	// this._bindFileEvents();
+	// this._bindProjectEvents();
+	// this._bindIdeEvents();
 
-	this._bindGdbEvents();
+	// this._bindGdbEvents();
 
-	this._initIde();
+	// this._initIde();
 
 	// this.gdbClient.run("/Users/exhaze/Documents/outbreak-ide/hello-world/BasicBlink.elf");
 },
@@ -89,111 +117,12 @@ _initDirectories: function()
 	this._mkdirIfNotExist(this.settingsDir);
 },
 
-_initIde: function()
-{
-	var ides = this.dataSync.collections.Ide;
-	var projects = this.dataSync.collections.Project;
-	var files = this.dataSync.collections.File;
-
-	if (ides.length === 0)
-	{
-		if(projects.length === 0)
-		{
-			projects.add({name: "Untitled"});
-		}
-		
-		ides.add({ activeProject: projects.at(0).id });
-	}
-
-	var ide = ides.at(0);
-
-	var project = projects.get(ide.get("activeProject"));
-
-	var filePath = project.get("files")[0];
-	var fileName = filePath.slice(filePath.lastIndexOf("/") + 1);
-
-	var file = new File({
-		name: fileName, 
-		project: project.toJSON() });
-
-	// set active files to new project's file
-	files.reset([file]);
-},
-
 _mkdirIfNotExist: function(dir)
 {
 	if (!fs.existsSync(dir))
 	{
 		fs.mkdirSync(dir);
 	}
-},
-
-_bindDeviceServerEvents: function()
-{
-	var devices = this.dataSync.collections.Device;
-
-	this.deviceServer.on("connect", function(id, name)
-	{
-		devices.add({ deviceId: id, name: name });
-		winston.debug("device connected (id: "+id+", name: "+name+")");
-	});
-
-	this.deviceServer.on("disconnect", function(id, name)
-	{
-		var model = devices.find(function(device)
-		{
-			return device.get("deviceId") == id;
-		});
-
-		devices.remove(model);
-		winston.debug("device disconnected (id: "+id+", name: "+name+")");
-	});
-},
-
-_bindFileEvents: function()
-{
-	var files = this.dataSync.collections.File;
-	var projects = this.dataSync.collections.Project;
-
-	var self = this;
-
-	function loadFile(file)
-	{
-		// sync with existing file on disk, if possible
-		if (fs.existsSync(file.path()))
-		{
-			winston.debug("restoring " + file.path() + " from file");
-			self._readFile(file);
-		}
-		else
-		{
-			self._saveFile(file);	
-		}
-	}
-
-	files.on("reset", function()
-	{
-		console.log("reset");
-		files.forEach(loadFile);
-	});
-
-	files.on("change", function()
-	{
-		// console.log(arguments);
-	});
-
-	files.on("add", loadFile);
-
-	files.on("change:name", function(file)
-	{
-		winston.debug("file rename event: " + file.get("name"));
-	});
-
-	files.on("change:text", function(file)
-	{
-		winston.debug("file text change event!");
-		self._saveFile(file);
-	});
 },
 
 _onBuildFinished: function(err, project, outputFile)
