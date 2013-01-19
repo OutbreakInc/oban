@@ -8,16 +8,12 @@
 	{
 		"socket.io": "0.9.x",
 		"backbone": "0.9.x",
-		"backbone.io": "git://github.com/exhaze/backbone.io.git",
 		"express": "2.5.x",
 		"underscore": "1.4.3",
 		"winston": "0.6.x",
 		"amdefine": "0.0.4",
-		"sidestep": "0.1.1",
-		"async": "0.1.22"
-	},
-	"devDependencies":
-	{
+		"sidestep": "git://github.com/exhaze/sidestep.git#master",
+		"async": "0.1.22",
 		"shelljs": "0.1.x"
 	},
 	"scripts":

@@ -1,40 +1,34 @@
-if (typeof define !== 'function') {
-    var define = require('amdefine')(module);
-}
-
 define(function(require)
 {
-	var Backbone = require("backbone");
 
-	var FileModel = Backbone.Model.extend(
+var Backbone = require("backbone"),
+	io = require("socket.io");
+
+var FileModel = Backbone.Model.extend(
+{
+	initialize: function(options)
 	{
-		defaults:
-		{
-			buildStatus: "unverified"
-		},
+		this.project = options.project;
+		this.socket = io.connect("http://localhost:8000/file");
+	},
 
-		path: function()
-		{
-			if (!this.get("project"))
-			{
-				console.log(this.toJSON());
-				console.log("file doesn't have a project associated with it:");
-				return;
-			}
-
-			return this.get("project").path + "/" + this.get("name");
-		},
-
-		validate: function(attrs)
-		{
-			if (!attrs.name) return "must have a name";
-		}
-	});
-
-	FileModel.meta =
+	setContents: function(contents, callback)
 	{
-		name: "File"
-	};
+		this.socket.emit(	"setContents", 
+							this.get("project").id,
+							this.get("name"),
+							contents,
+		function(err)
+		{
+			if (err) return callback(err);
 
-	return FileModel;
-})
+			this.set("contents", contents, { silent: true });
+			callback();
+
+		}.bind(this));
+	}
+});
+
+return FileModel;
+
+});

@@ -33,7 +33,8 @@ var Errors =
 	NO_PROJECT_JSON: "Project directory missing project.json",
 	INVALID_PROJECT_JSON: "Invalid project.json file",
 	FILE_RENAME_EXISTS: "The new name of the file being renamed already exists",
-	NO_SUCH_FILE: "No such file"
+	NO_SUCH_FILE: "No such file",
+	ALREADY_OPEN: "Project is already open by someone else"
 };
 
 var nextTickError = function(err, callback)
@@ -71,7 +72,7 @@ var Project = function(options, callback)
 
 	this._attrs.buildStatus = BuildStatus.UNCOMPILED;
 	this._attrs.runStatus = RunStatus.STOPPED;
-	this._attrs.isOpen = false;	
+	this._attrs.isOpenBy = undefined;
 
 	this._attrs.files = [];
 
@@ -120,17 +121,24 @@ Project.prototype._init = function(callback)
 {
 	this._attrs.id = idGen();
 
+	var error;
+
+	this.addFile(DEFAULT_FILE_NAME, function(err)
+	{
+		err = error;
+	});
+
 	var step = this.step;
 
 	step.define(
 	function()
 	{
-		this.addFile(DEFAULT_FILE_NAME, step.next);
-	},
-	function(err)
-	{
+		console.log("next step of init");
+
+		if (error) return step.next(error);
+
 		step.next();
-		callback();
+		callback(null, this);
 	})
 	.error(function(err)
 	{
@@ -172,7 +180,7 @@ Project.prototype._restore = function(callback)
 			if (err) return callback(err);
 
 			this._attrs.files = fileObjects;
-			callback();
+			callback(null, this);
 
 		}.bind(this));
 	}.bind(this));
@@ -183,7 +191,7 @@ Project.prototype._checkName = function(name, callback)
 	return !(!name || name.length === 0);
 }
 
-Project.prototype._findFile = function(name)
+Project.prototype.findFile = function(name)
 {
 	return _.find(this._attrs.files, function(file)
 	{
@@ -193,35 +201,17 @@ Project.prototype._findFile = function(name)
 
 Project.prototype._saveAttrs = function(callback)
 {
-	this._settingsIo.write(this.toFile(), callback);
-}
-
-Project.prototype.addFile = function(name, callback)
-{
-	if (this._findFile(name)) return callback("File already exists");
-
 	var step = this.step;
 
 	step.define(
 	function()
 	{
-		step.data.file = new File({ name: name }, step.next);
-	},
-	function(err)
-	{
-		var file = step.data.file;
-
-		this._attrs.files.push(file);
-		this._fileIo.create(file.name(), step.next);
-	},
-	function(err)
-	{
-		this._saveAttrs(step.next);
+		this._settingsIo.write(this.toFile(), step.next);
 	},
 	function(err)
 	{
 		step.next();
-		callback(null, step.data.file);
+		callback();
 	})
 	.error(function(err)
 	{
@@ -230,9 +220,54 @@ Project.prototype.addFile = function(name, callback)
 	.exec();
 }
 
+Project.prototype.setOpen = function(userId, isOpen, callback)
+{
+	if (this._attrs.isOpenBy &&
+		this._attrs.isOpenBy != userId) 
+	{
+		return callback(new Error(Errors.ALREADY_OPEN));
+	}
+
+	this._attrs.isOpenBy = isOpen ? userId : undefined;
+	callback();
+}
+
+Project.prototype.addFile = function(name, callback)
+{
+	if (this.findFile(name)) return callback("File already exists");
+
+	var step = this.step;
+
+	var file;
+
+	step.define(
+	function()
+	{
+		file = new File({ name: name }, step.next);
+	},
+	function(err)
+	{
+		this._attrs.files.push(file);
+		this._fileIo.create(file.name(), step.next);
+	})
+	.error(function(err)
+	{
+		// cancel _saveAttrs task
+		step.removeNextTask();
+	})
+	.exec();
+
+	this._saveAttrs(function(err)
+	{
+		if (err) return callback(err);
+
+		callback(null, file);
+	});
+}
+
 Project.prototype.removeFile = function(name, options, callback)
 {
-	var file = this._findFile(name);
+	var file = this.findFile(name);
 
 	if (!file) return callback(new Error(Errors.NO_SUCH_FILE));
 
@@ -269,7 +304,7 @@ Project.prototype.removeFile = function(name, options, callback)
 	function(err)
 	{
 		console.log("updated project settings");
-		step.next();		
+		step.next();
 		callback();
 	})
 	.error(function(err)
@@ -281,7 +316,7 @@ Project.prototype.removeFile = function(name, options, callback)
 
 Project.prototype.renameFile = function(oldName, newName, callback)
 {
-	var file = this._findFile(oldName);
+	var file = this.findFile(oldName);
 
 	if (!file) return callback(new Error(Errors.NO_SUCH_FILE));
 
@@ -322,7 +357,7 @@ Project.prototype.renameFile = function(oldName, newName, callback)
 
 Project.prototype.openFile = function(name, callback)
 {
-	var file = this._findFile(name);
+	var file = this.findFile(name);
 
 	if (!file) return callback(new Error(Errors.NO_SUCH_FILE));
 
@@ -352,7 +387,7 @@ Project.prototype.openFile = function(name, callback)
 
 Project.prototype.closeFile = function(name, callback)
 {
-	var file = this._findFile(name);
+	var file = this.findFile(name);
 
 	if (!file) return callback(new Error(Errors.NO_SUCH_FILE));
 
@@ -366,7 +401,7 @@ Project.prototype.saveFile = function(name, callback)
 {
 	console.log("saving " + name);
 
-	var file = this._findFile(name);
+	var file = this.findFile(name);
 
 	if (!file) return callback(new Error(Errors.NO_SUCH_FILE));
 
@@ -374,8 +409,10 @@ Project.prototype.saveFile = function(name, callback)
 	{
 		if (err) return callback(err);
 
+		this._attrs.buildStatus = BuildStatus.UNCOMPILED;
 		callback();
-	});
+
+	}.bind(this));
 }
 
 Project.prototype.name = function()
@@ -416,6 +453,22 @@ Project.prototype.setName = function(newName, callback)
 	.exec();
 }
 
+Project.prototype.build = function(callback)
+{
+	// tell build system to build
+	// magicalBuildSystem.build(function(err))
+
+	var err;
+	var binary = "main.elf";
+
+	if (err) return callback(err);
+
+	this._attrs.buildStatus = BuildStatus.COMPILED;
+	this._attrs.binary = binary;
+
+	callback();
+}
+
 Project.prototype.path = function()
 {
 	return this._attrs.path;
@@ -436,6 +489,11 @@ Project.prototype.runStatus = function()
 	return this._attrs.runStatus;
 }
 
+Project.prototype.isOpenBy = function()
+{
+	return this._attrs.isOpenBy;
+}
+
 Project.prototype.id = function()
 {
 	return this._attrs.id;
@@ -443,12 +501,12 @@ Project.prototype.id = function()
 
 Project.prototype.toJSON = function()
 {
-	return _.omit(this._attrs, "path");
+	return _.omit(this._attrs, [ "path", "binary" ]);
 }
 
 Project.prototype.toFile = function()
 {
-	var json = _.omit(this._attrs, [ "path", "buildStatus", "runStatus" ]);
+	var json = _.omit(this._attrs, [ "path", "buildStatus", "runStatus", "binary" ]);
 
 	var files = [];
 

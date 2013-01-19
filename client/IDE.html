@@ -35,25 +35,29 @@
 </head>
 
 <body>
-	<div class="navbar navbar-fixed-top">
+	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 		<div class="topbarContainer">
 			<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
 				<span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
 			</a>
 			<a class="brand" href="/"><!-- <img class="outbreakIDELogo" src="/images/blank.gif"></img> -->GalagoIDE <em class="colorOrange">beta</em></a>
-			<div class="nav-collapse" hidden="hidden">
-				<ul id="topNavigation" class="nav">
-					<li class="active"><a href="#SPIEmitter">SPI Emitter</a></li>
-					<li><a href="#BasicBlink">Basic Blink</a></li>
-					<li><a href="#TestProject">Test Project</a></li>
-					<li><a href="#OneMoreProject">One More Bro...</a></li>
+			<div class="nav-collapse">
+				<ul id="projectList" class="nav">
 				</ul>
 			</div><!-- /.nav-collapse  -->
-			<div class="nav-collapse" hidden="hidden">
+			<div class="nav-collapse closeProject pull-right" hidden="hidden">
 				<ul class="nav">
-					<li><button class="btn btn-small buildButton"><span class="icon-check"></span> Build</button></li>
-					<li><button class="btn btn-small runButton"><span class="icon-play"></span> Run</button></li>
+					<li>
+						<a class="closeProjectBtn">Close project</a>
+					</li>
+				</ul>
+			</div>
+			
+			<div class="projectControls nav-collapse" hidden="hidden">
+				<ul class="nav">
+					<li><button class="btn btn-small btn-primary buildButton"><span class="icon-check"></span> Build</button></li>
+					<li><button class="btn btn-small btn-primary runButton"><span class="icon-play"></span> Run</button></li>
 				</ul>
 			</div>
 		</div>
@@ -66,9 +70,29 @@
 				<p class="lead">
 					Create a new project or open an existing one
 				</p>
-				<p>
-					<button class="btn btn-large btn-primary newProjectBtn">Create a new project</button>
+				<p class="newProject">
+					<button role="button" class="btn btn-large btn-primary newProjectBtn">Create a new project</button>
 				</p>
+
+				<div id="newProjectModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="newProjectHeader" aria-hidden="true">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+						<h3 id="newProjectHeader">Create a new project</h3>
+					</div>
+					<div class="modal-body">
+						<p>Enter a project name:</p>
+						<p>
+							<input class="projectName" type="text" placeholder="New project name"></input>
+							<span class="text-error error"></span>
+						</p>
+					</div>
+					<div class="modal-footer">
+						<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+						<button class="btn btn-primary createProject">Create project</button>
+					</div>
+				</div>
+
+
 			</div>
 			<div class="row">
 				<div class="projectList">
@@ -167,5 +191,10 @@
 			<div class="projecttitle">Demo project</div>
 			<div class="runcontrols"><input id="verifyButton" type="button" value="Verify"></input><input id="runButton" type="button" value="Run"></input></div>
 		</div> -->
+
+	<script type="text/template" id="projectListTemplate">
+		<a class="projectListItem"><%= name %></a>
+	</script>
+
 </body>
 </html>
