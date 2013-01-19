@@ -80,13 +80,14 @@ function Module(rootPath)
 
 Toolchain.prototype =
 {
-	resolvePaths: function(paths, basesTable)
+	resolvePaths: function(paths, basesTable, defaultBase)
 	{
 		var resolvedPaths = [];
 		paths.forEach(function(source)
 		{
 			var path = [];
 			if(basesTable[source.base])	path.push(basesTable[source.base]);
+			else						path.push(basesTable[defaultBase]);
 			if(source.dir)				path.push(source.dir);
 			path.push(source.name);
 			resolvedPaths.push(path.join("/"));
@@ -119,23 +120,23 @@ Toolchain.prototype =
 				args.push("-D" + k + "=" + project.definitions[k]);
 		
 		//paths used to resolve complex referenced paths
-		pathsTable = _.extend({undefined: "."}, pathsTable);
+		pathsTable = _.extend({}, pathsTable);
 		
 		if(project.linkFile)
-			this.resolvePaths([project.linkFile], pathsTable).forEach(function(path)
+			this.resolvePaths([project.linkFile], pathsTable, "module").forEach(function(path)
 			{
 				args.push("-T", path);
 			});
 		
 		//resolve and add include files
 		if(project.include)
-			this.resolvePaths(project.include, pathsTable).forEach(function(path)
+			this.resolvePaths(project.include, pathsTable, "module").forEach(function(path)
 			{
 				args.push("-I", path);
 			});
 		
 		//resolve and add sources
-		args = args.concat(this.resolvePaths(project.files, pathsTable));
+		args = args.concat(this.resolvePaths(project.files, pathsTable, "module"));
 		
 		console.log("args: ", args);
 		
