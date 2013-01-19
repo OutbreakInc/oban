@@ -39,6 +39,9 @@ Core.prototype =
 
 init: function()
 {
+	winston.debug("initializing directories");
+	this._initDirectories();
+
 	var sockets = socketIo.listen(this.app);
 
 	var devices;
@@ -60,9 +63,6 @@ init: function()
 			var dcController = new DeviceCollectionController(devices, sockets);
 		});
 	});
-
-	// winston.debug("initializing directories");
-	// this._initDirectories();
 
 	// winston.debug("loading data sync module");
 
