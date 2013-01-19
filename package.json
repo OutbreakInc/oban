@@ -13,10 +13,7 @@
 		"winston": "0.6.x",
 		"amdefine": "0.0.4",
 		"sidestep": "git://github.com/exhaze/sidestep.git#master",
-		"async": "0.1.22"
-	},
-	"devDependencies":
-	{
+		"async": "0.1.22",
 		"shelljs": "0.1.x"
 	},
 	"scripts":
