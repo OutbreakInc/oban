@@ -20,7 +20,7 @@
 	[
 		{"name": "BasicBlink.h"}
 	],
-	"sources":
+	"files":
 	[
 		{"name": "BasicBlink.cpp"}
 	]

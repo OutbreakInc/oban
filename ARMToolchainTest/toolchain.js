@@ -169,15 +169,16 @@ Toolchain.prototype =
 			{
 				//this regex looks for errors like:
 				//	"./example.cpp:74:2: error: 'mistake' was not declared in this scope"
+				//	"./example.cpp:93: undefined reference to `mistake'"
 				//and breaks it into:
 				//	match[1]: "./example.cpp"
 				//	match[2]: "74"
 				//	match[3]: "2"
 				//	match[4]: " error: 'mistake' was not declared in this scope"
 				
-				var m = line.match(/(.*?):(\d+):(\d+):(.*)/);
+				var m = line.match(/^(.*?):(\d+):(\d*):{0,1}(.*)/);
 				if(m)
-					compileErrors.push({raw: line, file: m[1], line: m[2], charIndex: m[3], err: m[4]});
+					compileErrors.push({raw: line, file: m[1], line: m[2], charIndex: m[3] || 0, err: m[4].trim()});
 			});
 			
 			//invoke callback with no error
