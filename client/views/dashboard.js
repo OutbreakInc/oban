@@ -22,15 +22,20 @@ var Dashboard = Backbone.View.extend(
 
 		this.projects.fetch();
 
+		this.closeProjectBtn = this.$(".closeProject");
+		this.projectControls = this.$(".projectControls");
+
 		App.vent.on("openProjectSuccess", function()
 		{
-			this.$(".closeProject").removeAttr("hidden");
+			this.closeProjectBtn.removeAttr("hidden");
+			this.projectControls.removeAttr("hidden");
 
 		}.bind(this));
 
 		App.vent.on("closeProjectSuccess", function()
 		{
-			this.$(".closeProject").attr("hidden", "hidden");
+			this.closeProjectBtn.attr("hidden", "hidden");
+			this.projectControls.attr("hidden", "hidden");
 			
 		}.bind(this));
 	},
