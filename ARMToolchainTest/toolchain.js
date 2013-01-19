@@ -135,7 +135,7 @@ Toolchain.prototype =
 			});
 		
 		//resolve and add sources
-		args = args.concat(this.resolvePaths(project.sources, pathsTable));
+		args = args.concat(this.resolvePaths(project.files, pathsTable));
 		
 		console.log("args: ", args);
 		
@@ -434,7 +434,7 @@ Compiler.prototype =
 		});
 	}
 };
-function Compiler(dirs)
+function Compiler()
 {
 	this.toolchain = new Toolchain();
 	this.targets = new Targets();
