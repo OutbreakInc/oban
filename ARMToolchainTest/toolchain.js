@@ -184,7 +184,8 @@ Toolchain.prototype =
 			callback(undefined,
 			{
 				compileErrors: compileErrors,
-				returnCode: returnCode
+				returnCode: returnCode,
+				stderr: stderr
 			});
 		}.bind(this));
 	},
