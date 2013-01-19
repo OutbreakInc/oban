@@ -20,8 +20,10 @@ var ProjectCollection = Backbone.Collection.extend(
 		{
 			if (err) return callback(err);
 
-			this.add(project);
-			callback(null, project);
+			var projectModel = new Project(project);
+
+			this.add(projectModel);
+			callback(null, projectModel);
 
 		}.bind(this));
 	},
