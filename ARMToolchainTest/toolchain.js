@@ -1,3 +1,5 @@
+module.exports = (function(){
+
 var fs = require("fs");
 var childProcess = require("child_process");
 var http = require("http");
@@ -78,8 +80,6 @@ function Module(rootPath)
 
 Toolchain.prototype =
 {
-	sdkDir: undefined,
-	
 	resolvePaths: function(paths, basesTable)
 	{
 		var resolvedPaths = [];
@@ -94,7 +94,7 @@ Toolchain.prototype =
 		return(resolvedPaths);
 	},
 	
-	compile: function(output, pathsTable, project, callback)
+	compile: function(pathsTable, output, project, callback)
 	{
 		var args =
 		[
@@ -119,7 +119,7 @@ Toolchain.prototype =
 				args.push("-D" + k + "=" + project.definitions[k]);
 		
 		//paths used to resolve complex referenced paths
-		pathsTable = _.extend({undefined: ".", "sdk": this.sdkDir}, pathsTable);
+		pathsTable = _.extend({undefined: "."}, pathsTable);
 		
 		if(project.linkFile)
 			this.resolvePaths([project.linkFile], pathsTable).forEach(function(path)
@@ -140,12 +140,12 @@ Toolchain.prototype =
 		console.log("args: ", args);
 		
 		//compile!
-		var compiler = childProcess.spawn(this.sdkDir + "/bin/arm-none-eabi-g++", args,
+		var compiler = childProcess.spawn(pathsTable.sdk + "/bin/arm-none-eabi-g++", args,
 		{
 			env:
 			{
-				"PATH": (this.sdkDir + "/bin"),
-				"LD_PATH": (this.sdkDir + "/lib")
+				"PATH": (pathsTable.sdk + "/bin"),
+				"LD_PATH": (pathsTable.sdk + "/lib")
 			}
 		});
 		compiler.stdout.setEncoding("utf8");
@@ -199,18 +199,18 @@ Toolchain.prototype =
 		;
 	},
 	
-	disassemble: function(objectFileArray, callback)
+	disassemble: function(pathsTable, objectFileArray, callback)
 	{
 		var args = ["-d"];
 		
 		args = args.concat(objectFileArray);
 		
-		var disassembler = childProcess.spawn(this.sdkDir + "/bin/arm-none-eabi-objdump", args,
+		var disassembler = childProcess.spawn(pathsTable.sdk + "/bin/arm-none-eabi-objdump", args,
 		{
 			env:
 			{
-				"PATH": (this.sdkDir + "/bin"),
-				"LD_PATH": (this.sdkDir + "/lib")
+				"PATH": (pathsTable.sdk + "/bin"),
+				"LD_PATH": (pathsTable.sdk + "/lib")
 			}
 		});
 		disassembler.stdout.setEncoding("utf8");
@@ -236,9 +236,8 @@ Toolchain.prototype =
 		}.bind(this));
 	}
 }
-function Toolchain(sdkDir)
+function Toolchain()
 {
-	this.sdkDir = sdkDir;
 }
 
 // http://modules.logiblock.com/galago/
@@ -343,6 +342,7 @@ function Dependencies(baseDir)
 
 
 //global setting!
+/*
 var sdkBase = "../SDK6/";
 var platformBase = sdkBase + "../platform/";
 
@@ -386,8 +386,63 @@ targets.open(platformBase + "targets.json", function(err)
 			
 			toolchain.disassemble(["out.elf"], function(err, result)
 			{
-				//console.log("disassembly complete: ", result);
+				console.log("disassembly complete: ", result);
 			});
 		});
 	});
 });
+*/
+
+Compiler.prototype =
+{
+	toolchain: null,
+	targets: null,
+	
+	compile: function(dirs, callback)
+	{
+		var ths = this;
+		this.targets.open(dirs.platform + "/targets.json", function(err)
+		{
+			if(err)	return(callback(err));
+			
+			var module = new Module(dirs.module);
+			module.open(function(err, moduleJson)
+			{
+				if(err)	return(callback(err));
+				var targetName = moduleJson.compatibleWith[0];	//@@hack!
+				
+				var settings = ths.targets.resolve(targetName, moduleJson);
+				
+				if(!settings)
+					return(callback(new Error("Could not resolve target '" + targetName + "'")));
+				
+				var outputName = (dirs.output || dirs.module || ".") + "/module.elf";
+				ths.toolchain.compile(dirs, outputName, settings, function(err, compileResult)
+				{
+					//console.log("compilation complete: ", compileResult);
+					if(err)	return(callback(err));
+					
+					//@@diag and debug
+					ths.toolchain.disassemble(dirs, [outputName], function(err, result)
+					{
+						console.log("disassembly complete: ", result);
+					});
+					
+					callback(undefined, outputName, compileResult);
+				});
+			});
+		});
+	}
+};
+function Compiler(dirs)
+{
+	this.toolchain = new Toolchain();
+	this.targets = new Targets();
+}
+
+return(
+{
+	Compiler: Compiler
+});
+
+})();
