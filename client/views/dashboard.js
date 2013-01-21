@@ -11,7 +11,7 @@ var Dashboard = Backbone.View.extend(
 
 	events:
 	{
-		"click .closeProject" : "closeProject"
+		"click #homeButton" : "closeProject"
 	},
 
 	initialize: function(options)
@@ -22,27 +22,25 @@ var Dashboard = Backbone.View.extend(
 
 		this.projects.fetch();
 
-		this.closeProjectBtn = this.$(".closeProject");
 		this.projectControls = this.$(".projectControls");
 
 		App.vent.on("openProjectSuccess", function()
 		{
-			this.closeProjectBtn.removeAttr("hidden");
 			this.projectControls.removeAttr("hidden");
 
 		}.bind(this));
 
 		App.vent.on("closeProjectSuccess", function()
 		{
-			this.closeProjectBtn.attr("hidden", "hidden");
 			this.projectControls.attr("hidden", "hidden");
 			
 		}.bind(this));
 	},
 
-	closeProject: function()
+	closeProject: function(e)
 	{
 		App.vent.trigger("closeProject");
+		return false;
 	}
 });
 
