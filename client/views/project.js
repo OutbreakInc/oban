@@ -5,8 +5,10 @@ var Backbone = require("backbone"),
 	_ = require("underscore"),
 	EditorView = require("app/views/editor"),
 	DeviceListView = require("app/views/device-list"),
+	ProgressView = require("app/views/progress"),
 	File = require("app/models/file"),
-	DeviceCollection = require("app/models/device-collection");
+	DeviceCollection = require("app/models/device-collection"),
+	App = require("app/app");
 
 var ProjectView = Backbone.View.extend(
 {
@@ -44,6 +46,8 @@ var ProjectView = Backbone.View.extend(
 		}
 
 		this.devices.fetch();
+
+		this.progressView = new ProgressView({ el: ".progressView" });
 	},
 
 	openFile: function(fileName)
@@ -68,23 +72,37 @@ var ProjectView = Backbone.View.extend(
 
 	onBuild: function()
 	{
+		this.progressView.setVisible(true);
+		this.progressView.setText("Building project...");
+
 		this.project.build(function(err)
 		{
-			if (err) alert(err);
+			this.progressView.setSuccess(!err);
+			this.progressView.setVisible(false);
+			this.progressView.setText(err ? 
+				"Build failed" : "Build succeeded");
 
-			alert("Build success!");
-		});
+			if (err) return App.error(err);
+
+		}.bind(this));
 	},
 
 	onRun: function()
 	{
+		this.progressView.setVisible(true);
+		this.progressView.setText("Flashing device...");
+
 		// hack
 		this.project.flash(function(err)
 		{
-			if (err) return alert(err);
+			this.progressView.setSuccess(!err);
+			this.progressView.setVisible(false);
+			this.progressView.setText(err ? 
+				"Error flashing" : "Flashing succeeded");
 
-			alert("flashed!");
-		});
+			if (err) return App.error(err);
+
+		}.bind(this));
 	},
 
 	close: function()

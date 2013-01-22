@@ -82,6 +82,7 @@ DeviceCollection.prototype._onServerStop = function()
 {
 	this.emit("stopped");
 
+	this._attrs.devices = [];
 	// TODO: try to restart the device server
 }
 
