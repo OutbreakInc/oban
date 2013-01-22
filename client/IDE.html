@@ -45,13 +45,7 @@
 			<div class="nav-collapse">
 				<ul id="projectList" class="nav">
 				</ul>
-			</div><!-- /.nav-collapse  -->			
-			<div class="projectControls nav-collapse" hidden="hidden">
-				<ul class="nav">
-					<li><button class="btn btn-small btn-primary buildButton"><span class="icon-check icon-white"></span> Build</button></li>
-					<li><button class="btn btn-small btn-primary runButton"><span class="icon-play icon-white"></span> Run</button></li>
-				</ul>
-			</div>
+			</div><!-- /.nav-collapse  -->
 		</div>
 		</div>
 	</div>
@@ -95,6 +89,19 @@
 			<div class="documentView"></div>
 			<div class="devView sidebar">
 				<div class="optionsView">
+					<div class="projectControls sidebarHeader">
+						<button class="btn btn-small btn-primary buildButton">
+							<span class="icon-check icon-white"></span> Build
+						</button>
+						<button class="btn btn-small btn-primary runButton">
+							<span class="icon-play icon-white"></span> Run
+						</button>
+					</div>
+					<div class="progressView sidebarHeader hide">
+						<div class="progress progress-striped active">
+							<div class="bar" style="width: 100%;"></div>
+						</div>						
+					</div>
 					<div class="modulesView">
 						<hr/>
 						<div class="modulesHeader sidebarHeader">
@@ -120,6 +127,12 @@
 						<hr/>
 						<div class="devicesHeader sidebarHeader">
 							Devices
+						</div>
+					</div>
+					<div class="errorsView">
+						<hr/>
+						<div class="errorsHeader sidebarHeader">
+							Errors
 						</div>
 					</div>
 				</div>

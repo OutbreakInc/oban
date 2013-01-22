@@ -22,6 +22,7 @@ var DeviceCollection = Backbone.Collection.extend(
 	{
 		this.socket.on("add", this.add);
 		this.socket.on("remove", this.remove);
+		this.socket.on("clear", this.reset);
 	},
 
 	fetch: function()
