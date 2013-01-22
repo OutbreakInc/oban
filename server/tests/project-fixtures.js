@@ -21,6 +21,7 @@ function load(done)
 	}
 
 	cp("-R", "fixtures/existingProject", "projectsDir");
+	cp("-R", "fixtures/secondExistingProject", "projectsDir");
 
 	done();
 }
