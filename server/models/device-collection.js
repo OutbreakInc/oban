@@ -85,6 +85,11 @@ DeviceCollection.prototype._onServerStop = function()
 	// TODO: try to restart the device server
 }
 
+DeviceCollection.prototype.flash = function(fullFilePath, callback)
+{
+	this._deviceServer.flash(fullFilePath, callback);
+}
+
 DeviceCollection.prototype.toJSON = function()
 {
 	return this._attrs.devices;

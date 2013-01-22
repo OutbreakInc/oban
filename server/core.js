@@ -58,7 +58,7 @@ init: function()
 		function()
 		{
 			var pcController = new ProjectCollectionController(projects, sockets);
-			var projectController = new ProjectController(projects, sockets);
+			var projectController = new ProjectController(projects, devices._deviceServer, sockets);
 			var fileController = new FileController(projects, sockets);
 			var dcController = new DeviceCollectionController(devices, sockets);
 		});
