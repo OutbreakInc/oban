@@ -44,7 +44,23 @@ describe("Device Model", function()
 				assert.equal(err.message, Errors.INVALID_DEVICE_NAME);
 				done();
 			});				
-		});		
+		});
+
+		it("should not allow device to be opened when already opened by someone else", function(done)
+		{
+			var device = new Device({ deviceId: "1", name: "" }, function(err)
+			{
+				device.setOpen("1", true, function(err)
+				{
+					device.setOpen("2", true, function(err)
+					{
+						assert.equal(err.message, Errors.ALREADY_OPEN);
+						done();
+					});
+				});
+			});				
+		});
+
 	});
 });
 
