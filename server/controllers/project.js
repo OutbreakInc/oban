@@ -9,10 +9,11 @@ var Errors =
 	NOT_CLIENTS_PROJECT: "You don't own this project"
 };
 
-function ProjectController(projectCollection, sockets)
+function ProjectController(projectCollection, deviceServer, sockets)
 {
 	this.projects = projectCollection;
 	this.sockets = sockets.of("/project");
+	this.deviceServer = deviceServer;
 
 	this.sockets.on("connection", function(socket)
 	{
@@ -35,7 +36,8 @@ ProjectController.prototype.callbackTable =
 	"open": "onOpen",
 	"close": "onClose",
 	"openFile": "onOpenFile",
-	"build": "onBuild"
+	"build": "onBuild",
+	"flash": "onFlash"
 }
 
 ProjectController.prototype.findProject = function(socket, callback)
@@ -151,6 +153,20 @@ ProjectController.prototype.onBuild = function(socket, project, callback)
 		callback(null, project);
 
 	}.bind(this));
+}
+
+ProjectController.prototype.onFlash = function(socket, project, callback)
+{
+	if (!this._isOpenBy(project, socket))
+	{
+		return callback(Errors.NOT_CLIENTS_PROJECT);
+	}
+
+	this.deviceServer.flash(project.path() + project.binary(),
+	function()
+	{
+		callback();
+	});
 }
 
 ProjectController.prototype._isOpenBy = function(project, socket)

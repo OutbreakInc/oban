@@ -468,7 +468,7 @@ Project.prototype.build = function(callback)
 	// magicalBuildSystem.build(function(err))
 
 	var err;
-	var binary = "main.elf";
+	var binary = "module.elf";
 
 	var compiler = new Compiler;
 
@@ -493,6 +493,11 @@ Project.prototype.build = function(callback)
 		callback();
 
 	}.bind(this));
+}
+
+Project.prototype.binary = function()
+{
+	return this._attrs.binary;
 }
 
 Project.prototype.path = function()

@@ -27,6 +27,67 @@ util.inherits(DeviceServer, EventEmitter);
 
 var DEVICE_CONNECTED_MSG = "";
 
+DeviceServer.prototype.flash = function(fullFilePath, callback)
+{
+	console.log("flash");
+	console.log(fullFilePath);
+
+	// stop old device server if it's running
+	if (this.process)
+	{
+		console.log("stopping old process");
+
+		this.on("stopped", function()
+		{
+			_flash();
+
+		}.bind(this));
+
+		this.process.kill();
+	}
+
+	var _flash = function()
+	{
+		console.log("spawning:");
+		console.log(this.binary);
+		console.log(fullFilePath);
+		console.log("cwd: " + __dirname + "/../gdbServer");
+
+		this.process = spawn(
+			this.binary, 
+			[fullFilePath], 
+			{cwd: __dirname + "/../gdbServer"}
+		);
+
+		this.process.stdout.setEncoding("utf8");
+		this.process.stderr.setEncoding("utf8");
+
+		this.process.stdout.on("data", function(data)
+		{
+			console.log("flash data");
+			console.log(data);
+		});
+
+		this.process.stderr.on("data", function(data)
+		{
+			console.log("flash error data");
+			console.log(data);
+		});		
+
+		// after 5 seconds, assume it's been flashed
+		setTimeout(function()
+		{
+			this.process.kill();
+
+			// resume normal device server run
+			this.run();
+			callback();
+
+		}.bind(this), 5000);
+
+	}.bind(this);
+}
+
 DeviceServer.prototype.run = function()
 {
 	winston.debug("Starting device server...");	
@@ -71,7 +132,7 @@ DeviceServer.prototype.run = function()
 			}
 			else
 			{
-				deviceServer.emit("started", {port: port});
+				deviceServer.emit("started", { port: port });
 			}
 		}
 

@@ -220,3 +220,8 @@ img.outbreakIDELogo
     box-shadow: 0px 0px 1px 1px red inset; 
 } 
 
+.runButton
+{
+	margin-left: 1em;
+
+}
