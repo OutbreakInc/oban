@@ -82,7 +82,7 @@ img.outbreakIDELogo
 	position: absolute;
 	height: 100%;
 	left: 0px;
-	right: 400px;
+	right: 300px;
 }
 
 .sidebar
@@ -90,7 +90,7 @@ img.outbreakIDELogo
 	position: absolute;
 	background-color: #e8e8e8;
 	height: 100%;
-	width: 400px;
+	width: 300px;
 	right: 0px;
 }
 
@@ -223,5 +223,9 @@ img.outbreakIDELogo
 .runButton
 {
 	margin-left: 1em;
+}
 
+.projectControls
+{
+	text-align: center;
 }

@@ -133,12 +133,106 @@ describe("Project Model", function()
 				project.setName("renamedProject", function(err)
 				{
 					if (err) return done(err);
-
+					
 					assert.equal(project.name(), "renamedProject");
 					done();
 				});
 			});
 		});
+
+		it("should not allow project to be renamed to an existing project", function(done)
+		{
+			var project = new Project(
+				{ name: "existingProject", baseDir: "projectsDir" }, 
+			function(err)
+			{
+				var secondProject = new Project(
+					{ name: "secondExistingProject", baseDir: "projectsDir" }, 
+				function(err)
+				{
+					if (err) return done(err);
+
+					secondProject.setName("existingProject", function(err)
+					{
+						if (err) return done(err);
+					 
+						assert.equal(err, "Existing Project Name");
+						done();
+					});
+				});
+			});
+		});
+				
+		it("should not allow duplicate project names", function(done)
+		{
+			var project = new Project(
+				{ name: "existingProject", baseDir: "projectsDir" }, 
+			function(err)
+			{
+				var secondProject = new Project(
+					{ name: "existingProject", baseDir: "projectsDir", create: true }, 
+				function(err)
+				{
+					assert.equal(err, "Existing Project Name");
+					
+					done();
+				});
+			});
+		});
+
+		it("should not allow open, rename, remove, close, or save operations on file that " +
+			"does not exist", function(done)
+		{
+			var project = new Project(
+				{ name: "existingProject", baseDir: "projectsDir" }, 
+			function(err)
+			{
+				project.openFile("noFile", function(err)
+				{
+					assert.equal(err.message, Errors.NO_SUCH_FILE);
+				});
+
+				project.renameFile("noFile", "stillNoFile", function(err)
+				{
+					assert.equal(err.message, Errors.NO_SUCH_FILE);
+				});
+
+				project.removeFile("noFile", {}, function(err)
+				{
+					assert.equal(err.message, Errors.NO_SUCH_FILE);
+				});
+
+				project.closeFile("noFile", function(err)
+				{
+					assert.equal(err.message, Errors.NO_SUCH_FILE);
+				});
+
+				project.saveFile("noFile", function(err)
+				{
+					assert.equal(err.message, Errors.NO_SUCH_FILE);
+				});
+
+				done();
+			});				
+		});
+		
+		it("should not allow project to be opened when already opened by someone else", function(done)
+		{
+			var project = new Project(
+				{ name: "existingProject", baseDir: "projectsDir" }, 
+			function(err)
+			{
+				project.setOpen("1", true, function(err)
+				{
+					project.setOpen("2", true, function(err)
+					{
+						assert.equal(err.message, Errors.ALREADY_OPEN);
+						done();
+					});
+				});
+			});				
+		});
+		
 	});
 });
 
