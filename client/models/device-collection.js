@@ -34,7 +34,6 @@ var DeviceCollection = Backbone.Collection.extend(
 
 		}.bind(this));
 	}
-
 });
 
 return DeviceCollection;

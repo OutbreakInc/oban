@@ -76,6 +76,15 @@ var ProjectView = Backbone.View.extend(
 		});
 	},
 
+	onRun: function()
+	{
+		// hack
+		this.project.flash(function()
+		{
+			alert("flashed!");
+		});
+	},
+
 	close: function()
 	{
 		this.editorView.close();
