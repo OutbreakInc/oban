@@ -40,7 +40,7 @@ var ProjectView = Backbone.View.extend(
 		{
 			// load active project's first file
 			var fileName = this.project.get("files")[0].name;
-			this.openFile(fileName);			
+			this.openFile(fileName);
 		}
 
 		this.devices.fetch();
@@ -79,8 +79,10 @@ var ProjectView = Backbone.View.extend(
 	onRun: function()
 	{
 		// hack
-		this.project.flash(function()
+		this.project.flash(function(err)
 		{
+			if (err) return alert(err);
+
 			alert("flashed!");
 		});
 	},
@@ -89,6 +91,8 @@ var ProjectView = Backbone.View.extend(
 	{
 		this.editorView.close();
 		this.deviceListView.close();
+		this.undelegateEvents();
+		this.stopListening();
 	}
 });
 

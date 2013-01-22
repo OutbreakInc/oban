@@ -29,6 +29,8 @@ App.addInitializer(function(options)
 				devices: App.devices
 			});
 
+			App.Views.welcomeView.setVisible(false);
+
 		}.bind(this));
 
 	}.bind(this));
@@ -49,6 +51,9 @@ App.addInitializer(function(options)
 			delete this.activeProject;
 
 			this.activeProjectView.close();
+			delete this.activeProjectView;
+
+			App.Views.welcomeView.setVisible(true);
 
 		}.bind(this));
 
@@ -60,12 +65,14 @@ App.start();
 App.projects = new ProjectCollection();
 App.devices = new DeviceCollection();
 
-var dashboard = new Dashboard(
+App.Views = {};
+
+App.Views.dashboard = new Dashboard(
 {
 	collection: App.projects
 });
 
-var welcomeView = new WelcomeView(
+App.Views.welcomeView = new WelcomeView(
 {
 	collection: App.projects
 });

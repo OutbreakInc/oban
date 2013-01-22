@@ -18,6 +18,18 @@ var WelcomeView = Backbone.View.extend(
 		this.projects = options.collection;
 	},
 
+	setVisible: function(isVisible)
+	{
+		if (isVisible)
+		{
+			this.$el.removeClass("hide");
+		}
+		else
+		{
+			this.$el.addClass("hide");
+		}
+	},
+
 	createProject: function()
 	{
 		var dialog = $("#newProjectModal");
