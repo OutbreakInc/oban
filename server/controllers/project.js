@@ -6,7 +6,8 @@
 var Errors =
 {
 	CLIENT_HAS_OPEN_PROJECT: "You already have a project open",
-	NOT_CLIENTS_PROJECT: "You don't own this project"
+	NOT_CLIENTS_PROJECT: "You don't own this project",
+	CANT_RUN_UNBUILT_PROJECT: "You must build this project first"
 };
 
 function ProjectController(projectCollection, deviceServer, sockets)
@@ -160,6 +161,13 @@ ProjectController.prototype.onFlash = function(socket, project, callback)
 	if (!this._isOpenBy(project, socket))
 	{
 		return callback(Errors.NOT_CLIENTS_PROJECT);
+	}
+
+	// project must be built first
+	if (project.buildStatus() != Project.BuildStatus.COMPILED ||
+		!project.binary())
+	{
+		return callback(Errors.CANT_RUN_UNBUILT_PROJECT);
 	}
 
 	this.deviceServer.flash(project.path() + project.binary(),
