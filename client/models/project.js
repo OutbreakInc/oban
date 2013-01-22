@@ -93,6 +93,17 @@ var ProjectModel = Backbone.Model.extend(
 		}.bind(this));
 	},
 
+	flash: function(callback)
+	{
+		this.socket.emit("flash", this.id, function(err)
+		{
+			if (err) return callback(err);
+
+			callback();
+
+		}.bind(this));
+	},
+
 	_isOpenByMe: function()
 	{
 		var openBy = this.get("isOpenBy");

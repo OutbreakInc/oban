@@ -21,6 +21,16 @@ DeviceCollectionController.prototype._init = function()
 
 		}.bind(this));
 
+		socket.on("flash", function(project, callback)
+		{
+			this.devices.flash(project.path() + "/" + project.files[0].name(),
+			function()
+			{
+				callback();
+			});
+
+		}.bind(this));
+
 	}.bind(this));
 
 	this.devices.on("add", this._onAdd);
