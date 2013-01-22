@@ -14,20 +14,22 @@ var ProjectView = Backbone.View.extend(
 
 	events:
 	{
-		"click .buildButton": "onBuild"
+		"click .buildButton": "onBuild",
+		"click .runButton": "onRun"
 	},
 
-	initialize: function()
+	initialize: function(options)
 	{
 		this.project = this.model;
 
-		this.devices = new DeviceCollection();
+		this.devices = options.devices;
 
 		this.deviceListView = new DeviceListView(
 		{
-			el: ".devicesList",
 			collection: this.devices
 		});
+
+		this.$(".devicesView").append(this.deviceListView.render().el);
 
 		// check if project has any files
 		if (this.project.get("files").length === 0)
@@ -77,6 +79,7 @@ var ProjectView = Backbone.View.extend(
 	close: function()
 	{
 		this.editorView.close();
+		this.deviceListView.close();
 	}
 });
 
