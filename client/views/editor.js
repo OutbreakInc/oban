@@ -20,9 +20,6 @@ var EditorView = Backbone.View.extend(
 		this.editor = ace.edit(this.$(".documentView")[0]);
 
 		_.bindAll(this);
-
-		// App.Files.on("add", this.addFile);
-		// App.Files.on("reset", this.addAll);
 		
 		this.editor.setTheme("ace/theme/chrome");
 		
@@ -43,7 +40,9 @@ var EditorView = Backbone.View.extend(
 			
 		}, this), 100);	//this should be done when ACE emits an event that I don't yet know about
 
-		this.file.on("change", this.render);
+		this.listenTo(this.file, "change", this.render);
+
+		// ace doesn't support listenTo syntax
 		this.session.on("change", this.save);
 	},
 
@@ -72,29 +71,8 @@ var EditorView = Backbone.View.extend(
 	close: function()
 	{
 		this.$el.attr("hidden", "hidden");
-	},
-
-	setup: function()
-	{
-		// set single instance of IDE model
-		// this.model = this.collection.at(0);
-
-		// // load currently active project
-		// var id = this.model.get("activeProject");
-
-		// if (id !== undefined)
-		// {
-		// 	App.activeProject = App.Projects.get(id);
-
-		// 	// load active project's first file
-		// 	App.Files.fetch();
-		// 	App.activeFile = App.Files.at(0);
-		// }
-		// else
-		// {
-		// 	// show welcome screen and list of projects
-		// 	// var view = new App.WelcomeView;
-		// }
+		this.stopListening();
+		this.session.removeListener("change", this.save);
 	},
 
 	onBuildStatus: function(err)
@@ -108,18 +86,7 @@ var EditorView = Backbone.View.extend(
 
 		// if err is null, compilation succeeded
 		console.log(arguments);
-	},
-
-	addFile: function(file)
-	{
-		// this.fileView = new App.FileView({ model: file, session: this.session });
-		// this.fileView.render();
-	},
-
-	// addAll: function()
-	// {
-	// 	App.Files.each(this.addFile, this);
-	// }
+	}
 });
 
 return EditorView;

@@ -3,6 +3,7 @@ define(function(require)
 
 var $ = require("jquery"),
 	ProjectCollection = require("app/models/project-collection"),
+	DeviceCollection = require("app/models/device-collection"),
 	Dashboard = require("app/views/dashboard"),
 	WelcomeView = require("app/views/welcome"),
 	ProjectView = require("app/views/project"),
@@ -24,8 +25,11 @@ App.addInitializer(function(options)
 
 			this.activeProjectView = new ProjectView(
 			{
-				model: this.activeProject
+				model: this.activeProject,
+				devices: App.devices
 			});
+
+			App.Views.welcomeView.setVisible(false);
 
 		}.bind(this));
 
@@ -47,6 +51,9 @@ App.addInitializer(function(options)
 			delete this.activeProject;
 
 			this.activeProjectView.close();
+			delete this.activeProjectView;
+
+			App.Views.welcomeView.setVisible(true);
 
 		}.bind(this));
 
@@ -55,16 +62,19 @@ App.addInitializer(function(options)
 
 App.start();
 
-var projects = new ProjectCollection();
+App.projects = new ProjectCollection();
+App.devices = new DeviceCollection();
 
-var dashboard = new Dashboard(
+App.Views = {};
+
+App.Views.dashboard = new Dashboard(
 {
-	collection: projects
+	collection: App.projects
 });
 
-var welcomeView = new WelcomeView(
+App.Views.welcomeView = new WelcomeView(
 {
-	collection: projects
+	collection: App.projects
 });
 
 });
