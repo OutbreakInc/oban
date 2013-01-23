@@ -11,22 +11,6 @@ function GdbClient(deviceServer)
 	// this.gdb = new Gdb("/usr/local/gdb-7.5/bin/gdb-7.5");
 	this.gdb.setDebugging(true);
 	this.deviceServer = deviceServer;
-	this.deviceServerStatus = "stopped";
-
-	var self = this;
-
-	this.deviceServer.on("started", function(options)
-	{
-		console.log("DEVICE SERVER STARTED ", options);
-		self.deviceServerStatus = "started";
-		self.deviceServerPort = options.port;
-	});
-
-	this.deviceServer.on("stopped", function()
-	{
-		console.log("DEVICE SERVER STOPPED");
-		self.deviceServerStatus = "stopped";
-	});	
 }
 
 module.exports = GdbClient;
@@ -36,14 +20,15 @@ GdbClient.prototype =
 
 run: function(file, callback)
 {
-	if (this.deviceServerStatus != "started")
+	if (!this.deviceServer.isStarted)
 	{
 		console.log("Device server not started, can't connect to GDB");
 		return callback("Device server not started");
 	}
 
-	this.gdb.run(file, this.deviceServerPort);
+	this.gdb.run(file, this.deviceServer.port);
 	this.gdb.setDebugging(true);
+	callback();
 	// this.gdb.run("demo.elf");
 },
 

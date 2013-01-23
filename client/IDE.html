@@ -93,8 +93,11 @@
 						<button class="btn btn-small btn-primary buildButton">
 							<span class="icon-check icon-white"></span> Build
 						</button>
-						<button class="btn btn-small btn-primary runButton">
-							<span class="icon-play icon-white"></span> Run
+						<button class="btn btn-small btn-primary flashButton">
+							<span class="icon-play icon-white"></span> Flash
+						</button>
+						<button class="btn btn-small btn-primary debugButton">
+							<span class="icon-play icon-white"></span> Debug
 						</button>
 					</div>
 					<div class="progressView sidebarHeader hide">
@@ -137,7 +140,7 @@
 					</div>
 				</div>
 			</div>
-			<div class="debugView sidebar hiddenView">
+			<div class="debugView sidebar hide">
 				<div class="controls">
 					<button class="btn btn-small continueButton">Continue</button><br>
 					<button class="btn btn-small pauseButton">Pause</button> 
@@ -146,7 +149,7 @@
 					<ul>
 					</ul>
 				</div>
-				<div class="varView yui-skin-sam hiddenView">
+				<div class="varView yui-skin-sam hide">
 					<div id="varTree" class="varTree">
 						<ul>
 							<li class="expanded"><span>this <em>const Object*</em></span>
@@ -174,18 +177,6 @@
 					</div>
 				</div>
 				<div class="callstackView">
-					<div>
-						<ul>
-							<li class="odd selected"><strong>Thing::delete</strong>(int, char const**) <em>main.cpp:53</em></li>
-							<li class="even"><strong>download</strong>() <em>main.cpp:72</em></li>
-							<li class="odd"><strong>main</strong>(int, char const**) <em>main.cpp:20</em></li>
-							<li class="even"><strong>_start</strong>() <em>LPC11xx.S:124</em></li>
-							<li class="odd"><strong>main</strong>(int, char const**) <em>main.cpp:20</em></li>
-							<li class="even"><strong>_start</strong>() <em>LPC11xx.S:124</em></li>
-							<li class="odd"><strong>main</strong>(int, char const**) <em>main.cpp:20</em></li>
-							<li class="even"><strong>_start</strong>() <em>LPC11xx.S:124</em></li>
-						</ul>
-					</div>
 				</div>
 			</div>
 		</div>
@@ -202,6 +193,14 @@
 
 	<script type="text/template" id="errorItemTemplate">
 		<div class="view">Line <%= line %>: <%= err %></div>
+	</script>
+
+	<script type="text/template" id="stackItemTemplate">
+		<div class="view"><strong><%= name %></strong></div>
+	</script>
+
+	<script type="text/template" id="deviceItemTemplate">
+		<div class="view"><%= deviceId %>: <%= name%></div>
 	</script>
 
 </body>
