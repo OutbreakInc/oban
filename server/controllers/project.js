@@ -147,11 +147,15 @@ ProjectController.prototype.onBuild = function(socket, project, callback)
 		return callback(Errors.NOT_CLIENTS_PROJECT);
 	}
 
-	project.build(function(err)
+	project.build(function(err, compileErrors)
 	{
 		if (err) return callback(err.message);
+		else if (compileErrors)
+		{
+			return callback(null, compileErrors);
+		}
 
-		callback(null, project);
+		callback(null, null, project);
 
 	}.bind(this));
 }

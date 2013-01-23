@@ -479,13 +479,19 @@ Project.prototype.build = function(callback)
 		sdk: utils.sdkDir(), 
 		platform: utils.platformDir(), 
 		module: this._attrs.path
-	}, function()
-	{
-		console.log("onboarded, bro");
 
+	}, function(err, outputName, result)
+	{
 		console.log(arguments);
 
 		if (err) return callback(err);
+
+		if (result.compileErrors.length > 0)
+		{
+			console.log(result.compileErrors);
+			this._attrs.buildStatus = BuildStatus.ERRORS;
+			return callback(null, result.compileErrors);
+		}
 
 		this._attrs.buildStatus = BuildStatus.COMPILED;
 		this._attrs.binary = binary;

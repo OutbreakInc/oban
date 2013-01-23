@@ -5,8 +5,12 @@ var Backbone = require("backbone"),
 	_ = require("underscore"),
 	EditorView = require("app/views/editor"),
 	DeviceListView = require("app/views/device-list"),
+	ProgressView = require("app/views/progress"),
+	ErrorListView = require("app/views/error-list"),
 	File = require("app/models/file"),
-	DeviceCollection = require("app/models/device-collection");
+	DeviceCollection = require("app/models/device-collection"),
+	ErrorCollection = require("app/models/error-collection"),
+	App = require("app/app");
 
 var ProjectView = Backbone.View.extend(
 {
@@ -20,6 +24,8 @@ var ProjectView = Backbone.View.extend(
 
 	initialize: function(options)
 	{
+		_.bindAll(this);
+
 		this.project = this.model;
 
 		this.devices = options.devices;
@@ -44,6 +50,26 @@ var ProjectView = Backbone.View.extend(
 		}
 
 		this.devices.fetch();
+
+		this.progressView = new ProgressView({ el: ".progressView" });
+
+		this.errors = new ErrorCollection();
+
+		this.errorListView = new ErrorListView(
+		{
+			collection: this.errors
+		});
+
+		this.errorListView.on("error:click", this.onErrorClick);
+
+		$(".errorsView").append(this.errorListView.render().el);
+	},
+
+	onErrorClick: function(view, model)
+	{
+		var line = parseInt(model.get("line"), 10);
+
+		this.editorView.highlightError(line);
 	},
 
 	openFile: function(fileName)
@@ -68,29 +94,55 @@ var ProjectView = Backbone.View.extend(
 
 	onBuild: function()
 	{
-		this.project.build(function(err)
-		{
-			if (err) alert(err);
+		this.progressView.setVisible(true);
+		this.progressView.setText("Building project...");
 
-			alert("Build success!");
-		});
+		this.project.build(function(err, compileErrors)
+		{
+			console.log(compileErrors);
+
+			this.progressView.setSuccess(!err && !compileErrors);
+			this.progressView.setVisible(false);
+			this.progressView.setText(err || compileErrors ? 
+				"Build failed" : "Build succeeded");
+
+			if (err) return App.error(err);
+			else if (compileErrors)
+			{
+				this.setCompileErrors(compileErrors);
+			}
+
+		}.bind(this));
 	},
 
 	onRun: function()
 	{
+		this.progressView.setVisible(true);
+		this.progressView.setText("Flashing device...");
+
 		// hack
 		this.project.flash(function(err)
 		{
-			if (err) return alert(err);
+			this.progressView.setSuccess(!err);
+			this.progressView.setVisible(false);
+			this.progressView.setText(err ? 
+				"Error flashing" : "Flashing succeeded");
 
-			alert("flashed!");
-		});
+			if (err) return App.error(err);
+
+		}.bind(this));
+	},
+
+	setCompileErrors: function(errors)
+	{
+		this.errors.reset(errors);
 	},
 
 	close: function()
 	{
 		this.editorView.close();
 		this.deviceListView.close();
+		this.errorListView.close();
 		this.undelegateEvents();
 		this.stopListening();
 	}

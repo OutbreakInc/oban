@@ -35,6 +35,7 @@ DeviceCollectionController.prototype._init = function()
 
 	this.devices.on("add", this._onAdd);
 	this.devices.on("remove", this._onRemove);
+	this.devices.on("stopped", this._onStop);
 }
 
 DeviceCollectionController.prototype._onAdd = function(device)
@@ -45,6 +46,11 @@ DeviceCollectionController.prototype._onAdd = function(device)
 DeviceCollectionController.prototype._onRemove = function(device)
 {
 	this.sockets.emit("remove", device);
+}
+
+DeviceCollectionController.prototype._onStop = function()
+{
+	this.sockets.emit("clear");
 }
 
 module.exports = DeviceCollectionController;
