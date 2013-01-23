@@ -75,17 +75,25 @@ var EditorView = Backbone.View.extend(
 		this.session.removeListener("change", this.save);
 	},
 
-	onBuildStatus: function(err)
+	highlightError: function(line)
 	{
-		// check arguments to see if file built successfully
+		this.clearError();
 
-		// if it didn't build successfully, highlight the lines that had issues
+		this.editor.gotoLine(line, 0);
 
-		// err:
-		// compileErrors: [ { line: 5, message: "Unexpected identifier" }, ... ]
+		var range = new Range(line - 1, 0, line, 0);
 
-		// if err is null, compilation succeeded
-		console.log(arguments);
+		this.highlightedError = 
+			this.session.addMarker(range, "ide-line-error", "background");
+	},
+
+	clearError: function()
+	{
+		if (this.highlightedError)
+		{
+			this.session.removeMarker(this.highlightedError);
+			delete this.highlightedError;
+		}
 	}
 });
 
