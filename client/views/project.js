@@ -6,8 +6,10 @@ var Backbone = require("backbone"),
 	EditorView = require("app/views/editor"),
 	DeviceListView = require("app/views/device-list"),
 	ProgressView = require("app/views/progress"),
+	ErrorListView = require("app/views/error-list"),
 	File = require("app/models/file"),
 	DeviceCollection = require("app/models/device-collection"),
+	ErrorCollection = require("app/models/error-collection"),
 	App = require("app/app");
 
 var ProjectView = Backbone.View.extend(
@@ -22,6 +24,8 @@ var ProjectView = Backbone.View.extend(
 
 	initialize: function(options)
 	{
+		_.bindAll(this);
+
 		this.project = this.model;
 
 		this.devices = options.devices;
@@ -48,6 +52,24 @@ var ProjectView = Backbone.View.extend(
 		this.devices.fetch();
 
 		this.progressView = new ProgressView({ el: ".progressView" });
+
+		this.errors = new ErrorCollection();
+
+		this.errorListView = new ErrorListView(
+		{
+			collection: this.errors
+		});
+
+		this.errorListView.on("error:click", this.onErrorClick);
+
+		$(".errorsView").append(this.errorListView.render().el);
+	},
+
+	onErrorClick: function(view, model)
+	{
+		var line = parseInt(model.get("line"), 10);
+
+		this.editorView.highlightError(line);
 	},
 
 	openFile: function(fileName)
@@ -75,14 +97,20 @@ var ProjectView = Backbone.View.extend(
 		this.progressView.setVisible(true);
 		this.progressView.setText("Building project...");
 
-		this.project.build(function(err)
+		this.project.build(function(err, compileErrors)
 		{
-			this.progressView.setSuccess(!err);
+			console.log(compileErrors);
+
+			this.progressView.setSuccess(!err && !compileErrors);
 			this.progressView.setVisible(false);
-			this.progressView.setText(err ? 
+			this.progressView.setText(err || compileErrors ? 
 				"Build failed" : "Build succeeded");
 
 			if (err) return App.error(err);
+			else if (compileErrors)
+			{
+				this.setCompileErrors(compileErrors);
+			}
 
 		}.bind(this));
 	},
@@ -105,10 +133,16 @@ var ProjectView = Backbone.View.extend(
 		}.bind(this));
 	},
 
+	setCompileErrors: function(errors)
+	{
+		this.errors.reset(errors);
+	},
+
 	close: function()
 	{
 		this.editorView.close();
 		this.deviceListView.close();
+		this.errorListView.close();
 		this.undelegateEvents();
 		this.stopListening();
 	}
