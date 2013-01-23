@@ -1,0 +1,12 @@
+{
+	"name": "hello-world",
+	"files": [
+		{
+			"name": "main.cpp"
+		}
+	],
+	"id": "e85a5bb753a",
+	"compatibleWith": [
+		"Galago4"
+	]
+}
