@@ -8,8 +8,19 @@ require("backbone.marionette");
 
 var ErrorItemView = Backbone.Marionette.ItemView.extend(
 {
-	template: _.template("<div class=\"alert alert-error\"><%= message %></div>"),
-	tagName: "li"
+	tagName: "li",
+
+	template: _.template($("#errorItemTemplate").html()),
+
+	events:
+	{
+		"click .view": "onClick"
+	},
+
+	onClick: function()
+	{
+		this.trigger("click", this.model);
+	}
 });
 
 var ErrorListView = Backbone.Marionette.CollectionView.extend(
@@ -17,6 +28,7 @@ var ErrorListView = Backbone.Marionette.CollectionView.extend(
 	itemView: ErrorItemView,
 	tagName: "ul",
 	className: "errorList",
+	itemViewEventPrefix: "error",
 
 	appendHtml: function(collectionView, itemView)
 	{
