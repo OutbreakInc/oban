@@ -1,5 +1,7 @@
 {
 	"name":	"BasicBlinkTest",
+	"tags":["blink","test","led","example","flash","timer"],
+	"desc":"Demonstrates several good ways to make LEDs blink.",
 	"compatibleWith":
 	[
 		"Galago4"

@@ -47,7 +47,8 @@ int main(void)
 }
 */
 
-int defaultEmitPeriod$ = 1000;
+/*
+int defaultEmitPeriod$;
 
 struct NumberEmitter
 {
@@ -65,13 +66,27 @@ struct NumberEmitter
 		IO.spi.write((byte)self->counter++);
 	}
 };
+*/
 
 int main(void)
 {
-	IO.spi.start(2000000, IO::SPI::Master);	//2MHz master, mode 0
+	//IO.spi.start(2000000, IO::SPI::Master);	//2MHz master, mode 0
 	
-	NumberEmitter job;
+	//NumberEmitter job;
 	
+	IO.led.setOutput();
 	while(true)
-		System.sleep();
+	{
+		//System.sleep();
+		
+		IO.led.write(1);
+		
+		for(int i = 0; i < 1000000; i++)
+			__asm__("nop");
+		
+		IO.led.write(0);
+		
+		for(int i = 0; i < 1000000; i++)
+			__asm__("nop");
+	}
 }
