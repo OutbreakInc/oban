@@ -69,7 +69,6 @@ App.addInitializer(function(options)
 
 	App.Collections.projects = new ProjectCollection();
 	App.Collections.devices = new DeviceCollection();
-	App.Collections.errors = new ErrorCollection();
 
 	// init views
 	App.Views = {};
@@ -83,19 +82,13 @@ App.addInitializer(function(options)
 	{
 		collection: App.Collections.projects
 	});
-
-	App.Views.errorListView = new ErrorListView(
-	{
-		collection: App.Collections.errors
-	});
-
-	$(".errorsView").append(App.Views.errorListView.render().el);
 });
 
 
 App.error = function(message, line)
 {
-	App.Collections.errors.add({ message: message, line: line });
+	alert(message);
+	// App.Collections.errors.add({ message: message, line: line });
 }
 
 App.start();
