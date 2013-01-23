@@ -1,7 +1,9 @@
  var Project = require("../models/project"),
 	CollectionErrors = require("../models/project-collection").Errors,
 	Mixins = require("./mixins"),
-	_ = require("underscore");
+	GdbClient = require("../gdb-client"),
+	_ = require("underscore"),
+	winston = require("winston");
 
 var Errors =
 {
@@ -15,6 +17,7 @@ function ProjectController(projectCollection, deviceServer, sockets)
 	this.projects = projectCollection;
 	this.sockets = sockets.of("/project");
 	this.deviceServer = deviceServer;
+	this.gdbClient = new GdbClient(this.deviceServer);
 
 	this.sockets.on("connection", function(socket)
 	{
@@ -38,7 +41,8 @@ ProjectController.prototype.callbackTable =
 	"close": "onClose",
 	"openFile": "onOpenFile",
 	"build": "onBuild",
-	"flash": "onFlash"
+	"flash": "onFlash",
+	"debug": "onDebug"
 }
 
 ProjectController.prototype.findProject = function(socket, callback)
@@ -174,9 +178,26 @@ ProjectController.prototype.onFlash = function(socket, project, callback)
 		return callback(Errors.CANT_RUN_UNBUILT_PROJECT);
 	}
 
-	this.deviceServer.flash(project.path() + project.binary(),
-	function()
+	this.deviceServer.flash(project.path() + project.binary(), 
+	function(err)
 	{
+		if (err) return callback("Flash failed!");
+
+		callback();
+	});
+}
+
+ProjectController.prototype.onDebug = function(socket, project, callback)
+{
+	// if flash succeeded, run and attach GDB
+	winston.debug("attaching client to GDB");
+	this.gdbClient.attachClient(socket);
+
+	this.gdbClient.run(project.path() + project.binary(), 
+	function(err)
+	{
+		if (err) return callback(err);
+
 		callback();
 	});
 }
