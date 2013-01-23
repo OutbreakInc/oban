@@ -83,12 +83,13 @@ var ProjectModel = Backbone.Model.extend(
 
 	build: function(callback)
 	{
-		this.socket.emit("build", this.id, function(err, project)
+		this.socket.emit("build", this.id, function(err, compileErrors, project)
 		{
 			if (err) return callback(err);
+			else if (compileErrors) return callback(null, compileErrors);
 
 			this._setIfIdMatches(project);
-			callback(null, project);
+			callback(null, null, project);
 
 		}.bind(this));
 	},
