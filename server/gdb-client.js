@@ -7,7 +7,7 @@ var spawn = require("child_process").spawn,
 
 function GdbClient(deviceServer)
 {
-	this.gdb = new Gdb("/usr/local/arm-none-eabi/bin/arm-none-eabi-gdb");
+	this.gdb = new Gdb(__dirname + "/../SDK6/bin/arm-none-eabi-gdb");
 	// this.gdb = new Gdb("/usr/local/gdb-7.5/bin/gdb-7.5");
 	this.gdb.setDebugging(true);
 	this.deviceServer = deviceServer;
