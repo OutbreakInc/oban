@@ -96,6 +96,8 @@ var ProjectView = Backbone.View.extend(
 
 	onBuild: function()
 	{
+		this.setCompileErrors([]);
+
 		this.progressView.setVisible(true);
 		this.progressView.setText("Building project...");
 

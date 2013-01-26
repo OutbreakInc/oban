@@ -132,13 +132,15 @@ var DebugView = Backbone.View.extend(
 	{
 		this.socket.emit("gdb_resume");
 		this.clearMarker();
+		this.stack.reset();
+
+		var root = this.tree.getRoot();
+		this.tree.removeChildren(root);
+		this.tree.render();
 	},
 
 	onVariables: function(variables)
 	{
-		console.log("variables");
-		console.log(variables);
-
 		var root = this.tree.getRoot();
 		this.tree.removeChildren(root);
 
