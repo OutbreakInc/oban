@@ -1,7 +1,7 @@
 (function()
 {
 
-var winston = require("winston"),
+var logger = require("./logger"),
 	fs = require("fs"),
 	utils = require("./utils"),
 	toolchain = require("./toolchain"),
@@ -38,7 +38,7 @@ Core.prototype =
 
 init: function()
 {
-	winston.debug("initializing directories");
+	logger.debug("initializing directories");
 	this._initDirectories();
 
 	var sockets = socketIo.listen(this.app);
@@ -63,7 +63,7 @@ init: function()
 		var projectController = new ProjectController(projects, devices._deviceServer, sockets);
 		var fileController = new FileController(projects, sockets);
 
-		winston.debug("loading device server module");
+		logger.debug("loading device server module");
 		var dcController = new DeviceCollectionController(devices, sockets);
 
 		step.next();
@@ -74,18 +74,6 @@ init: function()
 		console.log(err);
 	})
 	.exec();
-
-
-	// this._bindDeviceServerEvents();
-	// this._bindFileEvents();
-	// this._bindProjectEvents();
-	// this._bindIdeEvents();
-
-	// this._bindGdbEvents();
-
-	// this._initIde();
-
-	// this.gdbClient.run("/Users/exhaze/Documents/outbreak-ide/hello-world/BasicBlink.elf");
 },
 
 _initDirectories: function()
@@ -114,111 +102,9 @@ _mkdirIfNotExist: function(dir)
 	}
 },
 
-_onBuildFinished: function(err, project, outputFile)
-{
-	if (err)
-	{
-		project.set("buildStatus", "errors");
-		// return all error messages to frontend
-		// also return lines where errors happened
-	}
-	else
-	{
-		project.set("buildStatus", "compiled");
-		project.set("binary", outputFile);
-	}
-},
-
-_onRun: function(project)
-{
-	// assume project is built for now, change this later
-	// to build the project if it isn't built
-	switch (project.get("buildStatus"))
-	{
-	case "compiled":
-	{
-		this.gdbClient.run(project.get("binary"), function(err)
-		{
-			if (err)
-			{
-				winston.error(err);
-				project.set("runStatus", "stop");
-			}
-		});
-	}
-	}
-},
-
 _onStop: function(project)
 {
 	this.gdbClient.stop();
-},
-
-_bindProjectEvents: function()
-{
-	var files = this.dataSync.collections.File;
-	var projects = this.dataSync.collections.Project;
-
-	var self = this;
-
-	projects.on("add", function(project)
-	{
-		var projectPath = self.projectsDir + "/" + project.get("name");
-
-		project.set("path", projectPath);
-
-		self._mkdirIfNotExist(projectPath);
-
-		var file = new File({ 
-			// text: "//#include <LPC1313.h>\n\nint main()\n{\n\treturn 0;\n}\n", 
-			name: "main.cpp", 
-			project: project.toJSON() });
-
-		project.addFile(file.path());
-	});
-
-	projects.on("change:buildStatus", function(project)
-	{
-		winston.debug("build status changed for project: " + project.get("name"));
-
-		winston.debug("build status: " + project.get("buildStatus"));
-		console.log(project.toJSON());
-
-		switch (project.get("buildStatus"))
-		{
-		case "verify":
-		{
-			toolchain.build(project,
-				function(err, outputFile)
-				{
-					self._onBuildFinished(err, project, outputFile);
-				});
-			break;
-		}
-
-		}
-	});
-
-	projects.on("change:runStatus", function(project)
-	{
-		winston.debug("run status changed for project: " + project.get("name"));
-		winston.debug("run status: " + project.get("runStatus"));
-
-		switch (project.get("runStatus"))
-		{
-		case "start":
-		{
-			self._onRun(project);
-			break;
-		}
-		case "stop":
-		{
-			self._onStop(project);
-			break;
-		}
-		}		
-
-	});
 }
 
 }
