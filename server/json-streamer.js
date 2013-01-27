@@ -1,6 +1,7 @@
 var EventEmitter = require("events").EventEmitter,
 	util = require("util"),
-	Logger = require("./logger");
+	Logger = require("./logger"),
+	_ = require("underscore");
 
 var logger = Logger(__filename, Logger.levels.ERROR);
 
@@ -9,6 +10,8 @@ function JsonStreamer()
 	this._buffer = "";
 	this._pos = 0;
 	this._depth = 0;
+
+	_.bindAll(this);
 
 	EventEmitter.call(this);
 }

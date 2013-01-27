@@ -18,7 +18,7 @@ module.exports = function logger(filename, logLevel)
 		levels: LogLevels,
 
 		// default log level
-		LOG_LEVEL: logLevel.level || LogLevels.ERROR.level,
+		LOG_LEVEL: (logLevel && logLevel.level) || LogLevels.ERROR.level,
 
 		error: function()
 		{
@@ -61,17 +61,17 @@ module.exports = function logger(filename, logLevel)
 			console.log.apply(this, args);
 		},
 
-		setLevel: function(level)
+		setLevel: function(logLevel)
 		{
-			level = parseInt(level, 10);
+			var level = parseInt(logLevel.level, 10);
 			if (isNaN(level) || level < 0) return this.error("Invalid log level!");
 
 			this.LOG_LEVEL = level;
 		},
 
-		setGlobalLevel: function(level)
+		setGlobalLevel: function(logLevel)
 		{
-			level = parseInt(level, 10);
+			var level = parseInt(logLevel.level, 10);
 			if (isNaN(level) || level < 0) return this.error("Invalid log level!");
 
 			GLOBAL_LOG_LEVEL = level;
