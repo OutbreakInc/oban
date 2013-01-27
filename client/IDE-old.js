@@ -396,56 +396,6 @@ App.StackCollection = Backbone.Collection.extend(
 
 App.stack = new App.StackCollection();
 
-App.StackView = Backbone.View.extend(
-{
-	el: ".callstack",
-
-	initialize: function()
-	{
-		App.stack.on("reset", this.updateStack, this);
-	},
-
-	updateStack: function()
-	{
-		console.log(this.collection);
-
-		this.$el.empty();
-
-		this.collection.forEach(function(frame)
-		{
-			this.addFrame(frame);
-		}, this);
-	},
-
-	addFrame: function(frame)
-	{
-		var view = new App.StackFrameView({model: frame});
-		this.$el.append(view.render().el);
-	}
-});
-
-App.StackFrameView = Backbone.View.extend(
-{
-	tagName: "li",
-	template: App.Templates.stackItem,
-
-	events:
-	{
-		"click": "onClick"
-	},
-	
-	render: function()
-	{
-		this.$el.html(this.template(this.model.toJSON()));
-		return this;
-	},
-
-	onClick: function()
-	{
-		// navigate GDB to selected frame
-	}
-});
-
 App.StatusBarView = Backbone.View.extend(
 {
 	events:
