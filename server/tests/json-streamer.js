@@ -1,8 +1,6 @@
 var assert = require("assert"),
 	JsonStreamer = require("../json-streamer");
 
-var util = require("util");
-
 var streamer;
 
 describe("JsonStreamer", function()
