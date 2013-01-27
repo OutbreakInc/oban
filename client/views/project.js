@@ -4,6 +4,7 @@ define(function(require)
 var Backbone = require("backbone"),
 	_ = require("underscore"),
 	EditorView = require("app/views/editor"),
+	DebugView = require("app/views/debug"),
 	DeviceListView = require("app/views/device-list"),
 	ProgressView = require("app/views/progress"),
 	ErrorListView = require("app/views/error-list"),
@@ -19,7 +20,8 @@ var ProjectView = Backbone.View.extend(
 	events:
 	{
 		"click .buildButton": "onBuild",
-		"click .runButton": "onRun"
+		"click .flashButton": "onFlash",
+		"click .debugButton": "onDebug"
 	},
 
 	initialize: function(options)
@@ -94,6 +96,8 @@ var ProjectView = Backbone.View.extend(
 
 	onBuild: function()
 	{
+		this.setCompileErrors([]);
+
 		this.progressView.setVisible(true);
 		this.progressView.setText("Building project...");
 
@@ -115,7 +119,7 @@ var ProjectView = Backbone.View.extend(
 		}.bind(this));
 	},
 
-	onRun: function()
+	onFlash: function()
 	{
 		this.progressView.setVisible(true);
 		this.progressView.setText("Flashing device...");
@@ -129,6 +133,25 @@ var ProjectView = Backbone.View.extend(
 				"Error flashing" : "Flashing succeeded");
 
 			if (err) return App.error(err);
+
+		}.bind(this));
+	},
+
+	onDebug: function()
+	{
+		// if flash succeeded, switch to debug view
+		this.debugView = new DebugView(
+		{
+			model: this.project,
+			editor: this.editorView.editor,
+			el: ".debugView"
+		});
+
+		this.$(".debugView").removeClass("hide");
+
+		this.debugView.on("debugEnd", function()
+		{
+			this.$(".debugView").addClass("hide");
 
 		}.bind(this));
 	},

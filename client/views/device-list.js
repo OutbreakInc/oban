@@ -8,7 +8,7 @@ require("backbone.marionette");
 
 var DeviceItemView = Backbone.Marionette.ItemView.extend(
 {
-	template: _.template("<%= deviceId %>: <%= name%>"),
+	template: _.template($("#deviceItemTemplate").html()),
 	tagName: "li"
 });
 
