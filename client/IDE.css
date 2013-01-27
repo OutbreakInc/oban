@@ -157,7 +157,7 @@ img.outbreakIDELogo
 	border-bottom: 1px  #A0A0A0 solid;
 	border-left: 1px  #A0A0A0 solid;
 	width: 100%;
-	top: 43%;
+	top: 5%;
 	height: 33%;
 	overflow: auto;
 }
@@ -180,8 +180,8 @@ img.outbreakIDELogo
 	border-top: 1px  #A0A0A0 solid;
 	border-left: 1px  #A0A0A0 solid;
 	width: 100%;
-	top: 77%;
-	bottom: 0px;
+	top: 38%;
+	height: 33%;
 	overflow: auto;
 }
 

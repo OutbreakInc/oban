@@ -93,8 +93,11 @@
 						<button class="btn btn-small btn-primary buildButton">
 							<span class="icon-check icon-white"></span> Build
 						</button>
-						<button class="btn btn-small btn-primary runButton">
-							<span class="icon-play icon-white"></span> Run
+						<button class="btn btn-small btn-primary flashButton">
+							<span class="icon-play icon-white"></span> Flash
+						</button>
+						<button class="btn btn-small btn-primary debugButton">
+							<span class="icon-play icon-white"></span> Debug
 						</button>
 					</div>
 					<div class="progressView sidebarHeader hide">
@@ -137,55 +140,18 @@
 					</div>
 				</div>
 			</div>
-			<div class="debugView sidebar hiddenView">
-				<div class="controls">
-					<button class="btn btn-small continueButton">Continue</button><br>
-					<button class="btn btn-small pauseButton">Pause</button> 
+			<div class="debugView sidebar hide">
+				<div class="controls sidebarHeader">
+					<button class="btn btn-small btn-primary continueButton">Continue</button>
+					<button class="btn btn-small btn-primary pauseButton">Pause</button> 
 				</div>
-				<div class="messageView">
-					<ul>
-					</ul>
-				</div>
-				<div class="varView yui-skin-sam hiddenView">
+				<div class="varView yui-skin-sam">
+					<h4>Variables</h4>
 					<div id="varTree" class="varTree">
-						<ul>
-							<li class="expanded"><span>this <em>const Object*</em></span>
-								<ul>
-									<li><span>owner: 0x10000246 <em>Thing*</em></span>
-										<ul>
-											<li><span>blah: 0 <em>int</em></span></li>
-											<li><span>name: 0x12345678 <em>"hello"</em></span></li>
-										</ul>
-									</li>
-								</ul>
-							</li>
-							<li class="expanded">Locals
-								<ul>
-									<li><span>i: 7 <em>int</em></span></li>
-									<li><span>buffer: 0x10001FF2 <em>char[128]</span></em>
-										<ul>
-											<li><span>buffer[0]: 'h' (104, 0x68) <em>char</em></span></li>
-											<li><span>buffer[1]: 'e' (101, 0x65) <em>char</em></span></li>
-										</ul>
-									</li>
-								</ul>
-							</li>
-						</ul>
 					</div>
 				</div>
 				<div class="callstackView">
-					<div>
-						<ul>
-							<li class="odd selected"><strong>Thing::delete</strong>(int, char const**) <em>main.cpp:53</em></li>
-							<li class="even"><strong>download</strong>() <em>main.cpp:72</em></li>
-							<li class="odd"><strong>main</strong>(int, char const**) <em>main.cpp:20</em></li>
-							<li class="even"><strong>_start</strong>() <em>LPC11xx.S:124</em></li>
-							<li class="odd"><strong>main</strong>(int, char const**) <em>main.cpp:20</em></li>
-							<li class="even"><strong>_start</strong>() <em>LPC11xx.S:124</em></li>
-							<li class="odd"><strong>main</strong>(int, char const**) <em>main.cpp:20</em></li>
-							<li class="even"><strong>_start</strong>() <em>LPC11xx.S:124</em></li>
-						</ul>
-					</div>
+					<h4>Stack</h4>
 				</div>
 			</div>
 		</div>
@@ -202,6 +168,14 @@
 
 	<script type="text/template" id="errorItemTemplate">
 		<div class="view">Line <%= line %>: <%= err %></div>
+	</script>
+
+	<script type="text/template" id="stackItemTemplate">
+		<div class="view"><strong><%= name %></strong></div>
+	</script>
+
+	<script type="text/template" id="deviceItemTemplate">
+		<div class="view"><%= deviceId %>: <%= name%></div>
 	</script>
 
 </body>
