@@ -6,8 +6,15 @@ var spawn = require("child_process").spawn,
 	path = require("path"),
 	EventEmitter = require("events").EventEmitter,
 	util = require("util"),
-	winston = require("winston"),
-	_ = require("underscore");
+	net = require("net"),
+	logger = require("./logger")(__filename);
+	_ = require("underscore"),
+	JsonStreamer = require("./json-streamer");
+
+var Error =
+{
+	STARTUP_ERROR: "Couldn't start server"
+};
 
 function DeviceServer()
 {
@@ -15,14 +22,16 @@ function DeviceServer()
 
 	this.binary = __dirname + "/../gdbServer/GalagoServer";
 
-	winston.debug("setting device server binary:")
-	winston.debug(this.binary);
+	logger.debug("setting device server binary:")
+	logger.debug(this.binary);
 
 	console.assert(fs.existsSync(this.binary),
 					"Device server binary wasn't found on the file system (looked in: " +
 						path.resolve(this.binary) + ")");
 
 	this.isStarted = false;
+
+	this.streamer = new JsonStreamer;
 }
 
 util.inherits(DeviceServer, EventEmitter);
@@ -31,8 +40,8 @@ var DEVICE_CONNECTED_MSG = "";
 
 DeviceServer.prototype.flash = function(fullFilePath, callback)
 {
-	console.log("flash");
-	console.log(fullFilePath);
+	logger.debug("flash");
+	logger.debug(fullFilePath);
 
 	// stop old device server if it's running
 	if (this.process)
@@ -73,77 +82,99 @@ DeviceServer.prototype.flash = function(fullFilePath, callback)
 	}.bind(this);
 }
 
+DeviceServer.prototype._onStatus = function(data)
+{
+	this.devices = data.devices;
+	this.emit("devices", this.devices);
+}
+
+DeviceServer.prototype._onDeviceDisconnect = function(data)
+{
+	this.emit("disconnect", data.device);
+}
+
 DeviceServer.prototype.run = function()
 {
-	winston.debug("Starting device server...");	
+	logger.debug("Starting device server...");	
 	
-	this.process = spawn(this.binary, [], {cwd: __dirname + "/../gdbServer"});
+	this.process = spawn(this.binary, [], {cwd: path.dirname(this.binary) });
 
 	this.process.stdout.setEncoding("utf8");
 	this.process.stderr.setEncoding("utf8");
 
-	var deviceServer = this;
-
 	this.process.stdout.on("data", function(data)
 	{
-		if (/connected/.exec(data))
+		logger.debug("got stdout data: ", data);
+
+		try
 		{
-			var matches = data.match(/Device '([^']*)' connected, id = ([^\.]*)/);
-
-			var deviceName = matches[1];
-			var deviceId = matches[2];
-
-			deviceServer.emit("connect", deviceId, deviceName);
+			data = JSON.parse(data);
+		} 
+		catch(e)
+		{
+			logger.error("Couldn't parse TCP port JSON:");
+			return this.emit("error", Errors.STARTUP_ERROR);
 		}
-		if (/removed/.exec(data))
+
+		if (!data.port)
 		{
-			var matches = data.match(/Device '([^']*)' removed, id = ([^\.]*)/);
-
-			var deviceName = matches[1];
-			var deviceId = matches[2];
-
-			deviceServer.emit("disconnect", deviceId, deviceName);			
+			logger.error("JSON data missing port parameter");
+			return this.emit("error", Errors.STARTUP_ERROR);
 		}
-		if (/Serving on port/.exec(data))
+
+		this.socket = net.connect(
 		{
-			var matches = data.match(/Serving on port ([0-9]+)/);
+			host: "localhost",
+			port: data.port
+		},
+		function()
+		{
+			logger.debug("connected to GalagoServer");
+			this.isStarted = true;
 
-			var port = parseInt(matches[1], 10);
+			// upon connect, query for currently connected devices
+			this.socket.write("?");
 
-			if (!port)
+		}.bind(this));
+
+		this.socket.setEncoding("utf8");
+
+		var buffer;
+		var inJson = false;
+
+		this.socket.on("data", this.streamer.processChunk);
+
+		this.streamer.on("data", function(data)
+		{
+			logger.debug("data:", data);
+
+			switch (data.event)
 			{
-				winston.debug("Couldn't parse port from device server data:");
-				winston.debug(data);
+			case "status": 
+				this._onStatus(data);
+				break;
+			case "unplug":
+				this._onDeviceDisconnect(data);
+				break;	
 			}
-			else
-			{
-				deviceServer.emit("started", { port: port });
-				deviceServer.isStarted = true;
-				deviceServer.port = port;
-			}
-		}
+
+		}.bind(this));
 
 		if (/Exiting!/.exec(data))
 		{
-			deviceServer.process.kill();
+			this.process.kill();
 		}
 
-		// todo: move to custom log file just for device server
-		winston.debug(data);
-	});
-
-	this.process.stderr.on("data", function(data)
-	{
-		winston.error(data);
-	});
+	}.bind(this));
 
 	this.process.on("exit", function(code)
 	{
 		winston.debug("GalagoServer exited with code: " + code);
-		deviceServer.emit("stopped");
-		deviceServer.isStarted = false;
-		delete deviceServer.port;
-	});
+		this.emit("stopped");
+		this.isStarted = false;
+		delete this.port;
+
+	}.bind(this));
 }
 
 module.exports = DeviceServer;
