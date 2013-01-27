@@ -9,14 +9,16 @@ var LogLevels =
 	DEBUG: { level: 2, prefix: "[debug]" }
 };
 
-var GLOBAL_LOG_LEVEL = LogLevels.ERROR;
+var GLOBAL_LOG_LEVEL = LogLevels.ERROR.level;
 
-module.exports = function logger(filename)
+module.exports = function logger(filename, logLevel)
 {
 	return {
 
+		levels: LogLevels,
+
 		// default log level
-		LOG_LEVEL: LogLevels.ERROR,
+		LOG_LEVEL: logLevel.level || LogLevels.ERROR.level,
 
 		error: function()
 		{
@@ -76,3 +78,5 @@ module.exports = function logger(filename)
 		}
 	}
 }
+
+module.exports.levels = LogLevels;
