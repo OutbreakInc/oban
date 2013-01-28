@@ -1,9 +1,7 @@
 var EventEmitter = require("events").EventEmitter,
 	util = require("util"),
-	Logger = require("./logger"),
+	badger = require("badger")(__filename),
 	_ = require("underscore");
-
-var logger = Logger(__filename, Logger.levels.ERROR);
 
 function JsonStreamer()
 {
@@ -20,8 +18,8 @@ util.inherits(JsonStreamer, EventEmitter);
 
 JsonStreamer.prototype.processChunk = function(data)
 {
-	logger.debug("input data:", data);
-	logger.debug("buffer:", this._buffer);
+	badger.debug("input data:", data);
+	badger.debug("buffer:", this._buffer);
 
 	if (data) this._buffer += data;
 
@@ -38,7 +36,7 @@ JsonStreamer.prototype.processChunk = function(data)
 
 		if (startIndex != 0)
 		{
-			logger.debug(	"Discarded non-JSON data:", 
+			badger.debug(	"Discarded non-JSON data:", 
 							this._buffer.substr(0, startIndex));
 		}
 
@@ -63,7 +61,7 @@ JsonStreamer.prototype.processChunk = function(data)
 
 	var json = this._buffer.substr(0, this._pos + 1);
 
-	logger.debug("trying to parse:", json);
+	badger.debug("trying to parse:", json);
 
 	this._buffer = this._buffer.substr(this._pos + 1);
 

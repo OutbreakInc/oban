@@ -7,7 +7,7 @@ var spawn = require("child_process").spawn,
 	EventEmitter = require("events").EventEmitter,
 	util = require("util"),
 	net = require("net"),
-	logger = require("./logger")(__filename);
+	badger = require("badger")(__filename);
 	_ = require("underscore"),
 	JsonStreamer = require("./json-streamer");
 
@@ -22,8 +22,8 @@ function DeviceServer()
 
 	this.binary = __dirname + "/../gdbServer/GalagoServer";
 
-	logger.debug("setting device server binary:")
-	logger.debug(this.binary);
+	badger.debug("setting device server binary:")
+	badger.debug(this.binary);
 
 	console.assert(fs.existsSync(this.binary),
 					"Device server binary wasn't found on the file system (looked in: " +
@@ -40,8 +40,8 @@ var DEVICE_CONNECTED_MSG = "";
 
 DeviceServer.prototype.flash = function(fullFilePath, callback)
 {
-	logger.debug("flash");
-	logger.debug(fullFilePath);
+	badger.debug("flash");
+	badger.debug(fullFilePath);
 
 	// stop old device server if it's running
 	if (this.process)
@@ -95,7 +95,7 @@ DeviceServer.prototype._onDeviceDisconnect = function(data)
 
 DeviceServer.prototype.run = function()
 {
-	logger.debug("Starting device server...");	
+	badger.debug("Starting device server...");	
 	
 	this.process = spawn(this.binary, [], {cwd: path.dirname(this.binary) });
 
@@ -104,7 +104,7 @@ DeviceServer.prototype.run = function()
 
 	this.process.stdout.on("data", function(data)
 	{
-		logger.debug("got stdout data: ", data);
+		badger.debug("got stdout data: ", data);
 
 		try
 		{
@@ -112,13 +112,13 @@ DeviceServer.prototype.run = function()
 		} 
 		catch(e)
 		{
-			logger.error("Couldn't parse TCP port JSON:");
+			badger.error("Couldn't parse TCP port JSON:");
 			return this.emit("error", Errors.STARTUP_ERROR);
 		}
 
 		if (!data.port)
 		{
-			logger.error("JSON data missing port parameter");
+			badger.error("JSON data missing port parameter");
 			return this.emit("error", Errors.STARTUP_ERROR);
 		}
 
@@ -129,7 +129,7 @@ DeviceServer.prototype.run = function()
 		},
 		function()
 		{
-			logger.debug("connected to GalagoServer");
+			badger.debug("connected to GalagoServer");
 			this.isStarted = true;
 
 			// upon connect, query for currently connected devices
@@ -146,7 +146,7 @@ DeviceServer.prototype.run = function()
 
 		this.streamer.on("data", function(data)
 		{
-			logger.debug("data:", data);
+			badger.debug("data:", data);
 
 			switch (data.event)
 			{
