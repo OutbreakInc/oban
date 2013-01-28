@@ -68,11 +68,7 @@ init: function()
 
 		step.next();
 	})
-	.error(function(err)
-	{
-		console.log("ERROR:");
-		console.log(err);
-	})
+	.error(badger.error)
 	.exec();
 },
 

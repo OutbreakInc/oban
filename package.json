@@ -15,7 +15,7 @@
 		"sidestep": "git://github.com/exhaze/sidestep.git#master",
 		"async": "0.1.22",
 		"shelljs": "0.1.x",
-		"badger": "0.0.1"
+		"badger": "~0.0.2"
 	},
 	"scripts":
 	{
