@@ -2,6 +2,8 @@ var Device = require("./device"),
 	DeviceServer = require("../device-server"),
 	EventEmitter = require("events").EventEmitter,
 	util = require("util"),
+	badger = require("badger")(__filename),
+	async = require("async"),
 	_ = require("underscore");
 
 function DeviceCollection(options, callback)
@@ -22,8 +24,12 @@ function DeviceCollection(options, callback)
 	this._deviceServer.on("connect", this._add);
 	this._deviceServer.on("disconnect", this._remove);
 
+	this._deviceServer.on("list", this._reset);
+
 	this._deviceServer.on("started", this._onServerStart);
 	this._deviceServer.on("stopped", this._onServerStop);
+
+	this._statusRequested = true;
 
 	process.nextTick(function()
 	{
@@ -35,25 +41,47 @@ function DeviceCollection(options, callback)
 
 util.inherits(DeviceCollection, EventEmitter);
 
-DeviceCollection.prototype._add = function(id, name)
+DeviceCollection.prototype._reset = function(devices)
 {
-	var device = new Device(
+	if (!this._statusRequested) return;
+
+	badger.debug("reset devices", devices);
+
+	this._attrs.devices = [];
+
+	async.forEachSeries(devices, function(data, nextDevice)
 	{
-		deviceId: id,
-		name: name
+		var device = new Device(data, nextDevice);
+		this._attrs.devices.push(device);
+
+	}.bind(this),
+	function(err)
+	{
+		if (err) return badger.error(err);
 	});
 
-	this._attrs.devices.push(device);
-	this.emit("add", device);
+	this._statusRequested = false;
 }
 
-DeviceCollection.prototype._remove = function(id, name)
+DeviceCollection.prototype._add = function(data)
+{
+	var device = new Device(data, function()
+	{
+		this._attrs.devices.push(device);
+		this.emit("add", device);
+
+		badger.debug("devices after _add:", this._attrs.devices);
+
+	}.bind(this));
+}
+
+DeviceCollection.prototype._remove = function(data)
 {
 	var removedDevice;
 
 	_.some(this._attrs.devices, function(device, index)
 	{
-		if (device.deviceId() == id)
+		if (device.gdbPort() == data.gdbPort)
 		{
 			removedDevice = this._attrs.devices.splice(index, 1)[0];
 			return true;
@@ -69,6 +97,8 @@ DeviceCollection.prototype._remove = function(id, name)
 					"we never had in our list");
 		return;
 	}
+
+	badger.debug("devices after _remove:", this._attrs.devices);
 
 	this.emit("remove", removedDevice);
 }

@@ -2,8 +2,7 @@ var idGen = require("../id-gen");
 
 var Errors =
 {
-	INVALID_DEVICE_ID: "Invalid device id",	
-	INVALID_DEVICE_NAME: "Invalid device name",
+	INVALID_PARAMETER: "Invalid or missing parameter",	
 	ALREADY_OPEN: "Device is already open by someone else"
 };
 
@@ -19,23 +18,24 @@ var Device = function(options, callback)
 {
 	options = options || {};
 
-	if (!this._isValidStr(options.deviceId))
-	{
-		return nextTickError(new Error(Errors.INVALID_DEVICE_ID), callback);
-	}
-
-	if (!this._isValidStr(options.name))
-	{
-		return nextTickError(new Error(Errors.INVALID_DEVICE_NAME), callback);
-	}	
+	// TODO: figure out how to do validation here on all these
 
 	this._attrs = {};
 
-	this._attrs.deviceId = options.deviceId;
-	this._attrs.name = options.name;
+	this._attrs.productId = options.productID;
+	this._attrs.vendorId = options.vendorID;
+	this._attrs.vendorName = options.vendorName;
+	this._attrs.productName = options.productName;
+	this._attrs.serialNumber = options.serialNumber;
+	this._attrs.allocated = options.allocated;
+	this._attrs.hwActive = options.hwActive;
+	this._attrs.gdbPort = options.gdbPort;
+
 	this._attrs.isOpenBy = undefined;
 
 	this._attrs.id = idGen();
+
+	process.nextTick(callback);
 }
 
 Device.prototype._isValidStr = function(name)
@@ -43,9 +43,9 @@ Device.prototype._isValidStr = function(name)
 	return !(!name || name.length === 0);
 }
 
-Device.prototype.deviceId = function()
+Device.prototype.gdbPort = function()
 {
-	return this._attrs.deviceId;
+	return this._attrs.gdbPort;
 }
 
 Device.prototype.setOpen = function(userId, isOpen, callback)

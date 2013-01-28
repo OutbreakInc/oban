@@ -11,7 +11,7 @@ var spawn = require("child_process").spawn,
 	_ = require("underscore"),
 	JsonStreamer = require("./json-streamer");
 
-var Error =
+var Errors =
 {
 	STARTUP_ERROR: "Couldn't start server"
 };
@@ -85,12 +85,23 @@ DeviceServer.prototype.flash = function(fullFilePath, callback)
 DeviceServer.prototype._onStatus = function(data)
 {
 	this.devices = data.devices;
-	this.emit("devices", this.devices);
+
+	this.emit("list", this.devices);
+}
+
+DeviceServer.prototype._onDeviceConnect = function(data)
+{
+	this.emit("connect", data.device);
 }
 
 DeviceServer.prototype._onDeviceDisconnect = function(data)
 {
 	this.emit("disconnect", data.device);
+}
+
+DeviceServer.prototype.requestStatus = function()
+{
+	this.socket.write("?");
 }
 
 DeviceServer.prototype.run = function()
@@ -133,7 +144,7 @@ DeviceServer.prototype.run = function()
 			this.isStarted = true;
 
 			// upon connect, query for currently connected devices
-			this.socket.write("?");
+			this.requestStatus();
 
 		}.bind(this));
 
@@ -153,6 +164,9 @@ DeviceServer.prototype.run = function()
 			case "status": 
 				this._onStatus(data);
 				break;
+			case "plug":
+				this._onDeviceConnect(data);
+				break;
 			case "unplug":
 				this._onDeviceDisconnect(data);
 				break;	
@@ -160,10 +174,7 @@ DeviceServer.prototype.run = function()
 
 		}.bind(this));
 
-		if (/Exiting!/.exec(data))
-		{
-			this.process.kill();
-		}
+		this.streamer.on("error", badger.error);
 
 	}.bind(this));
 
