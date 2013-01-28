@@ -96,7 +96,7 @@ var ProjectModel = Backbone.Model.extend(
 
 	flash: function(callback)
 	{
-		this.socket.emit("flash", this.id, function(err)
+		this.socket.emit("flash", this.id, "#dev", function(err)
 		{
 			if (err) return callback(err);
 

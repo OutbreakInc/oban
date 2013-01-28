@@ -38,48 +38,29 @@ util.inherits(DeviceServer, EventEmitter);
 
 var DEVICE_CONNECTED_MSG = "";
 
-DeviceServer.prototype.flash = function(fullFilePath, callback)
+DeviceServer.prototype.flash = function(device, fullFilePath, callback)
 {
-	badger.debug("flash");
+	badger.debug("flashing device on port:", device.gdbPort);
 	badger.debug(fullFilePath);
 
-	// stop old device server if it's running
-	if (this.process)
+	// syntax: f<gdbPort><[absolute path]>
+	this.socket.write("f" + device.gdbPort + "[" + fullFilePath + "]");
+
+	var flashCallback = function(data)
 	{
-		console.log("stopping old process");
+		badger.debug("flashback!");
 
-		this.on("stopped", function()
+		if (!data || !data.event || data.event != "flashed") return;
+
+		if (data.device.serialNumber == device.serialNumber)
 		{
-			_flash();
-
-		}.bind(this));
-
-		this.process.kill();
-	}
-
-	var _flash = function()
-	{
-		this.process = spawn(
-			this.binary, 
-			[fullFilePath], 
-			{cwd: __dirname + "/../gdbServer"}
-		);
-
-		this.process.stdout.setEncoding("utf8");
-		this.process.stderr.setEncoding("utf8");
-
-		// after 5 seconds, assume it's been flashed
-		setTimeout(function()
-		{
-			this.process.kill();
-
-			// resume normal device server run
-			this.run();
 			callback();
-
-		}.bind(this), 5000);
+			this.streamer.removeListener("data", flashCallback);
+		}
 
 	}.bind(this);
+
+	this.streamer.on("data", flashCallback);
 }
 
 DeviceServer.prototype._onStatus = function(data)

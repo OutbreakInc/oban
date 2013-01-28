@@ -48,6 +48,11 @@ Device.prototype.gdbPort = function()
 	return this._attrs.gdbPort;
 }
 
+Device.prototype.serialNumber = function()
+{
+	return this._attrs.serialNumber;
+}
+
 Device.prototype.setOpen = function(userId, isOpen, callback)
 {
 	if (this._attrs.isOpenBy &&
