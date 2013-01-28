@@ -1,7 +1,7 @@
 (function()
 {
 
-var logger = require("./logger"),
+var badger = require("badger")(__filename),
 	fs = require("fs"),
 	utils = require("./utils"),
 	toolchain = require("./toolchain"),
@@ -38,7 +38,7 @@ Core.prototype =
 
 init: function()
 {
-	logger.debug("initializing directories");
+	badger.debug("initializing directories");
 	this._initDirectories();
 
 	var sockets = socketIo.listen(this.app);
@@ -63,7 +63,7 @@ init: function()
 		var projectController = new ProjectController(projects, devices._deviceServer, sockets);
 		var fileController = new FileController(projects, sockets);
 
-		logger.debug("loading device server module");
+		badger.debug("loading device server module");
 		var dcController = new DeviceCollectionController(devices, sockets);
 
 		step.next();
