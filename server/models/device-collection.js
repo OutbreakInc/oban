@@ -6,6 +6,11 @@ var Device = require("./device"),
 	async = require("async"),
 	_ = require("underscore");
 
+var Errors =
+{
+	NO_SUCH_DEVICE: "No such device"
+};
+
 function DeviceCollection(options, callback)
 {
 	// on initialization, start a device server
@@ -119,9 +124,21 @@ DeviceCollection.prototype._onServerStop = function()
 	// TODO: try to restart the device server
 }
 
-DeviceCollection.prototype.flash = function(fullFilePath, callback)
+DeviceCollection.prototype.findBySerial = function(serialNumber)
 {
-	this._deviceServer.flash(fullFilePath, callback);
+	return _.find(this._attrs.devices, function(device)
+	{
+		return (device.serialNumber() == serialNumber);
+	});
+}
+
+DeviceCollection.prototype.flash = function(serialNumber, fullFilePath, callback)
+{
+	var device = this.findBySerial(serialNumber);
+
+	if (!device) return callback(Errors.NO_SUCH_DEVICE);
+
+	this._deviceServer.flash(device.toJSON(), fullFilePath, callback);
 }
 
 DeviceCollection.prototype.toJSON = function()

@@ -12,12 +12,12 @@ var Errors =
 	CANT_RUN_UNBUILT_PROJECT: "You must build this project first"
 };
 
-function ProjectController(projectCollection, deviceServer, sockets)
+function ProjectController(projectCollection, deviceCollection, sockets)
 {
 	this.projects = projectCollection;
 	this.sockets = sockets.of("/project");
-	this.deviceServer = deviceServer;
-	this.gdbClient = new GdbClient(this.deviceServer);
+	this.devices = deviceCollection;
+	this.gdbClient = new GdbClient(this.devices._deviceServer);
 
 	this.sockets.on("connection", function(socket)
 	{
@@ -164,7 +164,7 @@ ProjectController.prototype.onBuild = function(socket, project, callback)
 	}.bind(this));
 }
 
-ProjectController.prototype.onFlash = function(socket, project, callback)
+ProjectController.prototype.onFlash = function(socket, project, serialNumber, callback)
 {
 	if (!this._isOpenBy(project, socket))
 	{
@@ -178,7 +178,7 @@ ProjectController.prototype.onFlash = function(socket, project, callback)
 		return callback(Errors.CANT_RUN_UNBUILT_PROJECT);
 	}
 
-	this.deviceServer.flash(project.path() + project.binary(), 
+	this.devices.flash(serialNumber, project.path() + project.binary(),
 	function(err)
 	{
 		if (err) return callback("Flash failed!");

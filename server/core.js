@@ -60,10 +60,8 @@ init: function()
 	function()
 	{
 		var pcController = new ProjectCollectionController(projects, sockets);
-		var projectController = new ProjectController(projects, devices._deviceServer, sockets);
+		var projectController = new ProjectController(projects, devices, sockets);
 		var fileController = new FileController(projects, sockets);
-
-		badger.debug("loading device server module");
 		var dcController = new DeviceCollectionController(devices, sockets);
 
 		step.next();
