@@ -7,9 +7,11 @@ var logger = require("./logger"),
 	toolchain = require("./toolchain"),
 	ProjectCollection = require("./models/project-collection"),
 	DeviceCollection = require("./models/device-collection"),
+	Settings = require("./models/settings"),
 	ProjectCollectionController = require("./controllers/project-collection"),
 	ProjectController = require("./controllers/project"),
 	FileController = require("./controllers/file"),
+	SettingsController = require("./controllers/settings"),
 	DeviceCollectionController = require("./controllers/device-collection"),
 	GdbClient = require("./gdb-client"),
 	socketIo = require("socket.io"),
@@ -38,12 +40,12 @@ Core.prototype =
 
 init: function()
 {
-	logger.debug("initializing directories");
+	//logger.debug("initializing directories");
 	this._initDirectories();
 
 	var sockets = socketIo.listen(this.app);
 
-	var devices, projects;
+	var devices, projects, settings;
 
 	var step = new Side(this);
 
@@ -57,12 +59,17 @@ init: function()
 	{
 		devices = new DeviceCollection({}, step.next);
 	},
+	function(err)
+	{
+		settings = new Settings(step.next);
+	},
 	function()
 	{
 		var pcController = new ProjectCollectionController(projects, sockets);
 		var projectController = new ProjectController(projects, devices._deviceServer, sockets);
 		var fileController = new FileController(projects, sockets);
-
+		var settingsController = new SettingsController(settings, sockets);
+		
 		logger.debug("loading device server module");
 		var dcController = new DeviceCollectionController(devices, sockets);
 

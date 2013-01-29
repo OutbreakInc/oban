@@ -56,28 +56,31 @@ var WelcomeView = Backbone.View.extend(
 			errorField.empty();
 			inputField.val("");			
 		}
-
+		
 		createBtn.click(function()
 		{
 			enableControls(false);
 
 			var name = inputField.val();
-
-			this.projects.create(name, function(err, project)
+			
+			mixpanel.track("Created project", null, function()
 			{
-				enableControls(true);
-
-				if (err)
+				this.projects.create(name, function(err, project)
 				{
-					return errorField.html(err);
-				}
+					enableControls(true);
 
-				dialog.modal("hide");
+					if (err)
+					{
+						return errorField.html(err);
+					}
 
-				// now open this project
-				App.vent.trigger("openProject", project);
-				// something.emit("open", project);
+					dialog.modal("hide");
 
+					// now open this project
+					App.vent.trigger("openProject", project);
+					// something.emit("open", project);
+
+				}.bind(this));
 			}.bind(this));
 		}.bind(this));
 

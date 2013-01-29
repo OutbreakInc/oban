@@ -31,6 +31,11 @@
 		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
 	<![endif]-->
 	
+	<!-- start Mixpanel --><script type="text/javascript">(function(e,b){if(!b.__SV){var a,f,i,g;window.mixpanel=b;a=e.createElement("script");a.type="text/javascript";a.async=!0;a.src=("https:"===e.location.protocol?"https:":"http:")+'//cdn.mxpnl.com/libs/mixpanel-2.2.min.js';f=e.getElementsByTagName("script")[0];f.parentNode.insertBefore(a,f);b._i=[];b.init=function(a,e,d){function f(b,h){var a=h.split(".");2==a.length&&(b=b[a[0]],h=a[1]);b[h]=function(){b.push([h].concat(Array.prototype.slice.call(arguments,0)))}}var c=b;"undefined"!==
+	typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var a="mixpanel";"mixpanel"!==d&&(a+="."+d);b||(a+=" (stub)");return a};c.people.toString=function(){return c.toString(1)+".people (stub)"};i="disable track track_pageview track_links track_forms register register_once alias unregister identify name_tag set_config people.set people.increment people.append people.track_charge people.clear_charges people.delete_user".split(" ");for(g=0;g<i.length;g++)f(c,i[g]);b._i.push([a,
+	e,d])};b.__SV=1.2}})(document,window.mixpanel||[]);
+	mixpanel.init("8940f5e6609f414ad88c4ffbc13086c4");</script><!-- end Mixpanel -->
+	
 	<link rel="icon" type="image/png" href="/images/outbreakFavicon.png"/>
 </head>
 
@@ -38,7 +43,11 @@
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="navbar-inner">
 		<div class="topbarContainer">
+			<a class="btn" id="settingsButton" href="#" style="float:right">
+				<img src="/lib/settings.png"></img>
+			</a>
 			<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+				<!-- http://files.softicons.com/download/system-icons/hadaikum-icons-by-tiny-lab/png/24x24/Settings.png -->
 				<span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
 			</a>
 			<a class="brand" id="homeButton" href="/"><!-- <img class="outbreakIDELogo" src="/images/blank.gif"></img> -->GalagoIDE <em class="colorOrange">beta</em></a>
@@ -78,6 +87,23 @@
 					</div>
 				</div>
 
+				<div id="userSettingsModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="settingsHeader" aria-hidden="true">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+						<h3 id="settingsHeader">Settings</h3>
+					</div>
+					<div class="modal-body">
+						<p>
+							<input id="allowTrack" class="allowTrack" type="checkbox"></input>
+							<span for="allowTrack">Automatically send usage statistics to Logiblock</span>
+							<span class="text-error error"></span>
+						</p>
+					</div>
+					<div class="modal-footer">
+						<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+						<button class="btn btn-primary saveBtn">Save Settings</button>
+					</div>
+				</div>
 
 			</div>
 			<div class="row">
@@ -177,6 +203,5 @@
 	<script type="text/template" id="deviceItemTemplate">
 		<div class="view"><%= deviceId %>: <%= name%></div>
 	</script>
-
 </body>
 </html>
