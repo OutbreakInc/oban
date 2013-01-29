@@ -22,7 +22,7 @@ function DeviceServer()
 
 	this.binary = __dirname + "/../gdbServer/GalagoServer";
 
-	badger.debug("setting device server binary:")
+	badger.debug("setting device server binary:");
 	badger.debug(this.binary);
 
 	console.assert(fs.existsSync(this.binary),
