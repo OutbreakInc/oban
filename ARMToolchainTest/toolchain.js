@@ -3,6 +3,7 @@ module.exports = (function(){
 var fs = require("fs");
 var childProcess = require("child_process");
 var http = require("http");
+var badger = require("badger")(__filename);
 
 var _ =
 {
@@ -137,8 +138,8 @@ Toolchain.prototype =
 		
 		//resolve and add sources
 		args = args.concat(this.resolvePaths(project.files, pathsTable, "module"));
-		
-		console.log("args: ", args);
+
+		badger.debug("args:", args);
 		
 		//compile!
 		var compiler = childProcess.spawn(pathsTable.sdk + "/bin/arm-none-eabi-g++", args,
@@ -425,10 +426,10 @@ Compiler.prototype =
 					//console.log("compilation complete: ", compileResult);
 					if(err)	return(callback(err));
 					
-					//@@diag and debug
+					// @@diag and debug
 					ths.toolchain.disassemble(dirs, [outputName], function(err, result)
 					{
-						console.log("disassembly complete: ", result);
+						badger.debug("disassembly complete: ", result);
 					});
 					
 					callback(undefined, outputName, compileResult);

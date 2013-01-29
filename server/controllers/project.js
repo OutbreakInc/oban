@@ -3,7 +3,7 @@
 	Mixins = require("./mixins"),
 	GdbClient = require("../gdb-client"),
 	_ = require("underscore"),
-	winston = require("winston");
+	badger = require("badger")(__filename);
 
 var Errors =
 {
@@ -190,7 +190,7 @@ ProjectController.prototype.onFlash = function(socket, project, serialNumber, ca
 ProjectController.prototype.onDebug = function(socket, project, callback)
 {
 	// if flash succeeded, run and attach GDB
-	winston.debug("attaching client to GDB");
+	badger.debug("attaching client to GDB");
 	this.gdbClient.attachClient(socket);
 
 	this.gdbClient.run(project.path() + project.binary(), 
