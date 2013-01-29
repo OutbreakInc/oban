@@ -18,22 +18,39 @@ App.addInitializer(function(options)
 {
 	this.vent.on("openProject", function(project)
 	{
-		project.open(function(err)
+		var openProject = function()
 		{
-			if (err) return App.error("Open project error: " + err);
-
-			this.vent.trigger("openProjectSuccess");
-			this.activeProject = project;
-
-			this.activeProjectView = new ProjectView(
+			project.open(function(err)
 			{
-				model: this.activeProject,
-				devices: App.Collections.devices
-			});
+				if (err) return App.error("Open project error: " + err);
 
-			App.Views.welcomeView.setVisible(false);
+				this.vent.trigger("openProjectSuccess");
+				this.activeProject = project;
 
-		}.bind(this));
+				this.activeProjectView = new ProjectView(
+				{
+					model: this.activeProject,
+					devices: App.Collections.devices
+				});
+
+				App.Views.welcomeView.setVisible(false);
+
+				this.vent.off("closeProjectSuccess", openProject);
+
+			}.bind(this));
+
+		}.bind(this);
+
+		if (this.activeProjectView)
+		{
+			this.vent.trigger("closeProject");
+
+			this.vent.on("closeProjectSuccess", openProject);
+		}
+		else
+		{
+			openProject();
+		}
 
 	}.bind(this));
 
