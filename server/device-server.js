@@ -68,6 +68,14 @@ DeviceServer.prototype._onStatus = function(data)
 	this.devices = data.devices;
 
 	this.emit("list", this.devices);
+
+	//! HACK: expose first device in list for debugging
+	if (this.devices.length > 0)
+	{
+		this.port = this.devices[0].gdbPort;
+		badger.debug(this.port);
+		this.isStarted = true;
+	}
 }
 
 DeviceServer.prototype._onDeviceConnect = function(data)
@@ -122,7 +130,6 @@ DeviceServer.prototype.run = function()
 		function()
 		{
 			badger.debug("connected to GalagoServer");
-			this.isStarted = true;
 
 			// upon connect, query for currently connected devices
 			this.requestStatus();

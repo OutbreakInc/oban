@@ -43,6 +43,8 @@ init: function()
 
 	var sockets = socketIo.listen(this.app);
 
+	sockets.set("log level", 1);
+
 	var devices, projects;
 
 	var step = new Side(this);

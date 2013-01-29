@@ -3,7 +3,8 @@
 var spawn = require("child_process").spawn,
 	_ = require("underscore"),
 	Parser = require("./gdb/parser"),
-	Gdb = require("./gdb");
+	Gdb = require("./gdb"),
+	badger = require("badger")(__filename);
 
 function GdbClient(deviceServer)
 {
@@ -20,6 +21,8 @@ GdbClient.prototype =
 
 run: function(file, callback)
 {
+	badger.debug("running gdbclient on port " + this.deviceServer.port);
+
 	if (!this.deviceServer.isStarted)
 	{
 		console.log("Device server not started, can't connect to GDB");

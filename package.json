@@ -10,7 +10,6 @@
 		"backbone": "0.9.x",
 		"express": "2.5.x",
 		"underscore": "1.4.3",
-		"winston": "0.6.x",
 		"amdefine": "0.0.4",
 		"sidestep": "git://github.com/exhaze/sidestep.git#master",
 		"async": "0.1.22",
