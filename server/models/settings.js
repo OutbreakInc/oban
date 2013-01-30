@@ -68,7 +68,7 @@ Settings.prototype.setAttrs = function(attrs, callback)
 Settings.prototype.saveFile = function(callback)
 {
 	var step = this.step;
-	
+	console.log("saveFile");
 	this._settingsIo.write(_.omit(this._attrs, "id"), callback);
 }
 

@@ -67,23 +67,22 @@ var Dashboard = Backbone.View.extend(
 			enableControls(false);
 			this.settings.set("allowTracking", $("#allowTrack").prop("checked"));
 			
-			// mixpanel.track("Changed tracking", null, function()
-			// {
-				this.settings.save(function(err)
+			mixpanel.track("Changed tracking");
+			this.settings.save(function(err)
+			{
+				if (!this.settings.get("allowTracking"))
+					mixpanel.disable();
+					
+				enableControls(true);
+
+				if (err)
 				{
-					if (!this.settings.get("allowTracking"))
-						mixpanel.disable();
-						
-					enableControls(true);
-	
-					if (err)
-					{
-						return errorField.html(err);
-					}
-	
-					dialog.modal("hide");
-				}.bind(this));
-			//}.bind(this));
+					return errorField.html(err);
+				}
+
+				dialog.modal("hide");
+				saveBtn.off();
+			}.bind(this));
 		}.bind(this));
 	}
 	
