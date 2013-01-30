@@ -43,6 +43,8 @@ App.addInitializer(function(options)
 
 		if (this.activeProjectView)
 		{
+			if (this.activeProject.get("name") == project.get("name")) return;
+
 			this.vent.trigger("closeProject");
 
 			this.vent.on("closeProjectSuccess", openProject);

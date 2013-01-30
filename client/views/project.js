@@ -152,7 +152,7 @@ var ProjectView = Backbone.View.extend(
 		this.debugView.on("debugEnd", function()
 		{
 			this.$(".debugView").addClass("hide");
-
+			
 		}.bind(this));
 	},
 
