@@ -5,6 +5,7 @@ var $ = require("jquery"),
 	ProjectCollection = require("app/models/project-collection"),
 	DeviceCollection = require("app/models/device-collection"),
 	ErrorCollection = require("app/models/error-collection"),
+	SettingsModel = require("app/models/settings"),
 	Dashboard = require("app/views/dashboard"),
 	WelcomeView = require("app/views/welcome"),
 	ProjectView = require("app/views/project"),
@@ -85,8 +86,10 @@ App.addInitializer(function(options)
 {
 	// init collections
 	App.Collections = {};
+	App.Settings = {};
 
 	App.Collections.projects = new ProjectCollection();
+	App.Settings = new SettingsModel();
 	App.Collections.devices = new DeviceCollection();
 
 	// init views
@@ -94,7 +97,8 @@ App.addInitializer(function(options)
 
 	App.Views.dashboard = new Dashboard(
 	{
-		collection: App.Collections.projects
+		collection: App.Collections.projects,
+		settings: App.Settings
 	});
 
 	App.Views.welcomeView = new WelcomeView(
