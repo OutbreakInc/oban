@@ -105,30 +105,26 @@ var ProjectView = Backbone.View.extend(
 		{
 			console.log(compileErrors);
 			
-			mixpanel.track("Building project", null, function()
-			{	
-				this.progressView.setSuccess(!err && !compileErrors);
-				this.progressView.setVisible(false);
-				this.progressView.setText(err || compileErrors ? 
-					"Build failed" : "Build succeeded");
+			mixpanel.track("Building project");
+			this.progressView.setSuccess(!err && !compileErrors);
+			this.progressView.setVisible(false);
+			this.progressView.setText(err || compileErrors ? 
+				"Build failed" : "Build succeeded");
 
-				if (err)
-				{
-					mixpanel.track("Build failed", err, function()
-					{
-						return App.error(err);
-					});
-				}
-				else if (compileErrors)
-				{
-					console.log(JSON.stringify(compileErrors))
-					
-						this.setCompileErrors(compileErrors);
-					// mixpanel.track("Compile failed" + JSON.stringify(compileErrors), JSON.stringify(compileErrors), function()
-					// 				{
-					// 				}.bind(this));
-				}
-			}.bind(this));
+			if (err)
+			{
+				mixpanel.track("Build failed");
+				return App.error(err);
+			}
+			else if (compileErrors)
+			{
+				console.log(JSON.stringify(compileErrors))
+				
+					this.setCompileErrors(compileErrors);
+				// mixpanel.track("Compile failed" + JSON.stringify(compileErrors), JSON.stringify(compileErrors), function()
+				// 				{
+				// 				}.bind(this));
+			}
 		}.bind(this));
 	},
 
@@ -140,21 +136,17 @@ var ProjectView = Backbone.View.extend(
 		// hack
 		this.project.flash(function(err)
 		{
-			mixpanel.track("Flashing project", null, function()
-			{
-				this.progressView.setSuccess(!err);
-				this.progressView.setVisible(false);
-				this.progressView.setText(err ? 
-					"Error flashing" : "Flashing succeeded");
+			mixpanel.track("Flashing project");
+			this.progressView.setSuccess(!err);
+			this.progressView.setVisible(false);
+			this.progressView.setText(err ? 
+				"Error flashing" : "Flashing succeeded");
 
-				if (err)
-				{
-					mixpanel.track("Flashing failed", err, function()
-					{
-						return App.error(err);
-					});
-				} 
-			}.bind(this));
+			if (err)
+			{
+				mixpanel.track("Flashing failed");
+				return App.error(err);
+			} 
 		}.bind(this));
 	},
 
