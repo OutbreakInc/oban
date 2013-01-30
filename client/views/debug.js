@@ -7,7 +7,8 @@ var Backbone = require("backbone"),
 	StackCollection = require("app/models/stack-collection"),
 	YAHOO = require("yui/yahoo-dom-event"),
 	ace = require("ace/ace"),
-	Range = ace.require("ace/range").Range;	
+	Range = ace.require("ace/range").Range,
+	_ = require("underscore");	
 
 require("yui/treeview-min");	
 
@@ -16,7 +17,44 @@ var DebugView = Backbone.View.extend(
 	events:
 	{
 		"click .continueButton": "onUserContinue",
-		"click .pauseButton": "onPause"
+		"click .pauseButton": "onPause",
+		"click .stopButton" : "onStop",
+		"click .disconnectButton": "onDisconnect"
+	},
+
+	unbindEvents: function()
+	{
+		this.socket.removeListener("gdb_message", this.onData);
+		this.socket.removeListener("gdb_break", this.onBreakpoint);
+		this.socket.removeListener("gdb_variables", this.onVariables);
+		this.socket.removeListener("gdb_continue", this.onContinue);
+		this.editor.removeListener("guttermousedown", this.onSetBreakpoint);
+		this.undelegateEvents();
+	},
+
+	onDisconnect: function()
+	{
+		this.unbindEvents();
+		this.clearMarker();
+		this.clearSidebar();
+		this.stackListView.remove();
+
+		_.forEach(this.breakpoints, function(value, row)
+		{
+			console.log("clearing breakpoint at row:", row);
+			this.editor.session.clearBreakpoint(row);
+
+		}, this);
+
+		this.trigger("debugEnd");
+		this.socket.emit("gdb_exit");
+	},
+
+	// same as onDisconnect, except we pause the program before disconnecting
+	onStop: function()
+	{
+		this.onPause();
+		this.onDisconnect();
 	},
 
 	initialize: function(options)
@@ -126,12 +164,18 @@ var DebugView = Backbone.View.extend(
 	onContinue: function()
 	{
 		this.clearMarker();
+		this.clearSidebar();
 	},
 
 	onUserContinue: function()
 	{
 		this.socket.emit("gdb_resume");
 		this.clearMarker();
+		this.clearSidebar();
+	},
+
+	clearSidebar: function()
+	{
 		this.stack.reset();
 
 		var root = this.tree.getRoot();
@@ -159,11 +203,6 @@ var DebugView = Backbone.View.extend(
 	onPause: function()
 	{
 		this.socket.emit("gdb_pause");
-	},
-
-	unbindEvents: function()
-	{
-		this.socket.removeListener("gdb_message", this.onData);
 	}
 });
 

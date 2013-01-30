@@ -26,6 +26,8 @@ function Gdb(binary)
 	this.binary = binary;
 	this._breakpoints = { isDirty: false, lines: {} };
 	this._actions = [];
+
+	_.bindAll(this);
 }
 
 util.inherits(Gdb, EventEmitter);
@@ -170,6 +172,7 @@ Gdb.prototype.exit = function()
 	{
 		this._pause();
 		this.rawCommand("quit");
+		this._unbindEvents();
 		this.process.stdin.end();
 		delete this.process;
 	}
@@ -230,34 +233,39 @@ Gdb.prototype._bindReconnectEvent = function()
 
 Gdb.prototype._bindEvents = function()
 {
-	var gdb = this;
+	this.socket.on("data", this._processData);
+}
 
-	this.socket.on("data", function(data)
+Gdb.prototype._unbindEvents = function()
+{
+	this.socket.removeListener("data", this._processData);
+}
+
+Gdb.prototype._processData = function(data)
+{
+	if (this.isDebugging)
 	{
-		if (gdb.isDebugging)
+		console.log("PYTHON GDB DATA:");
+		console.log(data);
+	}
+
+	data = JSON.parse(data);
+
+	if (data.event)
+	{
+		switch (data.event)
 		{
-			console.log("PYTHON GDB DATA:");
-			console.log(data);
+		case Gdb.events.STOP:
+			this.isStopped = true;
+			this._onStop();
+			break;
+		case Gdb.events.CONTINUE:
+			this.isStopped = false;
+			break;
 		}
 
-		data = JSON.parse(data);
-
-		if (data.event)
-		{
-			switch (data.event)
-			{
-			case Gdb.events.STOP:
-				gdb.isStopped = true;
-				gdb._onStop();
-				break;
-			case Gdb.events.CONTINUE:
-				gdb.isStopped = false;
-				break;
-			}
-
-			gdb.emit(data.event, data.data);
-		}
-	});	
+		this.emit(data.event, data.data);
+	}
 }
 
 Gdb.prototype._syncBreakpoints = function()

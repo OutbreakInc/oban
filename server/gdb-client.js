@@ -47,7 +47,7 @@ attachClient: function(client)
 
 	var self = this;
 
-	var events =
+	this.events =
 	[
 		{ name: Gdb.events.STOP, callback: parser.onStop },
 		{ name: Gdb.events.CONTINUE, callback: parser.onContinue },
@@ -76,20 +76,31 @@ attachClient: function(client)
 		self.gdb.queueAction(Gdb.actions.RESUME);
 	});
 
-	client.on("disconnect", function()
+	client.on("gdb_exit", function()
 	{
-		events.forEach(function(event)
-		{
-			self.gdb.removeListener(event.name, event.callback);
-		});
-
-		self.stop();
+		self._onExit(client);
 	});
 
-	events.forEach(function(event)
+	client.on("disconnect", function()
+	{
+		self._onExit(client);
+	});
+
+	this.events.forEach(function(event)
 	{
 		self.gdb.on(event.name, event.callback);
 	});
+},
+
+_onExit: function(client)
+{
+	this.events.forEach(function(event)
+	{
+		this.gdb.removeListener(event.name, event.callback);
+
+	}.bind(this));
+
+	this.stop();
 }
 
 }

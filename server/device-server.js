@@ -168,7 +168,7 @@ DeviceServer.prototype.run = function()
 
 	this.process.on("exit", function(code)
 	{
-		winston.debug("GalagoServer exited with code: " + code);
+		badger.error("GalagoServer exited with code: " + code);
 		this.emit("stopped");
 		this.isStarted = false;
 		delete this.port;
