@@ -2,7 +2,8 @@ define(function(require)
 {
 
 var Backbone = require("backbone"),
-	App = require("app/app");
+	App = require("app/app"),
+	NewProjectView = require("app/views/new-project");
 
 var WelcomeView = Backbone.View.extend(
 {
@@ -32,57 +33,12 @@ var WelcomeView = Backbone.View.extend(
 
 	createProject: function()
 	{
-		var dialog = $("#newProjectModal");
-
-		dialog.modal();
-
-		var inputField = $("#newProjectModal .projectName");
-		var errorField = $("#newProjectModal .error");
-		var createBtn = $(".createProject");
-
-		dialog.on("shown", function()
-		{
-			inputField.focus();
+		var newProjectView = new NewProjectView(
+		{ 
+			collection: this.projects 
 		});
 
-		var enableControls = function(isEnabled)
-		{
-			inputField.prop("disabled", !isEnabled);
-			createBtn.prop("disabled", !isEnabled);
-		}
-
-		var clearInputs = function()
-		{
-			errorField.empty();
-			inputField.val("");			
-		}
-		
-		createBtn.click(function()
-		{
-			enableControls(false);
-
-			var name = inputField.val();
-			
-			mixpanel.track("Created project");
-			this.projects.create(name, function(err, project)
-			{
-				enableControls(true);
-
-				if (err)
-				{
-					return errorField.html(err);
-				}
-
-				dialog.modal("hide");
-
-				// now open this project
-				App.vent.trigger("openProject", project);
-				// something.emit("open", project);
-
-			}.bind(this));
-		}.bind(this));
-
-		dialog.on("hidden", clearInputs);
+		newProjectView.render();
 	}
 });
 
