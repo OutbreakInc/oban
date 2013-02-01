@@ -7,11 +7,11 @@ var badger = require("badger")(__filename),
 	toolchain = require("./toolchain"),
 	ProjectCollection = require("./models/project-collection"),
 	DeviceCollection = require("./models/device-collection"),
-	Settings = require("./models/settings"),
+	SettingCollection = require("./models/setting-collection"),
 	ProjectCollectionController = require("./controllers/project-collection"),
 	ProjectController = require("./controllers/project"),
 	FileController = require("./controllers/file"),
-	SettingsController = require("./controllers/settings"),
+	SettingController = require("./controllers/setting-collection"),
 	DeviceCollectionController = require("./controllers/device-collection"),
 	GdbClient = require("./gdb-client"),
 	socketIo = require("socket.io"),
@@ -62,14 +62,14 @@ init: function()
 	},
 	function(err)
 	{
-		settings = new Settings(step.next);
+		settings = new SettingCollection(step.next);
 	},
 	function()
 	{
 		var pcController = new ProjectCollectionController(projects, sockets);
 		var projectController = new ProjectController(projects, devices, sockets);
 		var fileController = new FileController(projects, sockets);
-		var settingsController = new SettingsController(settings, sockets);
+		var settingController = new SettingController(settings, sockets);
 		var dcController = new DeviceCollectionController(devices, sockets);
 
 		step.next();

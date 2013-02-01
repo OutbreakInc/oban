@@ -3,6 +3,7 @@ define(function(require)
 
 var Backbone = require("backbone"),
 	ProjectList = require("app/views/project-list"),
+	SettingList = require("app/views/setting-list"),
 	App = require("app/app");
 
 var Dashboard = Backbone.View.extend(
@@ -17,7 +18,7 @@ var Dashboard = Backbone.View.extend(
 
 	initialize: function(options)
 	{
-		this.projects = options.collection;
+		this.projects = options.projects;
 
 		this.projectList = new ProjectList({ collection: this.projects });
 
@@ -26,6 +27,7 @@ var Dashboard = Backbone.View.extend(
 		this.projectControls = this.$(".projectControls");
 		
 		this.settings = options.settings;
+		this.settingsList = new SettingList({ collection: this.settings });
 		this.settings.fetch();
 		
 		App.vent.on("openProjectSuccess", function()
@@ -50,7 +52,6 @@ var Dashboard = Backbone.View.extend(
 	openSettings: function(e)
 	{
 		//hack, not sure how to tie into new templates
-		$("#allowTrack").prop("checked", this.settings.get("allowTracking"));
 		
 		var dialog = $("#userSettingsModal");
 		var saveBtn = $(".saveBtn");
@@ -65,13 +66,12 @@ var Dashboard = Backbone.View.extend(
 		saveBtn.click(function()
 		{
 			enableControls(false);
-			this.settings.set("allowTracking", $("#allowTrack").prop("checked"));
 			
 			mixpanel.track("Changed tracking");
 			this.settings.save(function(err)
 			{
-				if (!this.settings.get("allowTracking"))
-					mixpanel.disable();
+				// if (!this.settings.get("allowTracking"))
+				// 				mixpanel.disable();
 					
 				enableControls(true);
 

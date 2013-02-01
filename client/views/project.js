@@ -79,7 +79,8 @@ var ProjectView = Backbone.View.extend(
 		this.project.openFile(fileName, function(err, file)
 		{
 			if (err) return alert(err);
-
+			
+			mixpanel.track("project file: open");
 			file.project = this.project;
 
 			this.activeFile = new File(file);
@@ -105,7 +106,7 @@ var ProjectView = Backbone.View.extend(
 		{
 			console.log(compileErrors);
 			
-			mixpanel.track("Building project");
+			mixpanel.track("project: build");
 			this.progressView.setSuccess(!err && !compileErrors);
 			this.progressView.setVisible(false);
 			this.progressView.setText(err || compileErrors ? 
@@ -136,7 +137,7 @@ var ProjectView = Backbone.View.extend(
 		// hack
 		this.project.flash(function(err)
 		{
-			mixpanel.track("Flashing project");
+			mixpanel.track("project: flash");
 			this.progressView.setSuccess(!err);
 			this.progressView.setVisible(false);
 			this.progressView.setText(err ? 
@@ -164,8 +165,8 @@ var ProjectView = Backbone.View.extend(
 
 		this.debugView.on("debugEnd", function()
 		{
+			mixpanel.track("project: debug");
 			this.$(".debugView").addClass("hide");
-			
 		}.bind(this));
 	},
 
@@ -176,6 +177,7 @@ var ProjectView = Backbone.View.extend(
 
 	close: function()
 	{
+		mixpanel.track("project: close");
 		this.editorView.close();
 		this.deviceListView.close();
 		this.errorListView.close();

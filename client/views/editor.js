@@ -29,9 +29,7 @@ var EditorView = Backbone.View.extend(
 		this.session.setMode(new CppMode);
 		
 		setTimeout(_.bind(function()
-		{
-			console.log("Settings applied.");
-			
+		{	
 			this.editor.setBehavioursEnabled(false);
 			this.editor.setShowPrintMargin(false);
 			this.editor.setHighlightActiveLine(false);
@@ -59,7 +57,8 @@ var EditorView = Backbone.View.extend(
 		// don't prompt a save if we called setValue
 		// or else we'll end up in an infinite render/save loop
 		if (e.flags && e.flags.renderCall) return;
-
+		
+		mixpanel.track("file: saved");
 		this.file.setContents(this.session.getValue(),
 		function(err)
 		{
@@ -70,6 +69,7 @@ var EditorView = Backbone.View.extend(
 
 	close: function()
 	{
+		mixpanel.track("file: close");
 		this.$el.attr("hidden", "hidden");
 		this.stopListening();
 		this.session.removeListener("change", this.save);

@@ -171,11 +171,6 @@
 					<h3 id="settingsHeader">Settings</h3>
 				</div>
 				<div class="modal-body">
-					<p>
-						<input id="allowTrack" class="allowTrack" type="checkbox"></input>
-						<span for="allowTrack">Allow sending anonymous usage statistics</span>
-						<span class="text-error error"></span>
-					</p>
 				</div>
 				<div class="modal-footer">
 					<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
@@ -204,6 +199,12 @@
 
 	<script type="text/template" id="deviceItemTemplate">
 		<div class="view"><%= productName %>: <%= serialNumber %> (port <%= gdbPort %>)</div>
+	</script>
+	
+	<script type="text/template" id="settingsItemTemplate">
+		<input id="<%= name %>" class="settingCheckbox" type="checkbox" <%= value ? "checked" : "" %>></input>
+		<span for="<%= name %>"><%= text %></span>
+		<span class="text-error error"></span>
 	</script>
 </body>
 </html>

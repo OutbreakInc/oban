@@ -4,7 +4,7 @@ var _ = require("underscore"),
 	SettingsIo = require("../settings-io"),
 	utils = require("../utils");
 
-var Settings = function(callback)
+var Setting = function(callback)
 {
 	this.settingsDir = utils.settingsDir();
 	this.step = new Side(this);
@@ -17,7 +17,7 @@ var Settings = function(callback)
 	this._load(callback);
 }
 
-Settings.prototype._load = function(callback)
+Setting.prototype._load = function(callback)
 {
 	var step = this.step;
 	
@@ -35,18 +35,23 @@ Settings.prototype._load = function(callback)
 				if (err) return callback(err);
 				else if (!attrs) return callback(new Error(Errors.INVALID_PROJECT_JSON));
 
-				_.extend(this._attrs, attrs);
+				_.extend(this._attrs, _.omit(attrs, "firstTimeOpening"));
 				
 				callback(null, this);
 			}.bind(this));
 		}
 		else
 		{
+			this._attrs.firstTimeOpening = true;
+			this._attrs.collection = [];
+			var trackingSetting = {"id": idGen(), "name":"allowTracking", "text":"Allow sending anonymous usage statistics", "value": true};
+			
+			this._attrs.collection.push(trackingSetting);
 			//create file since it doesn't exist
-			this._settingsIo.write("", function(err)
+			this._settingsIo.write(this._attrs, function(err)
 			{
 				callback(null, this);
-			});
+			}.bind(this));
 		}
 	})
 	.error(function(err)
@@ -56,20 +61,20 @@ Settings.prototype._load = function(callback)
 	.exec();
 }
 
-Settings.prototype.setAttrs = function(attrs, callback)
+Setting.prototype.setAttrs = function(attrs, callback)
 {
 	callback = callback || function(){};
 
-	this._attrs = attrs;
+	this._attrs.collection = attrs;
 
 	callback();
 }
 
-Settings.prototype.saveFile = function(callback)
+Setting.prototype.saveFile = function(callback)
 {
 	var step = this.step;
 	console.log("saveFile");
-	this._settingsIo.write(_.omit(this._attrs, "id"), callback);
+	this._settingsIo.write(this._attrs, callback);
 }
 
-module.exports = Settings;
+module.exports = Setting;
