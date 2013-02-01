@@ -38,7 +38,8 @@ var ProjectListItem = Backbone.View.extend(
 	},
 
 	openProject: function()
-	{
+	{	
+		mixpanel.track("project: open");
 		App.vent.trigger("openProject", this.project);
 	}
 });
