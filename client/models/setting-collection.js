@@ -20,11 +20,9 @@ var SettingCollection = Backbone.Collection.extend(
 
 	fetch: function()
 	{
-		console.log("fetch")
 		this.socket.emit("get", function(err, settings)
 		{
 			if (err) return alert(err);
-			console.log("fetch", JSON.stringify(settings.collection))
 			this.reset(settings.collection);
 		}.bind(this));
 	},
