@@ -6,6 +6,7 @@ var Backbone = require("backbone"),
 	EditorView = require("app/views/editor"),
 	DebugView = require("app/views/debug"),
 	DeviceListView = require("app/views/device-list"),
+	ProjectNameView = require("app/views/project-name"),
 	ProgressView = require("app/views/progress"),
 	ErrorListView = require("app/views/error-list"),
 	File = require("app/models/file"),
@@ -37,6 +38,12 @@ var ProjectView = Backbone.View.extend(
 			collection: this.devices
 		});
 
+		this.projectNameView = new ProjectNameView(
+		{
+			model: this.project
+		});
+
+		this.$(".settingsList").append(this.projectNameView.render().el);
 		this.$(".devicesView").append(this.deviceListView.render().el);
 
 		// check if project has any files
@@ -178,6 +185,7 @@ var ProjectView = Backbone.View.extend(
 	{
 		this.editorView.close();
 		this.deviceListView.close();
+		this.projectNameView.remove();
 		this.errorListView.close();
 		this.undelegateEvents();
 		this.stopListening();

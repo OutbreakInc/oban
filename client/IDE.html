@@ -11,6 +11,7 @@
 	<link rel="stylesheet" type="text/css" href="/shared/css/bootstrap.min.css" media="screen"/>
 	<link rel="stylesheet" type="text/css" href="/lib/yui/treeview.css"/>
 	<link rel="stylesheet" type="text/css" href="/shared/css/outbreak.css" media="screen"/>
+	<link rel="stylesheet" type="text/css" href="/shared/css/bootstrap-editable.css" media="screen"/>
 	<link rel="stylesheet" type="text/css" href="/IDE.css" media="screen"/>
 
 	<script src="/lib/platform/require-jquery.js" type="application/javascript" charset="utf-8"></script>
@@ -150,7 +151,8 @@
 						<div class="settingsHeader sidebarHeader">
 							Settings
 						</div>
-						<div class="settingsList"></div>
+						<div class="settingsList">
+						</div>
 					</div>
 					<div class="devicesView">
 						<hr/>
@@ -204,6 +206,12 @@
 
 	<script type="text/template" id="deviceItemTemplate">
 		<div class="view"><%= productName %>: <%= serialNumber %> (port <%= gdbPort %>)</div>
+	</script>
+
+	<script type="text/template" id="projectNameTemplate">
+		<div class="view">
+			Name: <span class="name"><%= name %></span>
+		</div>
 	</script>
 </body>
 </html>

@@ -42,7 +42,8 @@ ProjectController.prototype.callbackTable =
 	"openFile": "onOpenFile",
 	"build": "onBuild",
 	"flash": "onFlash",
-	"debug": "onDebug"
+	"debug": "onDebug",
+	"rename": "onRename"
 }
 
 ProjectController.prototype.findProject = function(socket, callback)
@@ -200,6 +201,13 @@ ProjectController.prototype.onDebug = function(socket, project, callback)
 
 		callback();
 	});
+}
+
+ProjectController.prototype.onRename = function(socket, project, newName, callback)
+{
+	badger.debug("onRename: " + project.name() + " -> " + newName);
+
+	callback();
 }
 
 ProjectController.prototype._isOpenBy = function(project, socket)

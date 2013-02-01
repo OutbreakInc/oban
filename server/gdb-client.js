@@ -8,9 +8,6 @@ var spawn = require("child_process").spawn,
 
 function GdbClient(deviceServer)
 {
-	this.gdb = new Gdb(__dirname + "/../SDK6/bin/arm-none-eabi-gdb");
-	// this.gdb = new Gdb("/usr/local/gdb-7.5/bin/gdb-7.5");
-	this.gdb.setDebugging(true);
 	this.deviceServer = deviceServer;
 }
 
@@ -21,6 +18,9 @@ GdbClient.prototype =
 
 run: function(file, callback)
 {
+	this.gdb = new Gdb(__dirname + "/../SDK6/bin/arm-none-eabi-gdb");
+	this.gdb.setDebugging(true);	
+
 	badger.debug("running gdbclient on port " + this.deviceServer.port);
 
 	if (!this.deviceServer.isStarted)
@@ -32,7 +32,6 @@ run: function(file, callback)
 	this.gdb.run(file, this.deviceServer.port);
 	this.gdb.setDebugging(true);
 	callback();
-	// this.gdb.run("demo.elf");
 },
 
 stop: function()
