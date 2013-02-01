@@ -30,8 +30,7 @@ SettingsIo.prototype.read = function(callback)
 {
 	fs.readFile(this.settingsFilePath, "utf8", function(err, data)
 	{
-		if (err) return callback(err); 
-		console.log("JSON.parse(data)",JSON.parse(data));
+		if (err) return callback(err);
 		callback(null, JSON.parse(data));
 	});
 }

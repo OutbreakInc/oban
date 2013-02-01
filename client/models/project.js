@@ -27,7 +27,6 @@ var ProjectModel = Backbone.Model.extend(
 
 		this.clear({ silent: true });
 		this.set(project);
-
 	},
 
 	open: function(callback)
@@ -62,6 +61,20 @@ var ProjectModel = Backbone.Model.extend(
 
 			this._setIfIdMatches(project);
 			callback(null, project);
+
+		}.bind(this));
+	},
+
+	rename: function(newName, callback)
+	{
+		console.log("rename");
+
+		this.socket.emit("rename", this.id, newName, function(err)
+		{
+			if (err) return callback(err);
+
+			this.set("name", newName);
+			callback();
 
 		}.bind(this));
 	},
