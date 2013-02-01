@@ -32,7 +32,6 @@ var SettingListItem = Backbone.View.extend(
 	{
 		this.$el.html(this.template(this.setting.toJSON()));
 		
-		console.log("render", this.el)
 		return this;
 	}
 });
@@ -43,7 +42,6 @@ var SettingList = Backbone.View.extend(
 
 	initialize: function(options)
 	{
-		console.log("initalize", options.collection)
 		this.settings = options.collection;
 
 		this.listenTo(this.settings, "reset", this.addAll);
@@ -54,13 +52,11 @@ var SettingList = Backbone.View.extend(
 
 	addAll: function()
 	{
-		console.log("addAll")
 		this.settings.each(this.addOne);
 	},
 
 	addOne: function(setting)
 	{
-		console.log("addOne", setting)
 		var view = new SettingListItem({ model: setting });
 	
 		$("#userSettingsModal .modal-body").append(view.render().el);

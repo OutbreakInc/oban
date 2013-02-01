@@ -23,7 +23,6 @@ SettingCollectionController.prototype._init = function()
 
 		socket.on("save", function(attrs, callback)
 		{
-			console.log("attrs", attrs)
 			this.setting.setAttrs(attrs, function(err)
 			{
 				if (err) return callback(err.message);
