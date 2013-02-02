@@ -91,7 +91,7 @@ var Project = function(options, callback)
 	if (fs.existsSync(this._attrs.path) && 
 		fs.existsSync(this._settingsIo.path()))
 	{
-		console.log("restoring project: " + this._attrs.name);
+		console.log("project:restore " + this._attrs.name);
 
 		process.nextTick(function()
 		{

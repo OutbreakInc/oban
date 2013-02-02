@@ -106,7 +106,7 @@ var ProjectView = Backbone.View.extend(
 		{
 			console.log(compileErrors);
 			
-			mixpanel.track("project: build");
+			mixpanel.track("project:build");
 			this.progressView.setSuccess(!err && !compileErrors);
 			this.progressView.setVisible(false);
 			this.progressView.setText(err || compileErrors ? 
@@ -137,7 +137,7 @@ var ProjectView = Backbone.View.extend(
 		// hack
 		this.project.flash(function(err)
 		{
-			mixpanel.track("project: flash");
+			mixpanel.track("project:flash");
 			this.progressView.setSuccess(!err);
 			this.progressView.setVisible(false);
 			this.progressView.setText(err ? 
@@ -165,7 +165,7 @@ var ProjectView = Backbone.View.extend(
 
 		this.debugView.on("debugEnd", function()
 		{
-			mixpanel.track("project: debug");
+			mixpanel.track("project:debug");
 			this.$(".debugView").addClass("hide");
 		}.bind(this));
 	},
