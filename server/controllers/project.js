@@ -207,7 +207,12 @@ ProjectController.prototype.onRename = function(socket, project, newName, callba
 {
 	badger.debug("onRename: " + project.name() + " -> " + newName);
 
-	callback();
+	project.setName(newName, function(err)
+	{
+		if (err) return callback(err);
+
+		callback();
+	});
 }
 
 ProjectController.prototype._isOpenBy = function(project, socket)
