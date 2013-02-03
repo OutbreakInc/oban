@@ -25,7 +25,7 @@ var SettingListItem = Backbone.View.extend(
 	
 	changeSetting: function(ev)
 	{
-		this.setting.set("value", $(ev.currentTarget).prop("checked"), { silent: true });
+		this.setting.set("value", $(ev.currentTarget).prop("checked"));
 	},
 
 	render: function()
@@ -46,7 +46,8 @@ var SettingList = Backbone.View.extend(
 
 		this.listenTo(this.settings, "reset", this.addAll);
 		this.listenTo(this.settings, "add", this.addOne);
-
+		this.listenTo(this.settings, "change", this.syncAll);
+		
 		_.bindAll(this);
 	},
 
@@ -60,6 +61,14 @@ var SettingList = Backbone.View.extend(
 		var view = new SettingListItem({ model: setting });
 	
 		$("#userSettingsModal .modal-body").append(view.render().el);
+	},
+	
+	syncAll: function()
+	{
+		this.settings.sync(function(err)
+		{
+			if (err) return this(err);
+		});
 	}
 });
 

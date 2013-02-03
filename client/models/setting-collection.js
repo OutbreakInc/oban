@@ -27,8 +27,9 @@ var SettingCollection = Backbone.Collection.extend(
 		}.bind(this));
 	},
 
-	save: function(callback)
+	sync: function(callback)
 	{
+		mixpanel.track("settings:save");
 		this.socket.emit("save", this.models, function(err, settings)
 		{
 			if (err) return alert(err);

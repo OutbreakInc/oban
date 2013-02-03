@@ -91,7 +91,7 @@ var Project = function(options, callback)
 	if (fs.existsSync(this._attrs.path) && 
 		fs.existsSync(this._settingsIo.path()))
 	{
-		console.log("restoring project: " + this._attrs.name);
+		console.log("project:restore " + this._attrs.name);
 
 		process.nextTick(function()
 		{
@@ -276,6 +276,7 @@ Project.prototype.addFile = function(name, callback)
 
 Project.prototype.removeFile = function(name, options, callback)
 {
+	console.log("model:remove", name, options)
 	var file = this.findFile(name);
 
 	if (!file) return callback(new Error(Errors.NO_SUCH_FILE));

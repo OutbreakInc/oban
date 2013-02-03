@@ -22,7 +22,8 @@ var ProjectView = Backbone.View.extend(
 	{
 		"click .buildButton": "onBuild",
 		"click .flashButton": "onFlash",
-		"click .debugButton": "onDebug"
+		"click .debugButton": "onDebug",
+		"click .removeButton": "onRemove"
 	},
 
 	initialize: function(options)
@@ -113,7 +114,7 @@ var ProjectView = Backbone.View.extend(
 		{
 			console.log(compileErrors);
 			
-			mixpanel.track("project: build");
+			mixpanel.track("project:build");
 			this.progressView.setSuccess(!err && !compileErrors);
 			this.progressView.setVisible(false);
 			this.progressView.setText(err || compileErrors ? 
@@ -144,7 +145,7 @@ var ProjectView = Backbone.View.extend(
 		// hack
 		this.project.flash(function(err)
 		{
-			mixpanel.track("project: flash");
+			mixpanel.track("project:flash");
 			this.progressView.setSuccess(!err);
 			this.progressView.setVisible(false);
 			this.progressView.setText(err ? 
@@ -152,7 +153,7 @@ var ProjectView = Backbone.View.extend(
 
 			if (err)
 			{
-				mixpanel.track("Flashing failed");
+				mixpanel.track("project:flash failed");
 				return App.error(err);
 			} 
 		}.bind(this));
@@ -172,9 +173,30 @@ var ProjectView = Backbone.View.extend(
 
 		this.debugView.on("debugEnd", function()
 		{
-			mixpanel.track("project: debug");
+			mixpanel.track("project:debug");
 			this.$(".debugView").addClass("hide");
 		}.bind(this));
+	},
+	
+	onRemove: function()
+	{
+		var confirmDialog = confirm("Are you sure you want to remove this project?");
+		if (confirmDialog == true)
+		{
+			App.vent.trigger("closeProject");
+			this.project.destroy(function(err)
+			{
+				if (err)
+				{
+					mixpanel.track("project:remove failed");
+					return App.error(err);
+				}
+			}.bind(this));
+		}
+		else
+		{
+		  return false;
+		}
 	},
 
 	setCompileErrors: function(errors)
