@@ -66,6 +66,20 @@ var ProjectModel = Backbone.Model.extend(
 		}.bind(this));
 	},
 
+	destroy: function()
+	{
+		//fix: disabling the removing of individual files, using only the projectCollection remove for now
+		this.trigger("destroy", this);
+		// this.socket.emit("remove", this.id, function(err, project)
+		// {
+		// 	if (err) return callback(err);
+		// 
+		// 	this._setIfIdMatches(project);
+		// 	callback(null, project);
+		// 
+		// }.bind(this));
+	},
+	
 	openFile: function(fileName, callback)
 	{
 		if (!this._isOpenByMe())

@@ -42,7 +42,8 @@ ProjectController.prototype.callbackTable =
 	"openFile": "onOpenFile",
 	"build": "onBuild",
 	"flash": "onFlash",
-	"debug": "onDebug"
+	"debug": "onDebug",
+	"remove": "onClose"
 }
 
 ProjectController.prototype.findProject = function(socket, callback)
@@ -106,6 +107,7 @@ ProjectController.prototype.onOpen = function(socket, project, callback)
 
 ProjectController.prototype.onClose = function(socket, project, callback)
 {
+	console.log("onClose", project)
 	project.setOpen(socket.id, false, function(err)
 	{
 		if (err) return callback(err.message);
