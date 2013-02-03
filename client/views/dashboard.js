@@ -51,39 +51,7 @@ var Dashboard = Backbone.View.extend(
 	
 	openSettings: function(e)
 	{
-		//hack, not sure how to tie into new templates
-		
-		var dialog = $("#userSettingsModal");
-		var saveBtn = $(".saveBtn");
-	
-		dialog.modal();
-		
-		var enableControls = function(isEnabled)
-		{
-			saveBtn.prop("disabled", !isEnabled);
-		}
-		
-		saveBtn.click(function()
-		{
-			enableControls(false);
-			
-			mixpanel.track("Changed tracking");
-			this.settings.save(function(err)
-			{
-				// if (!this.settings.get("allowTracking"))
-				// 				mixpanel.disable();
-					
-				enableControls(true);
-
-				if (err)
-				{
-					return errorField.html(err);
-				}
-
-				dialog.modal("hide");
-				saveBtn.off();
-			}.bind(this));
-		}.bind(this));
+		$("#userSettingsModal").modal();
 	}
 	
 });

@@ -110,6 +110,22 @@ img.outbreakIDELogo
 	font-size: 16px;
 }
 
+.sidebarFooter
+{
+	padding: 5px 0px 5px 0px;
+	background-color: #2c2c2c;
+	color: #f0f0f0;
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+}
+
+.removeButton
+{
+	margin-right: 10px;
+	float:right;
+}
+
 .hiddenView
 {
 	display: none;

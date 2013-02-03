@@ -37,14 +37,20 @@ var ProjectCollection = Backbone.Collection.extend(
 		this.socket.emit("list", function(err, projects)
 		{
 			this.reset(projects);
-
 		}.bind(this));
 	},
-
+	
+	remove: function(project)
+	{
+		this.socket.emit("remove", project.get("id"), function(err, projects)
+		{
+			this.reset(projects);
+		}.bind(this));
+	},
+	
 	_bindEvents: function()
 	{
 		this.socket.on("add", this.add);
-		this.socket.on("remove", this.remove);
 	}
 });
 

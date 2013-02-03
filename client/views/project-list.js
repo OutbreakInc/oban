@@ -39,7 +39,7 @@ var ProjectListItem = Backbone.View.extend(
 
 	openProject: function()
 	{	
-		mixpanel.track("project: open");
+		mixpanel.track("project:open");
 		App.vent.trigger("openProject", this.project);
 	}
 });
@@ -54,12 +54,14 @@ var ProjectList = Backbone.View.extend(
 
 		this.listenTo(this.projects, "reset", this.addAll);
 		this.listenTo(this.projects, "add", this.addOne);
+		this.listenTo(this.projects, "remove", this.onRemove);
 
 		_.bindAll(this);
 	},
 
 	addAll: function()
 	{
+		this.$el.empty();
 		this.projects.each(this.addOne);
 	},
 
@@ -68,6 +70,11 @@ var ProjectList = Backbone.View.extend(
 		var view = new ProjectListItem({ model: project });
 
 		this.$el.append(view.render().el);
+	},
+
+	onRemove: function(project)
+	{	
+		this.projects.remove(project);
 	}
 });
 
