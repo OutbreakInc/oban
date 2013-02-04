@@ -1,3 +1,0 @@
-[submodule "client/shared"]
-	path = client/shared
-	url = git@outbreak.co:shared
