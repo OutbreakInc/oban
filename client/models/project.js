@@ -81,7 +81,7 @@ var ProjectModel = Backbone.Model.extend(
 
 	destroy: function()
 	{
-		//fix: disabling the removing of individual files, using only the projectCollection remove for now
+		//todo: disabling the removing of individual files, using only the projectCollection remove for now
 		this.trigger("destroy", this);
 		// this.socket.emit("remove", this.id, function(err, project)
 		// {

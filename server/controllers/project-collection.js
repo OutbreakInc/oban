@@ -34,7 +34,7 @@ ProjectCollectionController.prototype._init = function()
 			this.projects.removeProject(id, function(err)
 			{
 				if (err) return callback(err.message);
-				console.log("this.projects)",this.projects);
+				
 				socket.broadcast.emit("remove", this.projects);
 				callback(null, this.projects);
 

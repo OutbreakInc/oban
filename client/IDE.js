@@ -15,6 +15,22 @@ var $ = require("jquery"),
 require("bootstrap");
 require("backbone.marionette");
 
+$.fn.highlight = function() {
+   $(this).each(function() {
+        var el = $(this);
+        el.before("<div/>")
+        el.prev()
+            .width(el.width())
+            .height(el.height())
+            .css({
+                "position": "absolute",
+                "background-color": "yellow",
+                "opacity": ".9"   
+            })
+            .fadeOut(700);
+    });
+}
+
 App.addInitializer(function(options)
 {
 	this.vent.on("openProject", function(project)

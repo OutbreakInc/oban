@@ -102,8 +102,13 @@ var ProjectView = Backbone.View.extend(
 
 		}.bind(this));
 	},
-
+	
 	onBuild: function()
+	{
+		this.goBuild(function(){});
+	},
+
+	goBuild: function(callback)
 	{
 		this.setCompileErrors([]);
 
@@ -119,7 +124,9 @@ var ProjectView = Backbone.View.extend(
 			this.progressView.setVisible(false);
 			this.progressView.setText(err || compileErrors ? 
 				"Build failed" : "Build succeeded");
-
+			
+			this.editorView.clearDirty();
+			
 			if (err)
 			{
 				mixpanel.track("Build failed");
@@ -134,48 +141,97 @@ var ProjectView = Backbone.View.extend(
 				// 				{
 				// 				}.bind(this));
 			}
+			callback();
 		}.bind(this));
 	},
 
 	onFlash: function()
 	{
-		this.progressView.setVisible(true);
-		this.progressView.setText("Flashing device...");
-
-		// hack
-		this.project.flash(function(err)
+		if(this.editorView.isDirty())
 		{
-			mixpanel.track("project:flash");
-			this.progressView.setSuccess(!err);
-			this.progressView.setVisible(false);
-			this.progressView.setText(err ? 
-				"Error flashing" : "Flashing succeeded");
-
-			if (err)
+			this.goBuild(function()
 			{
-				mixpanel.track("project:flash failed");
-				return App.error(err);
-			} 
-		}.bind(this));
+				this.goFlash(function(){});
+			}.bind(this));
+		}
+		else
+		{
+			this.goDebug(function(){});
+		}
+	},
+	
+	goFlash: function(callback)
+	{
+		if(!this.errors.length > 0)
+		{
+			this.progressView.setVisible(true);
+			this.progressView.setText("Flashing device...");
+
+			// hack
+			this.project.flash(function(err)
+			{
+				mixpanel.track("project:flash");
+				this.progressView.setSuccess(!err);
+				this.progressView.setVisible(false);
+				this.progressView.setText(err ? 
+					"Error flashing" : "Flashing succeeded");
+
+				if (err)
+				{
+					mixpanel.track("project:flash failed");
+					return App.error(err);
+				} 
+				callback();
+			}.bind(this));
+		}
+		else
+		{
+			$(".errorList").highlight();
+		}
 	},
 
 	onDebug: function()
 	{
-		// if flash succeeded, switch to debug view
-		this.debugView = new DebugView(
+		if(this.editorView.isDirty())
 		{
-			model: this.project,
-			editor: this.editorView.editor,
-			el: ".debugView"
-		});
-
-		this.$(".debugView").removeClass("hide");
-
-		this.debugView.on("debugEnd", function()
+			this.goBuild(function()
+			{
+				this.goFlash(function()
+				{
+					this.goDebug();
+				}.bind(this));
+			}.bind(this));
+		}
+		else
 		{
-			mixpanel.track("project:debug");
-			this.$(".debugView").addClass("hide");
-		}.bind(this));
+			this.goDebug();
+		}
+	},
+	
+	goDebug: function()
+	{
+		if(!this.errors.length > 0)
+		{
+			// if flash succeeded, switch to debug view
+			this.debugView = new DebugView(
+			{
+				model: this.project,
+				editor: this.editorView.editor,
+				el: ".debugView"
+			});
+
+			this.$(".debugView").removeClass("hide");
+
+			this.debugView.on("debugEnd", function()
+			{
+				mixpanel.track("project:debug");
+				this.$(".debugView").addClass("hide");
+			}.bind(this));
+		}
+		else
+		{
+			$(".errorList").highlight();
+		}
 	},
 	
 	onRemove: function()
@@ -191,6 +247,7 @@ var ProjectView = Backbone.View.extend(
 					mixpanel.track("project:remove failed");
 					return App.error(err);
 				}
+				mixpanel.track("project:removed");
 			}.bind(this));
 		}
 		else
