@@ -23,6 +23,7 @@ var FileModel = Backbone.Model.extend(
 			if (err) return callback(err);
 
 			this.set("contents", contents, { silent: true });
+			this.set("dirty", true, { silent: true });
 			callback();
 
 		}.bind(this));

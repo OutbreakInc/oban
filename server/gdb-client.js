@@ -18,11 +18,18 @@ GdbClient.prototype =
 
 run: function(file, callback)
 {
+	var self = this;
+	
 	this.gdb = new Gdb(__dirname + "/../SDK6/bin/arm-none-eabi-gdb");
 	this.gdb.setDebugging(true);	
 
 	badger.debug("running gdbclient on port " + this.deviceServer.port);
 
+	this.events.forEach(function(event)
+	{
+		self.gdb.on(event.name, event.callback);
+	});
+	
 	if (!this.deviceServer.isStarted)
 	{
 		console.log("Device server not started, can't connect to GDB");
@@ -30,7 +37,6 @@ run: function(file, callback)
 	}
 
 	this.gdb.run(file, this.deviceServer.port);
-	this.gdb.setDebugging(true);
 	callback();
 },
 
@@ -83,11 +89,6 @@ attachClient: function(client)
 	client.on("disconnect", function()
 	{
 		self._onExit(client);
-	});
-
-	this.events.forEach(function(event)
-	{
-		self.gdb.on(event.name, event.callback);
 	});
 },
 

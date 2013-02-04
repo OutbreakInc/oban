@@ -27,6 +27,7 @@ var EditorView = Backbone.View.extend(
 
 		this.session = this.editor.getSession();
 		this.session.setMode(new CppMode);
+		this.dirty = true;
 		
 		setTimeout(_.bind(function()
 		{	
@@ -59,6 +60,7 @@ var EditorView = Backbone.View.extend(
 		if (e.flags && e.flags.renderCall) return;
 		
 		mixpanel.track("file: saved");
+		this.dirty = true;
 		this.file.setContents(this.session.getValue(),
 		function(err)
 		{
@@ -94,6 +96,16 @@ var EditorView = Backbone.View.extend(
 			this.session.removeMarker(this.highlightedError);
 			delete this.highlightedError;
 		}
+	},
+	
+	isDirty: function()
+	{
+		return this.dirty;
+	},
+
+	clearDirty: function()
+	{
+		this.dirty = false;
 	}
 });
 
