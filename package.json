@@ -11,7 +11,7 @@
 		"express": "2.5.x",
 		"underscore": "1.4.3",
 		"amdefine": "0.0.4",
-		"sidestep": "git://github.com/exhaze/sidestep.git#master",
+		"sidestep": "0.1.1",
 		"async": "0.1.22",
 		"shelljs": "0.1.x",
 		"badger": "~0.0.2"
