@@ -125,8 +125,6 @@ var ProjectView = Backbone.View.extend(
 			this.progressView.setText(err || compileErrors ? 
 				"Build failed" : "Build succeeded");
 			
-			this.editorView.clearDirty();
-			
 			if (err)
 			{
 				mixpanel.track("Build failed");
@@ -141,6 +139,11 @@ var ProjectView = Backbone.View.extend(
 				// 				{
 				// 				}.bind(this));
 			}
+			else
+			{
+				this.editorView.clearDirty();
+			}
+			
 			callback();
 		}.bind(this));
 	},
@@ -156,7 +159,7 @@ var ProjectView = Backbone.View.extend(
 		}
 		else
 		{
-			this.goDebug(function(){});
+			this.goFlash(function(){});
 		}
 	},
 	
