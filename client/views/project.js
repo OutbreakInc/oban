@@ -105,28 +105,19 @@ var ProjectView = Backbone.View.extend(
 	
 	onBuild: function()
 	{
-		this.goBuild(function(){});
+		this.goBuild(function(){}, function(){});
 	},
 
-	goBuild: function(callback)
+	goBuild: function(updateUI, callback)
 	{
 		this.setCompileErrors([]);
-
-		this.progressView.setVisible(true);
+		
+		this.editorView.clearError();
 		this.progressView.setText("Building project...");
-
+		this.progressView.setVisible(true, function(){});
+		
 		this.project.build(function(err, compileErrors)
-		{
-			console.log(compileErrors);
-			
-			mixpanel.track("project:build");
-			this.progressView.setSuccess(!err && !compileErrors);
-			this.progressView.setVisible(false);
-			this.progressView.setText(err || compileErrors ? 
-				"Build failed" : "Build succeeded");
-			
-			this.editorView.clearDirty();
-			
+		{	
 			if (err)
 			{
 				mixpanel.track("Build failed");
@@ -135,28 +126,45 @@ var ProjectView = Backbone.View.extend(
 			else if (compileErrors)
 			{
 				console.log(JSON.stringify(compileErrors))
-				
+
 					this.setCompileErrors(compileErrors);
 				// mixpanel.track("Compile failed" + JSON.stringify(compileErrors), JSON.stringify(compileErrors), function()
 				// 				{
 				// 				}.bind(this));
 			}
-			callback();
+
+			mixpanel.track("project:build");
+			this.editorView.clearDirty();
+			this.progressView.setSuccess(!err && !compileErrors);
+			this.progressView.setText(err || compileErrors ? 
+				"Build failed" : "Build succeeded");
+			this.progressView.setVisible(false, updateUI);
+			callback();			
 		}.bind(this));
 	},
 
 	onFlash: function()
 	{
+		//isDirty checks if the editor has changed, and thus needs to be rebuilt before flashing
 		if(this.editorView.isDirty())
 		{
+			//todo: a bit of a hack to wait for the "build succeeded" progressview to fade away before changing the text
+			//to "flashing device"
 			this.goBuild(function()
 			{
-				this.goFlash(function(){});
+				this.progressView.setText("Flashing device...");
+				this.progressView.setVisible(true, function(){});
+			}.bind(this),function()
+			{
+				this.goFlash(function(){},function(){});
 			}.bind(this));
 		}
 		else
 		{
-			this.goDebug(function(){});
+			this.progressView.setText("Flashing device...");
+			this.progressView.setVisible(true, function(){});
+			
+			this.goFlash(function(){});
 		}
 	},
 	
@@ -164,24 +172,22 @@ var ProjectView = Backbone.View.extend(
 	{
 		if(!this.errors.length > 0)
 		{
-			this.progressView.setVisible(true);
-			this.progressView.setText("Flashing device...");
-
 			// hack
 			this.project.flash(function(err)
 			{
-				mixpanel.track("project:flash");
-				this.progressView.setSuccess(!err);
-				this.progressView.setVisible(false);
-				this.progressView.setText(err ? 
-					"Error flashing" : "Flashing succeeded");
-
 				if (err)
 				{
 					mixpanel.track("project:flash failed");
 					return App.error(err);
-				} 
-				callback();
+				}
+
+				mixpanel.track("project:flash");
+				this.progressView.setSuccess(!err);
+				
+				this.progressView.setText(err ? 
+					"Error flashing" : "Flashing succeeded");
+				this.progressView.setVisible(false, callback);
+
 			}.bind(this));
 		}
 		else
@@ -192,9 +198,14 @@ var ProjectView = Backbone.View.extend(
 
 	onDebug: function()
 	{
+		//isDirty checks if the editor has changed, and thus needs to be rebuilt and reflashed before debugging
 		if(this.editorView.isDirty())
 		{
 			this.goBuild(function()
+			{
+				this.progressView.setText("Flashing device...");
+				this.progressView.setVisible(true, function(){});
+			}.bind(this),function()
 			{
 				this.goFlash(function()
 				{
