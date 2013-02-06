@@ -4,7 +4,6 @@
 var badger = require("badger")(__filename),
 	fs = require("fs"),
 	utils = require("./utils"),
-	toolchain = require("./toolchain"),
 	ProjectCollection = require("./models/project-collection"),
 	DeviceCollection = require("./models/device-collection"),
 	SettingCollection = require("./models/setting-collection"),
