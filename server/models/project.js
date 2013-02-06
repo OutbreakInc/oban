@@ -9,7 +9,7 @@ var _ = require("underscore"),
 	idGen = require("../id-gen"),
 	File = require("./file"),
 	utils = require("../utils"),
-	Compiler = require("../../ARMToolchainTest/toolchain").Compiler;
+	Compiler = require("../toolchain").Compiler;
 
 var DEFAULT_FILE_NAME = "main.cpp";
 
