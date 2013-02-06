@@ -1,1 +1,0 @@
-PATH=../SDK6/bin arm-none-eabi-g++ -DPART=lpc1343 -T Galago.x -g -Os -nostdlib -nodefaultlibs --function-sections -fno-exceptions -Wl,--gc-sections -o BasicBlinkTest.elf LPC13xx.S GalagoAPI.cpp BasicBlink.cpp
