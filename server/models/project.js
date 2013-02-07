@@ -544,7 +544,7 @@ Project.prototype.toJSON = function()
 
 Project.prototype.toFile = function()
 {
-	var json = _.omit(this._attrs, [ "path", "buildStatus", "runStatus", "binary" ]);
+	var json = _.omit(this._attrs, [ "path", "buildStatus", "runStatus", "binary", "isOpenBy" ]);
 
 	var files = [];
 
