@@ -10,7 +10,7 @@ var spawn = require("child_process").spawn,
 	_ = require("underscore"),
 	utils = require("./utils");
 
-var PYTHON_SCRIPT = utils.scriptsDir() + "/gdb.py";
+var PYTHON_SCRIPT = __dirname + "/gdb/gdb.py";
 var PYTHON_HOST = "127.0.0.1";
 
 function Gdb(binary)

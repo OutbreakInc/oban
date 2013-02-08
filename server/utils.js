@@ -44,19 +44,19 @@ projectsDirForPort: function(port)
 	return module.exports.documentsDir() + "/outbreak-ide-server/" + port;
 },
 
-scriptsDir: function()
-{
-	return __dirname + "/../SDK/scripts";
-},
-
 sdkDir: function()
 {
-	return __dirname + "/../SDK6/";
+	return __dirname + "/../../ardbeg/SDK/";
+},
+
+gdbServerDir: function()
+{
+	return __dirname + "/../../ardbeg/gdbServer/";
 },
 
 platformDir: function()
 {
-	return __dirname + "/../Platform/";
+	return __dirname + "/../../ardbeg/Platform/";
 }
 
 }

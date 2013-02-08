@@ -9,7 +9,8 @@ var spawn = require("child_process").spawn,
 	net = require("net"),
 	badger = require("badger")(__filename);
 	_ = require("underscore"),
-	JsonStreamer = require("./json-streamer");
+	JsonStreamer = require("./json-streamer"),
+	utils = require("./utils");
 
 var Errors =
 {
@@ -20,7 +21,7 @@ function DeviceServer()
 {
 	EventEmitter.call(this);
 
-	this.binary = __dirname + "/../gdbServer/GalagoServer";
+	this.binary = utils.gdbServerDir() + "GalagoServer";
 
 	badger.debug("setting device server binary:");
 	badger.debug(this.binary);
