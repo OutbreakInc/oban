@@ -26,10 +26,13 @@ run: function(file, callback)
 
 	badger.debug("running gdbclient on port " + this.deviceServer.port);
 
-	this.events.forEach(function(event)
+	if (this.events)
 	{
-		self.gdb.on(event.name, event.callback);
-	});
+		this.events.forEach(function(event)
+		{
+			self.gdb.on(event.name, event.callback);
+		});
+	}
 	
 	if (!this.deviceServer.isStarted)
 	{
@@ -39,6 +42,22 @@ run: function(file, callback)
 
 	this.gdb.run(file, this.deviceServer.port);
 	callback();
+},
+
+// just used to resume a paused galago, does no actual debugging
+resume: function(callback)
+{
+	badger.debug("resuming program");
+
+	this.gdb = new Gdb(utils.sdkDir() + "/bin/arm-none-eabi-gdb");
+
+	this.gdb.unpause(this.deviceServer.port,
+	function()
+	{
+		this.gdb.kill();
+		callback();
+
+	}.bind(this));
 },
 
 stop: function()

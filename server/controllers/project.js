@@ -184,10 +184,19 @@ ProjectController.prototype.onFlash = function(socket, project, serialNumber, ca
 	this.devices.flash(serialNumber, project.path() + project.binary(),
 	function(err)
 	{
-		if (err) return callback("Flash failed!");
+		if (err) return callback(err);
 
-		callback();
-	});
+		// after flash is done, start GDB just to resume the device
+		this.gdbClient.resume(
+		function(err)
+		{
+			if (err) return callback(err);
+
+			callback();
+
+		}.bind(this));
+
+	}.bind(this));
 }
 
 ProjectController.prototype.onDebug = function(socket, project, callback)

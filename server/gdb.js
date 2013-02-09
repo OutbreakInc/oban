@@ -51,6 +51,34 @@ Gdb.prototype.setDebugging = function(isEnabled)
 	this.isDebugging = isEnabled;
 };
 
+Gdb.prototype._init = function(port)
+{
+	this.process = spawn(this.binary);
+
+	// so GDB doesn't prompt us when we delete all breakpoints
+	this.rawCommand("set confirm off");
+	this.rawCommand("target remote localhost:" + port);
+
+	this.isStopped = false;
+
+	// if we don't set encoding, data will be given to us as Buffer objects
+	this.process.stdout.setEncoding("utf8");
+	this.process.stderr.setEncoding("utf8");	
+}
+
+Gdb.prototype.unpause = function(port, callback)
+{
+	this._init(port);
+	this._resume();
+
+	// hack, make it actually correctly find out when we are running
+	setTimeout(function()
+	{
+		callback();
+
+	}.bind(this), 1000);
+}
+
 // start gdb process and connect to our local gdb server
 Gdb.prototype.run = function(symbolFile, port)
 {
@@ -60,26 +88,12 @@ Gdb.prototype.run = function(symbolFile, port)
 	console.assert( _.isNumber(port) && port > 0,
 					"Must specify valid device server port: " + port);
 
-	this.process = spawn(this.binary, [], {cwd: path.dirname(symbolFile)});
-
-	// so GDB doesn't prompt us when we delete all breakpoints
-	this.rawCommand("set confirm off");
+	this._init(port);
 
 	this.rawCommand("source " + PYTHON_SCRIPT);
 	this.rawCommand("file " + symbolFile);
-	// this.rawCommand("b 20");
-	// this.rawCommand("run");
-	this.rawCommand("target remote localhost:" + port);
-
-	this.isStopped = false;
 
 	var gdb = this;
-
-	// setTimeout(function() { gdb.setBreakpoint(15); gdb.resume() }, 3000);
-
-	// if we don't set encoding, data will be given to us as Buffer objects
-	this.process.stdout.setEncoding("utf8");
-	this.process.stderr.setEncoding("utf8");
 
 	this.process.stderr.on("data", function(err)
 	{
@@ -166,6 +180,18 @@ Gdb.prototype.queueAction = function(action)
 	}
 }
 
+Gdb.prototype.kill = function()
+{
+	if (this.process)
+	{
+		this.process.kill("SIGTERM");
+	}
+	else
+	{
+		badger.warning("tried to kill gdb process when it wasn't running");
+	}
+}
+
 Gdb.prototype.exit = function()
 {
 	if (this.process)
@@ -176,6 +202,10 @@ Gdb.prototype.exit = function()
 		this.process.stdin.end();
 		delete this.process;
 	}
+	else
+	{
+		badger.warning("tried to kill gdb process when it wasn't running");
+	}	
 }
 
 Gdb.prototype.getGlobalVariables = function()
@@ -238,7 +268,10 @@ Gdb.prototype._bindEvents = function()
 
 Gdb.prototype._unbindEvents = function()
 {
-	this.socket.removeListener("data", this._processData);
+	if (this.socket)
+	{
+		this.socket.removeListener("data", this._processData);
+	}
 }
 
 Gdb.prototype._processData = function(data)
