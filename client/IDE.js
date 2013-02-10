@@ -8,6 +8,7 @@ var $ = require("jquery"),
 	SettingCollection = require("app/models/setting-collection"),
 	Dashboard = require("app/views/dashboard"),
 	WelcomeView = require("app/views/welcome"),
+	RestartView = require("app/views/restart"),
 	ProjectView = require("app/views/project"),
 	ErrorListView = require("app/views/error-list"),
 	App = require("app/app");
@@ -120,8 +121,19 @@ App.addInitializer(function(options)
 	{
 		collection: App.Collections.projects
 	});
+
+	App.Views.restartView = new RestartView();
 });
 
+App.addInitializer(function()
+{
+	var socket = io.connect("http://localhost:8000");
+
+	socket.on("disconnect", function()
+	{
+		App.Views.restartView.render();
+	});
+});
 
 App.error = function(message, line)
 {
