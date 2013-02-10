@@ -61,7 +61,6 @@ var NewProjectView = Backbone.View.extend(
 	onCreate: function()
 	{
 		this.enableControls(false);
-		console.log("WAR");
 
 		var name = this.$(".projectName").val();
 		
