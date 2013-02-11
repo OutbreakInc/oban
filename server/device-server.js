@@ -114,6 +114,7 @@ DeviceServer.prototype.run = function()
 		catch(e)
 		{
 			badger.error("Couldn't parse TCP port JSON:");
+			badger.error(e);
 			return this.emit("error", Errors.STARTUP_ERROR);
 		}
 

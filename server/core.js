@@ -12,6 +12,7 @@ var badger = require("badger")(__filename),
 	FileController = require("./controllers/file"),
 	SettingController = require("./controllers/setting-collection"),
 	DeviceCollectionController = require("./controllers/device-collection"),
+	DeviceController = require("./controllers/device"),
 	GdbClient = require("./gdb-client"),
 	socketIo = require("socket.io"),
 	Side = require("sidestep");
@@ -70,6 +71,7 @@ init: function()
 		var fileController = new FileController(projects, sockets);
 		var settingController = new SettingController(settings, sockets);
 		var dcController = new DeviceCollectionController(devices, sockets);
+		var deviceController = new DeviceController(devices, sockets);
 
 		step.next();
 	})

@@ -73,6 +73,46 @@ var ProjectView = Backbone.View.extend(
 		this.errorListView.on("error:click", this.onErrorClick);
 
 		$(".errorsView").append(this.errorListView.render().el);
+
+		this.listenTo(this.devices, "reset", this.pairProjectWithDevice);
+		this.listenTo(this.devices, "add", this.pairProjectWithDevice);
+
+		this.updateButtons();
+	},
+
+	// look for the first unused device and open it for the current project
+	pairProjectWithDevice: function()
+	{
+		// if we're already paired with device, do nothing
+		if (this.openDevice) return;
+
+		// find first unused device
+		var unusedDevice = this.devices.find(function(device)
+		{
+			return !(device.get("isOpenBy"));
+		});
+
+		// couldn't find an unused device, give up
+		if (!unusedDevice) return;
+
+		// assign this device to this client
+		unusedDevice.open(function(err, device)
+		{
+			if (err) return alert(err);
+
+			this.openDevice = device;
+			this.listenTo(this.openDevice, "destroy", this.onProjectDeviceRemoved);
+
+			this.updateButtons();
+
+		}.bind(this));
+	},
+
+	onProjectDeviceRemoved: function()
+	{
+		this.stopListening(this.openDevice);
+		delete this.openDevice;
+		this.updateButtons();
 	},
 
 	onErrorClick: function(view, model)
@@ -82,6 +122,17 @@ var ProjectView = Backbone.View.extend(
 		this.editorView.highlightError(line);
 	},
 
+	// enable/disable flash and debug buttons based on if we have a device open
+	updateButtons: function()
+	{
+		var haveDevice = !!(this.openDevice);
+
+		this.$(".flashButton").setEnabled(haveDevice);
+		this.$(".debugButton").setEnabled(haveDevice);
+	},
+
+	// open the given file, set it as the active file, 
+	// and create an editor view for it
 	openFile: function(fileName)
 	{
 		this.project.openFile(fileName, function(err, file)

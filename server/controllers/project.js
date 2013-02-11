@@ -65,7 +65,6 @@ ProjectController.prototype.findProject = function(socket, callback)
 
 		callback.apply(this, arguments);
 
-
 	}.bind(this);
 }
 

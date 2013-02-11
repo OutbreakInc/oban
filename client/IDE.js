@@ -32,6 +32,18 @@ $.fn.highlight = function() {
     });
 }
 
+$.fn.setEnabled = function(isEnabled)
+{
+	if (isEnabled) 
+	{
+		$(this).removeAttr("disabled");
+	}
+	else
+	{
+		$(this).attr("disabled", "disabled");
+	}
+}
+
 App.addInitializer(function(options)
 {
 	this.vent.on("openProject", function(project)
