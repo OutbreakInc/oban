@@ -208,30 +208,14 @@ Gdb.prototype.queueAction = function(action)
 	}
 }
 
-Gdb.prototype.kill = function()
-{
-	badger.debug("gdb kill issued");
-
-	if (this.process)
-	{
-		this.process.kill("SIGTERM");
-	}
-	else
-	{
-		badger.warning("tried to kill gdb process when it wasn't running");
-	}
-}
-
 Gdb.prototype.exit = function()
 {
 	badger.debug("gdb exit issued");
 
 	if (this.process)
 	{
-		this._pause();
-		this.rawCommand("quit");
 		this._unbindEvents();
-		this.process.stdin.end();
+		this.process.kill("SIGTERM");
 		delete this.process;
 	}
 	else

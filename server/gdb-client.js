@@ -54,7 +54,7 @@ resume: function(callback)
 	this.gdb.unpause(this.deviceServer.port,
 	function()
 	{
-		this.gdb.kill();
+		this.gdb.exit();
 		callback();
 
 	}.bind(this));
