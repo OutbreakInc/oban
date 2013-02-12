@@ -37,7 +37,7 @@ var DeviceModel = Backbone.Model.extend(
 			return callback("Device is open by someone else");
 		}
 
-		this.socket.emit("close", this.id, function(err, device)
+		this.socket.emit("close", this.get("serialNumber"), function(err, device)
 		{
 			if (err) return callback(err);
 

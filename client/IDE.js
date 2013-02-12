@@ -101,10 +101,14 @@ App.addInitializer(function(options)
 			this.vent.trigger("closeProjectSuccess");
 			delete this.activeProject;
 
-			this.activeProjectView.close();
-			delete this.activeProjectView;
+			this.activeProjectView.close(function(err)
+			{
+				delete this.activeProjectView;
+				App.Views.welcomeView.setVisible(true);
 
-			App.Views.welcomeView.setVisible(true);
+				if (err) App.error("Close project view error: " + err);
+
+			}.bind(this));
 
 		}.bind(this));
 

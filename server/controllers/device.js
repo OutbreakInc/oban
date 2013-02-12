@@ -31,9 +31,9 @@ DeviceController.prototype._init = function()
 	{
 		badger.debug("got a socket connection");
 
-		_.forEach(this.events, function(callback, event)
+		_.forEach(this.events, function(handler, event)
 		{
-			socket.on(event, this.findDevice(socket, this[callback]));
+			socket.on(event, this.findDevice(socket, this[handler]));
 
 		}, this);
 
@@ -43,11 +43,13 @@ DeviceController.prototype._init = function()
 	this._socketOpenDevices = {};
 }
 
-DeviceController.prototype.findDevice = function(socket, callback)
+DeviceController.prototype.findDevice = function(socket, handler)
 {
 	return function()
 	{
 		arguments = Array.prototype.slice.call(arguments);
+
+		var callback = arguments[arguments.length - 1];
 
 		var device = this.devices.findBySerial(arguments[0]);
 
@@ -59,7 +61,7 @@ DeviceController.prototype.findDevice = function(socket, callback)
 		// add socket as first argument
 		arguments.unshift(socket);
 
-		callback.apply(this, arguments);
+		handler.apply(this, arguments);
 
 	}.bind(this);
 }
@@ -117,7 +119,7 @@ DeviceController.prototype.onOpen = function(socket, device, callback)
 
 DeviceController.prototype.onClose = function(socket, device, callback)
 {
-	badger.debug("onClose: " + device.id());
+	badger.debug("onClose: " + device.serialNumber());
 	device.close();
 
 	callback(null, device);
@@ -125,12 +127,12 @@ DeviceController.prototype.onClose = function(socket, device, callback)
 
 	delete this._socketOpenDevices[socket.id];
 
-	var id = device.id();
+	var serial = device.serialNumber();
 
-	if (this._disconnectListeners[id])
+	if (this._disconnectListeners[serial])
 	{
 		badger.debug("removing disconnect listener since device is closed");
-		socket.removeListener("disconnect", this._disconnectListeners[id]);
+		socket.removeListener("disconnect", this._disconnectListeners[serial]);
 	}
 }
 

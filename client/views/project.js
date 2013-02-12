@@ -321,15 +321,37 @@ var ProjectView = Backbone.View.extend(
 		this.errors.reset(errors);
 	},
 
-	close: function()
+	close: function(callback)
 	{
-		mixpanel.track("project: close");
+		mixpanel.track("project:close");
+
+		if (!this.openDevice)
+		{
+			this._cleanUp();
+			callback();
+		}
+		else
+		{
+			this.openDevice.close(function(err)
+			{
+				// clean up the rest of the views/events even if we have an error
+				this._cleanUp();
+
+				if (err) callback(err);
+				else callback();
+				
+			}.bind(this));
+		}
+	},
+
+	_cleanUp: function()
+	{
 		this.editorView.close();
 		this.deviceListView.close();
 		this.projectNameView.remove();
 		this.errorListView.close();
 		this.undelegateEvents();
-		this.stopListening();
+		this.stopListening();		
 	}
 });
 

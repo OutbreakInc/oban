@@ -49,6 +49,8 @@ function DeviceCollection(options, callback)
 
 util.inherits(DeviceCollection, EventEmitter);
 
+DeviceCollection.Errors = Errors;
+
 DeviceCollection.prototype._reset = function(devices)
 {
 	if (!this._statusRequested) return;

@@ -107,7 +107,6 @@ ProjectController.prototype.onOpen = function(socket, project, callback)
 
 ProjectController.prototype.onClose = function(socket, project, callback)
 {
-	console.log("onClose", project)
 	project.setOpen(socket.id, false, function(err)
 	{
 		if (err) return callback(err.message);
