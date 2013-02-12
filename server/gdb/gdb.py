@@ -38,11 +38,16 @@ def continue_handler(event):
 def parse_block(block, frame):
 	symbols = []
 
-	for symbol in block:
-		symbols.append({ 
-			"name": symbol.name, 
-			"type": str(symbol.type),
-			"value": str(symbol.value(frame)) })
+	# iterate thru all the blocks up to the function boundary
+	# and aggregate all the variables
+	while block.function == None:
+		for symbol in block:
+			symbols.append({ 
+				"name": symbol.name, 
+				"type": str(symbol.type),
+				"value": str(symbol.value(frame)) })
+			
+		block = block.superblock
 
 	return symbols
 
