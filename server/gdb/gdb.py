@@ -41,15 +41,47 @@ def parse_block(block, frame):
 	# iterate thru all the blocks up to the function boundary
 	# and aggregate all the variables
 	while block.function == None:
-		for symbol in block:
-			symbols.append({ 
-				"name": symbol.name, 
-				"type": str(symbol.type),
-				"value": str(symbol.value(frame)) })
-			
+		symbols += symbols_from_block(block, frame)
 		block = block.superblock
 
+	# get the symbols that are in the function's arguments block
+	symbols += symbols_from_block(block, frame)
+
 	return symbols
+
+def symbols_from_block(block, frame):
+	symbols = []
+	for symbol in block:
+	 	symbols.append(parse_symbol(symbol, frame))
+
+	return symbols
+
+def parse_symbol(symbol, frame):
+	symName = symbol.name
+	symType = symbol.type
+	value = []
+
+	# resolve to target type, if necessary
+	if symType.code == gdb.TYPE_CODE_REF or symType.code == gdb.TYPE_CODE_PTR:
+		symType = symType.target()
+
+	# for structs, enumerate all of their fields
+	if symType.code == gdb.TYPE_CODE_STRUCT:
+		fields = symType.fields()
+		for field in fields:
+			value.append(parse_field(field, symbol, frame))
+	# for all other types, just record their value
+	else:
+		value = str(symbol.value(frame))
+
+	return { "name": symbol.name, "type": str(symbol.type), "value": value }
+
+def parse_field(field, symbol, frame):
+	return { 
+		"name": field.name, 
+		"type": str(field.type),
+		"value": str(symbol.value(frame)[field.name])
+	}
 
 def parse_bt(frame):
 	frameNames = []

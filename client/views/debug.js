@@ -185,19 +185,35 @@ var DebugView = Backbone.View.extend(
 
 	onVariables: function(variables)
 	{
+		// clear the tree of existing variables
 		var root = this.tree.getRoot();
 		this.tree.removeChildren(root);
 
-		for (var i = 0; i < variables.length; ++i)
+		_.forEach(variables, function(variable)
 		{
-			var variable = variables[i];
+			var node = new YAHOO.widget.TextNode(
+					this._printVar(variable), root);
 
-			var node = new YAHOO.widget.TextNode({ 
-				label: variable.name + ": " + variable.value + " ("+variable.type+")"
-			}, root);
-		}
+			if (_.isArray(variable.value))
+			{
+				_.forEach(variable.value, function(subVar)
+				{
+					var subNode = new YAHOO.widget.TextNode(
+						this._printVar(subVar), node);
+
+				}, this);
+			}
+
+		}, this);
 
 		this.tree.render();
+	},
+
+	_printVar: function(variable)
+	{
+		return variable.name + 
+			(_.isArray(variable.value) ? "" : ": " + variable.value) + 
+			" ("+variable.type+")";
 	},
 
 	onPause: function()

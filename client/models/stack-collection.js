@@ -17,8 +17,6 @@ var StackCollection = Backbone.Collection.extend(
 
 		this.socket.on("gdb_stack", function(stack)
 		{
-			console.log("reset stack!");
-			console.log(stack);
 			this.reset(stack);
 
 		}.bind(this));
