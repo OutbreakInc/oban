@@ -9,7 +9,7 @@ var FileModel = Backbone.Model.extend(
 	initialize: function(options)
 	{
 		this.project = options.project;
-		this.socket = io.connect("http://localhost:8000/file");
+		this.socket = io.connect("/file");
 	},
 
 	setContents: function(contents, callback)

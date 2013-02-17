@@ -16,7 +16,7 @@ var badger = require("badger")(__filename),
 	socketIo = require("socket.io"),
 	Side = require("sidestep");
 
-function Core(app, config)
+function Core(server, config)
 {
 	console.assert(	config,
 					"Must pass a configuration");
@@ -28,7 +28,7 @@ function Core(app, config)
 					(config.mode != "server" && config.mode != "app"),
 					"Must have a mode (app or server)");
 
-	this.app = app;
+	this.server = server;
 	this.config = config;
 }
 
@@ -42,7 +42,7 @@ init: function()
 	badger.debug("initializing directories");
 	this._initDirectories();
 
-	var sockets = socketIo.listen(this.app);
+	var sockets = socketIo.listen(this.server);
 
 	sockets.set("log level", 1);
 	var devices, projects, settings;

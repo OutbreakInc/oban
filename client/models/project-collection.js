@@ -11,7 +11,7 @@ var ProjectCollection = Backbone.Collection.extend(
 
 	initialize: function(options)
 	{
-		this.socket = io.connect("http://localhost:8000/projectCollection");
+		this.socket = io.connect("/projectCollection");
 
 		_.bindAll(this);
 
