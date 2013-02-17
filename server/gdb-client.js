@@ -4,7 +4,8 @@ var spawn = require("child_process").spawn,
 	_ = require("underscore"),
 	Parser = require("./gdb/parser"),
 	Gdb = require("./gdb"),
-	badger = require("badger")(__filename);
+	badger = require("badger")(__filename),
+	utils = require("./utils");
 
 function GdbClient(deviceServer)
 {
@@ -20,15 +21,18 @@ run: function(file, callback)
 {
 	var self = this;
 	
-	this.gdb = new Gdb(__dirname + "/../SDK6/bin/arm-none-eabi-gdb");
+	this.gdb = new Gdb(utils.sdkDir() + "/bin/arm-none-eabi-gdb");
 	this.gdb.setDebugging(true);	
 
 	badger.debug("running gdbclient on port " + this.deviceServer.port);
 
-	this.events.forEach(function(event)
+	if (this.events)
 	{
-		self.gdb.on(event.name, event.callback);
-	});
+		this.events.forEach(function(event)
+		{
+			self.gdb.on(event.name, event.callback);
+		});
+	}
 	
 	if (!this.deviceServer.isStarted)
 	{
@@ -38,6 +42,22 @@ run: function(file, callback)
 
 	this.gdb.run(file, this.deviceServer.port);
 	callback();
+},
+
+// just used to resume a paused galago, does no actual debugging
+resume: function(callback)
+{
+	badger.debug("resuming program");
+
+	this.gdb = new Gdb(utils.sdkDir() + "/bin/arm-none-eabi-gdb");
+
+	this.gdb.unpause(this.deviceServer.port,
+	function()
+	{
+		this.gdb.exit();
+		callback();
+
+	}.bind(this));
 },
 
 stop: function()

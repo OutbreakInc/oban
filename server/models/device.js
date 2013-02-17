@@ -1,4 +1,5 @@
-var idGen = require("../id-gen");
+var idGen = require("../id-gen"),
+	badger = require("badger")(__filename);
 
 var Errors =
 {
@@ -53,16 +54,29 @@ Device.prototype.serialNumber = function()
 	return this._attrs.serialNumber;
 }
 
-Device.prototype.setOpen = function(userId, isOpen, callback)
+// opens a device and associates it with a given project id
+// a device can only be open in one project at a time
+Device.prototype.open = function(socketId, callback)
 {
 	if (this._attrs.isOpenBy &&
-		this._attrs.isOpenBy != userId) 
+		this._attrs.isOpenBy != socketId) 
 	{
 		return callback(new Error(Errors.ALREADY_OPEN));
 	}
 
-	this._attrs.isOpenBy = isOpen ? userId : undefined;
-	callback();	
+	this._attrs.isOpenBy = socketId;
+	callback();
+}
+
+// closes a device
+Device.prototype.close = function()
+{
+	if (!this._attrs.isOpenBy)
+	{
+		badger.warning("called close() on a device that was already closed");
+	}
+
+	delete this._attrs.isOpenBy;
 }
 
 Device.prototype.toJSON = function()

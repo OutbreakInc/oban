@@ -8,6 +8,7 @@ var $ = require("jquery"),
 	SettingCollection = require("app/models/setting-collection"),
 	Dashboard = require("app/views/dashboard"),
 	WelcomeView = require("app/views/welcome"),
+	RestartView = require("app/views/restart"),
 	ProjectView = require("app/views/project"),
 	ErrorListView = require("app/views/error-list"),
 	App = require("app/app");
@@ -29,6 +30,18 @@ $.fn.highlight = function() {
             })
             .fadeOut(700);
     });
+}
+
+$.fn.setEnabled = function(isEnabled)
+{
+	if (isEnabled) 
+	{
+		$(this).removeAttr("disabled");
+	}
+	else
+	{
+		$(this).attr("disabled", "disabled");
+	}
 }
 
 App.addInitializer(function(options)
@@ -88,10 +101,14 @@ App.addInitializer(function(options)
 			this.vent.trigger("closeProjectSuccess");
 			delete this.activeProject;
 
-			this.activeProjectView.close();
-			delete this.activeProjectView;
+			this.activeProjectView.close(function(err)
+			{
+				delete this.activeProjectView;
+				App.Views.welcomeView.setVisible(true);
 
-			App.Views.welcomeView.setVisible(true);
+				if (err) App.error("Close project view error: " + err);
+
+			}.bind(this));
 
 		}.bind(this));
 
@@ -120,8 +137,19 @@ App.addInitializer(function(options)
 	{
 		collection: App.Collections.projects
 	});
+
+	App.Views.restartView = new RestartView();
 });
 
+App.addInitializer(function()
+{
+	var socket = io.connect("http://localhost:8000");
+
+	socket.on("disconnect", function()
+	{
+		App.Views.restartView.render();
+	});
+});
 
 App.error = function(message, line)
 {

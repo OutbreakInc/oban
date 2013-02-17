@@ -8,7 +8,8 @@ var spawn = require("child_process").spawn,
 	EventEmitter = require("events").EventEmitter,
 	util = require("util"),
 	_ = require("underscore"),
-	utils = require("./utils");
+	utils = require("./utils"),
+	badger = require("badger")(__filename);
 
 var PYTHON_SCRIPT = __dirname + "/gdb/gdb.py";
 var PYTHON_HOST = "127.0.0.1";
@@ -28,6 +29,8 @@ function Gdb(binary)
 	this._actions = [];
 
 	_.bindAll(this);
+
+	badger.debug("gdb initialized with binary:", binary);
 }
 
 util.inherits(Gdb, EventEmitter);
@@ -51,6 +54,45 @@ Gdb.prototype.setDebugging = function(isEnabled)
 	this.isDebugging = isEnabled;
 };
 
+Gdb.prototype._init = function(port, symbolFile)
+{
+	this.process = spawn(this.binary, [], { cwd: path.dirname(symbolFile) });
+
+	// so GDB doesn't prompt us when we delete all breakpoints
+	this.rawCommand("set confirm off");
+	this.rawCommand("target remote localhost:" + port);
+
+	this.isStopped = false;
+
+	// if we don't set encoding, data will be given to us as Buffer objects
+	this.process.stdout.setEncoding("utf8");
+	this.process.stderr.setEncoding("utf8");
+}
+
+Gdb.prototype.unpause = function(port, callback)
+{
+	this.process = spawn(this.binary);
+
+	// so GDB doesn't prompt us when we delete all breakpoints
+	this.rawCommand("set confirm off");
+	this.rawCommand("target remote localhost:" + port);
+
+	this.isStopped = false;
+
+	// if we don't set encoding, data will be given to us as Buffer objects
+	this.process.stdout.setEncoding("utf8");
+	this.process.stderr.setEncoding("utf8");
+
+	this._resume();
+
+	// hack, make it actually correctly find out when we are running
+	setTimeout(function()
+	{
+		callback();
+
+	}.bind(this), 1000);
+}
+
 // start gdb process and connect to our local gdb server
 Gdb.prototype.run = function(symbolFile, port)
 {
@@ -60,26 +102,25 @@ Gdb.prototype.run = function(symbolFile, port)
 	console.assert( _.isNumber(port) && port > 0,
 					"Must specify valid device server port: " + port);
 
-	this.process = spawn(this.binary, [], {cwd: path.dirname(symbolFile)});
+	badger.debug("run arguments:", arguments);
+
+	this.process = spawn(this.binary, [], { cwd: path.dirname(symbolFile) });
 
 	// so GDB doesn't prompt us when we delete all breakpoints
 	this.rawCommand("set confirm off");
 
-	this.rawCommand("source " + PYTHON_SCRIPT);
-	this.rawCommand("file " + symbolFile);
-	// this.rawCommand("b 20");
-	// this.rawCommand("run");
-	this.rawCommand("target remote localhost:" + port);
-
 	this.isStopped = false;
-
-	var gdb = this;
-
-	// setTimeout(function() { gdb.setBreakpoint(15); gdb.resume() }, 3000);
 
 	// if we don't set encoding, data will be given to us as Buffer objects
 	this.process.stdout.setEncoding("utf8");
 	this.process.stderr.setEncoding("utf8");
+
+	this.rawCommand("source " + PYTHON_SCRIPT);
+	this.rawCommand("file " + symbolFile);
+
+	this.rawCommand("target remote localhost:" + port);
+
+	var gdb = this;
 
 	this.process.stderr.on("data", function(err)
 	{
@@ -117,6 +158,7 @@ Gdb.prototype.isRunning = function()
 
 Gdb.prototype.rawCommand = function(command)
 {
+	badger.debug("sending raw command:", command);
 	this.process.stdin.write(command + "\n");
 }
 
@@ -168,14 +210,18 @@ Gdb.prototype.queueAction = function(action)
 
 Gdb.prototype.exit = function()
 {
+	badger.debug("gdb exit issued");
+
 	if (this.process)
 	{
-		this._pause();
-		this.rawCommand("quit");
 		this._unbindEvents();
-		this.process.stdin.end();
+		this.process.kill("SIGTERM");
 		delete this.process;
 	}
+	else
+	{
+		badger.warning("tried to kill gdb process when it wasn't running");
+	}	
 }
 
 Gdb.prototype.getGlobalVariables = function()
@@ -238,7 +284,10 @@ Gdb.prototype._bindEvents = function()
 
 Gdb.prototype._unbindEvents = function()
 {
-	this.socket.removeListener("data", this._processData);
+	if (this.socket)
+	{
+		this.socket.removeListener("data", this._processData);
+	}
 }
 
 Gdb.prototype._processData = function(data)
