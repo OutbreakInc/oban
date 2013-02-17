@@ -222,7 +222,8 @@ var ProjectView = Backbone.View.extend(
 		if(!this.errors.length > 0)
 		{
 			// hack
-			this.project.flash(function(err)
+			this.project.flash(this.openDevice.get("serialNumber"),
+			function(err)
 			{
 				if (err)
 				{
