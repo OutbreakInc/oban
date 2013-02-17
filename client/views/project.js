@@ -21,7 +21,7 @@ var ProjectView = Backbone.View.extend(
 	events:
 	{
 		"click .buildButton": "onBuild",
-		"click .flashButton": "onFlash",
+		"click .runButton": "onRun",
 		"click .debugButton": "onDebug",
 		"click .removeButton": "onRemove"
 	},
@@ -127,7 +127,7 @@ var ProjectView = Backbone.View.extend(
 	{
 		var haveDevice = !!(this.openDevice);
 
-		this.$(".flashButton").setEnabled(haveDevice);
+		this.$(".runButton").setEnabled(haveDevice);
 		this.$(".debugButton").setEnabled(haveDevice);
 	},
 
@@ -193,7 +193,7 @@ var ProjectView = Backbone.View.extend(
 		}.bind(this));
 	},
 
-	onFlash: function()
+	onRun: function()
 	{
 		//isDirty checks if the editor has changed, and thus needs to be rebuilt before flashing
 		if(this.editorView.isDirty())
@@ -206,18 +206,18 @@ var ProjectView = Backbone.View.extend(
 				this.progressView.setVisible(true, function(){});
 			}.bind(this),function()
 			{
-				this.goFlash(function(){},function(){});
+				this.goRun(function(){},function(){});
 			}.bind(this));
 		}
 		else
 		{
 			this.progressView.setText("Flashing device...");
 			this.progressView.setVisible(true, function(){});			
-			this.goFlash(function(){});
+			this.goRun(function(){});
 		}
 	},
 	
-	goFlash: function(callback)
+	goRun: function(callback)
 	{
 		if(!this.errors.length > 0)
 		{
@@ -257,7 +257,7 @@ var ProjectView = Backbone.View.extend(
 				this.progressView.setVisible(true, function(){});
 			}.bind(this),function()
 			{
-				this.goFlash(function()
+				this.goRun(function()
 				{
 					this.goDebug();
 				}.bind(this));
