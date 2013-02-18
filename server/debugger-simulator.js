@@ -1,19 +1,6 @@
+var net = require("net");
+
 ////////////////////////////////////////////////////////////////
-
-Array.prototype.merge = function(appendage)
-{
-	var arr = appendage;
-	arr.unshift(0);
-	arr.unshift(appendage.length + 1);
-	Array.prototype.splice.apply(this, arr);
-	return(this);
-}
-
-Function.prototype.bind = function(thisObj)
-{
-	var __method = this, args = Array.prototype.slice.call(arguments, 1);
-	return(function(){Array.prototype.merge.call(arguments, args); return(__method.apply(thisObj, arguments));});
-};
 
 String.prototype.trim = function()
 {
@@ -148,8 +135,6 @@ function ARMTarget()
 
 ////////////////////////////////
 
-var net = require("net");
-
 GDBServer.prototype =
 {
 	"connection": null,
@@ -173,7 +158,8 @@ GDBServer.prototype =
 				command = command.substr(1);
 				continue;
 			case 3:		//"ctrl+c", break
-				this.processCommand("~");	//translate to a simpler character ad execute it
+			case 126:	//"~", break
+				this.processCommand("~");	//translate to a simpler character and execute it
 				command = command.substr(1);
 				continue;
 			}
@@ -205,14 +191,32 @@ GDBServer.prototype =
 				this.respond("-");	//nack, bro
 				return;
 			}
-
-			this.processCommand(payload);
-
-			command = command.substr(end + 3);
+			
+			//sequence support
+			var seq = command.substr(end + 3, 4);
+			if(seq.length != 4)
+			{
+				console.log("packet sequence error: missing or corrupt sequence number.");
+				this.respond("-");	//nack, bro
+				return;
+			}
+			
+			var seqNum = parseInt(seq, 16);
+			if(isNaN(seqNum))
+			{
+				console.log("packet sequence error: corrupt sequence number '" + seqNum + "'");
+				this.respond("-");	//nack, bro
+				return;
+			}
+			
+			console.log("PROCESSING: >>>" + payload + "<<< (checksum " + command.substr(end + 1, 2).toLowerCase() + ", seq " + seq + " (" + seqNum + ") )");
+			this.processCommand(payload, seqNum);
+			
+			command = command.substr(end + 7);
 		}
 	},
 	
-	"processCommand": function(message)
+	"processCommand": function(message, seqNum)
 	{
 		var commandLen = this.findCharUnescaped(message, ":");
 		if(commandLen != -1)
@@ -256,16 +260,19 @@ GDBServer.prototype =
 		switch(commandCode)
 		{
 		case "qSupported":
-			this.respond("+" + this.wrapPacket("PacketSize=3fff;qXfer:memory-map:read+"));
+			this.respond("+" + this.wrapPacket("PacketSize=3fff;qXfer:memory-map:read+;QStartNoAckMode+", seqNum));
+			return;
+		case "QStartNoAckMode":
+			this.respond("+" + this.wrapPacket("OK", seqNum));
 			return;
 		case "qC":
-			this.respond("+" + this.wrapPacket("0"));
+			this.respond("+" + this.wrapPacket("0", seqNum));
 			return;
 		case "qAttached":
-			this.respond("+" + this.wrapPacket("0"));	//0 = spawned new process, 1 = attached
+			this.respond("+" + this.wrapPacket("0", seqNum));	//0 = spawned new process, 1 = attached
 			return;
 		case "qTStatus":
-			this.respond("+" + this.wrapPacket("T0;tnotrun:0"));
+			this.respond("+" + this.wrapPacket("T0;tnotrun:0", seqNum));
 			return;
 		case "qXfer":
 			var typeLen = this.findCharUnescaped(message, ":");
@@ -273,7 +280,7 @@ GDBServer.prototype =
 			switch(subject)
 			{
 			case "memory-map":
-				this.respond("+" + this.wrapPacket("l" + this.target.memoryMap));
+				this.respond("+" + this.wrapPacket("l" + this.target.memoryMap, seqNum));
 				return;
 			default:
 				console.log("unknown subject " + subject, "message = " + message);
@@ -281,14 +288,14 @@ GDBServer.prototype =
 			}
 			break;
 		case "qSymbol":
-			this.respond("+" + this.wrapPacket("OK"));
+			this.respond("+" + this.wrapPacket("OK", seqNum));
 			return;
 		case "qRcmd":
 			
 			switch(message)
 			{
 			case "":
-				this.respond("+" + this.wrapPacket("OK"));
+				this.respond("+" + this.wrapPacket("OK", seqNum));
 				return;
 			}
 			
@@ -303,43 +310,43 @@ GDBServer.prototype =
 		
 		case "~":	//translated break character
 			this.target.setRunState(5);	//break
-			this.respond("+" + this.wrapPacket("S" + this.target.getRunState().toString(16).padFront(2, "0")));
+			this.respond("+" + this.wrapPacket("S" + this.target.getRunState().toString(16).padFront(2, "0"), seqNum));
 			return;
 			
 		case "?":	//reason target isn't running
-			this.respond("+" + this.wrapPacket("S" + this.target.getRunState().toString(16).padFront(2, "0")));
+			this.respond("+" + this.wrapPacket("S" + this.target.getRunState().toString(16).padFront(2, "0"), seqNum));
 			return;
 			
 		case "H":	//set thread for action
-			this.respond("+" + this.wrapPacket("OK"));	//only have one thread, ignore
+			this.respond("+" + this.wrapPacket("OK", seqNum));	//only have one thread, ignore
 			return;
 			
 		case "g":	//read general registers
-			this.respond("+" + this.wrapPacket(this.target.getARMRegisterState()));
+			this.respond("+" + this.wrapPacket(this.target.getARMRegisterState(), seqNum));
 			return;
 		case "p":	//read single general register
-			this.respond("+" + this.wrapPacket(this.target.getARMRegisterState(parseInt(command.substr(1), 16))));
+			this.respond("+" + this.wrapPacket(this.target.getARMRegisterState(parseInt(command.substr(1), 16)), seqNum));
 			return;
 		case "G":	//write general registers
 			this.target.setARMRegisterState(command.substr(1));
-			this.respond("+" + this.wrapPacket("OK"));
+			this.respond("+" + this.wrapPacket("OK", seqNum));
 			return;
 		case "P":	//write single general register
 			var eq = this.findCharUnescaped(command, "=");
 			//console.log(">>>" + command + " -- idx=" + eq + " -- " + command.substr(eq + 1) + " -- " + command.substr(1, eq - 1));
 			this.target.setARMRegisterState(command.substr(eq + 1), parseInt(command.substr(1, eq - 1), 16));
-			this.respond("+" + this.wrapPacket("OK"));
+			this.respond("+" + this.wrapPacket("OK", seqNum));
 			return;
 		case "m":	//read memory
 			var comma = this.findCharUnescaped(command, ",");
 			console.log(">>>" + command + " => idx = " + comma + ", read *" + command.substr(1, comma - 1) + "{" + command.substr(comma + 1) + "}");
-			this.respond("+" + this.wrapPacket(this.target.getMemory(command.substr(1, comma - 1), parseInt(command.substr(comma + 1), 16))));
+			this.respond("+" + this.wrapPacket(this.target.getMemory(command.substr(1, comma - 1), parseInt(command.substr(comma + 1), 16)), seqNum));
 			return;
 		case "M":	//write memory
 			var comma = this.findCharUnescaped(command, ",");
 			console.log(">>>" + command + " => idx = " + comma + ", write *" + command.substr(1, comma - 1) + "{" + command.substr(comma + 1) + "} = " + message);
 			this.target.setMemory(command.substr(1, comma - 1), parseInt(command.substr(comma + 1), 16), message);
-			this.respond("+" + this.wrapPacket("OK"))
+			this.respond("+" + this.wrapPacket("OK", seqNum))
 			return;
 		
 		
@@ -353,25 +360,25 @@ GDBServer.prototype =
 		case "s":	//step
 			//simulate single-step
 			this.target.setRunState(1);	//single-step
-			this.respond("+" + this.wrapPacket("S" + this.target.getRunState().toString(16).padFront(2, "0")));
+			this.respond("+" + this.wrapPacket("S" + this.target.getRunState().toString(16).padFront(2, "0"), seqNum));
 			return;
 		case "vCont?":
-			this.respond("+" + this.wrapPacket("vCont;cst"));
+			this.respond("+" + this.wrapPacket("vCont;cst", seqNum));
 			return;
 			
 		case "Z":	//add/set breakpoint
 			console.log("ADD BREAKPOINT");
 			var args = command.split(",");	//Z<type>,<hex location>,<num bytes>
-			console.log(args);
+			//console.log(args);
 			switch(args[0])
 			{
 			case "Z0":	//memory (software trap) breakpoint, e.g. 'bkpt' on ARM, 'break' on AVR, 'int' on x86
 				//add the breakpoint to the sw-bp map, then composite it into the appropriate sector and re-flash that to the chip when we continue execution
 				//  if we stop on a sw breakpoint, we'll need to look up the original instruction and execute it from RAM right before continuing
-				this.respond("+" + this.wrapPacket("OK"))
+				this.respond("+" + this.wrapPacket("OK", seqNum));
 				return;
 			case "Z1":	//hardware execution breakpoint
-				this.respond("+" + this.wrapPacket("OK"))
+				this.respond("+" + this.wrapPacket("OK", seqNum));
 				return;
 			case "Z2":	//hardware data write breakpoint
 			case "Z3":	//hardware data read breakpoint
@@ -379,14 +386,14 @@ GDBServer.prototype =
 			}
 		case "z":	//remove breakpoint
 			var args = command.split(",");
-			console.log(args);
+			//console.log(args);
 			switch(args[0])
 			{
 			case "z0":	//memory (software trap) breakpoint
-				this.respond("+" + this.wrapPacket("OK"))
+				this.respond("+" + this.wrapPacket("OK", seqNum));
 				return;
 			case "z1":	//hardware execution breakpoint
-				this.respond("+" + this.wrapPacket("OK"))
+				this.respond("+" + this.wrapPacket("OK", seqNum));
 				return;
 			case "z2":	//hardware data write breakpoint
 			case "z3":	//hardware data read breakpoint
@@ -394,7 +401,7 @@ GDBServer.prototype =
 				break;
 			}
 		}
-		this.respond("+" + this.wrapPacket(""));	//empty response (unsupported command)
+		this.respond("+" + this.wrapPacket("", seqNum));	//empty response (unsupported command)
 	},
 	
 	"findCharUnescaped": function(str, char)
@@ -416,9 +423,15 @@ GDBServer.prototype =
 		return((checksum & 0xFF).toString(16).padFront(2, "0"));
 	},
 	
-	"wrapPacket": function(response)
+	"makeSeqNum": function(seqNum)
 	{
-		return("$" + response + "#" + this.makePacketChecksum(response));
+		var s = seqNum.toString(16);
+		return("0000".substr(s.length) + s);
+	},
+	
+	"wrapPacket": function(response, seqNum)
+	{
+		return("$" + response + "#" + this.makePacketChecksum(response) + this.makeSeqNum(seqNum));
 	},
 	
 	"respond": function(response)

@@ -11,7 +11,7 @@ var SettingCollection = Backbone.Collection.extend(
 
 	initialize: function(options)
 	{
-		this.socket = io.connect("http://localhost:8000/settingCollection");
+		this.socket = io.connect("/settingCollection");
 
 		_.bindAll(this);
 

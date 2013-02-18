@@ -8,7 +8,7 @@ var ProjectModel = Backbone.Model.extend(
 {
 	initialize: function()
 	{
-		this.socket = io.connect("http://localhost:8000/project");
+		this.socket = io.connect("/project");
 
 		_.bindAll(this);
 

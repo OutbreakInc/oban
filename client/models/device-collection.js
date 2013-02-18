@@ -11,7 +11,7 @@ var DeviceCollection = Backbone.Collection.extend(
 
 	initialize: function(options)
 	{
-		this.socket = io.connect("http://localhost:8000/deviceCollection");
+		this.socket = io.connect("/deviceCollection");
 
 		_.bindAll(this);
 
