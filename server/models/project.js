@@ -449,12 +449,8 @@ Project.prototype.setName = function(newName, callback)
 	function(err)
 	{
 		this._attrs.name = newName;
-		this._saveAttrs(step.next);
-	},
-	function(err)
-	{
 		step.next();
-		callback();
+		this._saveAttrs(callback);
 	})
 	.error(function(err)
 	{
