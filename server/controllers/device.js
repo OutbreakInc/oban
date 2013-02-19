@@ -91,25 +91,22 @@ DeviceController.prototype.onOpen = function(socket, device, callback)
 
 		}.bind(this);
 
-		var unplugDeviceFn = function()
+		var unplugDeviceFn = function(removedDevice)
 		{
+			if (removedDevice.serialNumber() != device.serialNumber()) return;
+
 			device.close();
 			delete this._socketOpenDevices[socket.id];
 
 			badger.debug(	"closed device " + device.serialNumber() + 
 							"(device unplugged)");
 
+			this.devices.removeListener("remove", unplugDeviceFn);
+
 		}.bind(this);
 
 		socket.on("disconnect", closeDeviceFn);
-
-		this.devices.on("remove", function(removedDevice)
-		{
-			if (removedDevice.serialNumber() == device.serialNumber())
-			{
-				unplugDeviceFn();
-			}
-		});
+		this.devices.on("remove", unplugDeviceFn);
 
 		this._disconnectListeners[device.serialNumber()] = closeDeviceFn;
 		this._socketOpenDevices[socket.id] = device;
