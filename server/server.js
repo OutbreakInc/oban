@@ -3,8 +3,8 @@
 var http = require("http"),
 	mime = require("./mime"),
 	fs = require("fs"),
-	Core = require("./core");
-
+	Core = require("./core"),
+	badger = require("badger")(__filename);
 
 var base = __dirname + "/../client";
 var server = http.createServer(function(request, response)
@@ -17,7 +17,7 @@ var server = http.createServer(function(request, response)
 	var path = base + "/" + url;
 	var resourceMIME = mime.lookup(path);
 	
-	console.log("Requesting: ", request.url, " => ", path, "(" + resourceMIME + ")");	//debug
+	badger.debug("Requesting: ", request.url, " => ", path, "(" + resourceMIME + ")");
 	
 	var f = fs.createReadStream(path).on("open", function(fd)
 	{
@@ -31,7 +31,7 @@ var server = http.createServer(function(request, response)
 	{
 		var code = (e.code == "ENOENT")? 404 : 500;	//cheesy error handler
 		
-		console.log("failed (" + code + "): ", url);	//debugging
+		badger.debug("failed (" + code + "): ", url);	//debugging
 		
 		response.writeHead(code, {"Content-Type": "text/plain"});
 		response.end(code.toString());

@@ -5,6 +5,7 @@ var spawn = require("child_process").spawn,
 	Parser = require("./gdb/parser"),
 	Gdb = require("./gdb"),
 	badger = require("badger")(__filename),
+	EventListener = require("./event-listener"),
 	utils = require("./utils");
 
 function GdbClient(deviceServer)
@@ -30,8 +31,13 @@ run: function(file, callback)
 	{
 		this.events.forEach(function(event)
 		{
-			self.gdb.on(event.name, event.callback);
-		});
+			this.listenTo(this.gdb, event.name, event.callback);
+
+		}.bind(this));
+	}
+	else
+	{
+		badger.warning("`this.events` did not exist, did you call run() before attachClient()?");
 	}
 	
 	if (!this.deviceServer.isStarted)
@@ -70,8 +76,6 @@ attachClient: function(client)
 	var parser = new Parser(client);
 	_.bindAll(parser);
 
-	var self = this;
-
 	this.events =
 	[
 		{ name: Gdb.events.STOP, callback: parser.onStop },
@@ -79,36 +83,46 @@ attachClient: function(client)
 		{ name: Gdb.events.RAW, callback: parser.onData }
 	];
 
-	client.on("gdb_command", function(command, data)
+	this.listenTo(client, "gdb_command", function(command, data)
 	{
 		console.log("client command: ", command);
-		self.gdb.rawCommand(command);
+		this.gdb.rawCommand(command);
 	});
 
-	client.on("gdb_break", function(line)
+	this.listenTo(client, "gdb_break", function(line)
 	{
 		console.log("GDB_BREAK " + line);
-		self.gdb.toggleBreakpoint(line);
+		this.gdb.toggleBreakpoint(line);
 	});
 
-	client.on("gdb_pause", function()
-	{	
-		self.gdb.queueAction(Gdb.actions.PAUSE);
-	});
-
-	client.on("gdb_resume", function()
+	this.listenTo(client, "gdb_pause", function()
 	{
-		self.gdb.queueAction(Gdb.actions.RESUME);
+		badger.debug("queued pause");	
+		this.gdb.queueAction(Gdb.actions.PAUSE);
 	});
 
-	client.on("gdb_exit", function()
+	this.listenTo(client, "gdb_resume", function()
 	{
-		self._onExit(client);
+		badger.debug("queued continue");
+		this.gdb.queueAction(Gdb.actions.RESUME);
 	});
 
-	client.on("disconnect", function()
+	this.listenTo(client, "gdb_exit", function()
 	{
-		self._onExit(client);
+		this._onExit(client);
+	});
+
+	this.listenTo(client, "disconnect", function()
+	{
+		this._onExit(client);
+	});
+
+	this.listenTo(client, "query", function(id, callback)
+	{
+		this.gdb.query(id, function(err, variables)
+		{
+			callback();
+		});
 	});
 },
 
@@ -120,9 +134,12 @@ _onExit: function(client)
 
 	}.bind(this));
 
+	this.stopListening();
 	this.stop();
 }
 
 }
+
+_.extend(GdbClient.prototype, EventListener);
 
 }).call(this);

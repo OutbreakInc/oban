@@ -175,6 +175,10 @@ DeviceServer.prototype.run = function()
 		this.isStarted = false;
 		delete this.port;
 
+		// restart GalagoServer
+		badger.error("restarting GalagoServer...");
+		this.run();
+
 	}.bind(this));
 }
 

@@ -75,25 +75,23 @@ var DebugView = Backbone.View.extend(
 
 		var self = this;
 
-		this.socket.on("gdb_message", this.onData);
-		this.socket.on("gdb_break", this.onBreakpoint);
-		this.socket.on("gdb_variables", this.onVariables);
-		this.socket.on("gdb_continue", this.onContinue);
+		this.listenTo(this.socket, "gdb_message", this.onData);
+		this.listenTo(this.socket, "gdb_break", this.onBreakpoint);
+		this.listenTo(this.socket, "gdb_variables", this.onVariables);
+		this.listenTo(this.socket, "gdb_continue", this.onContinue);
 
 		this.editor = options.editor;
 
 		this.editor.on("guttermousedown", this.onSetBreakpoint);
 
 		$(".varView").removeClass("hide");
+
 		this.tree = new YAHOO.widget.TreeView($("#varTree")[0]);
 		this.tree.render();
 
 		this.project.debug(function(err)
 		{
-			if (err)
-			{
-				this.trigger("debugEnd");
-			}
+			if (err) this.trigger("debugEnd");
 
 		}.bind(this));
 	},

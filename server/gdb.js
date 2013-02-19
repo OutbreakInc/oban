@@ -292,11 +292,8 @@ Gdb.prototype._unbindEvents = function()
 
 Gdb.prototype._processData = function(data)
 {
-	if (this.isDebugging)
-	{
-		console.log("PYTHON GDB DATA:");
-		console.log(data);
-	}
+	badger.debug("PYTHON GDB DATA:");
+	badger.debug(data);
 
 	data = JSON.parse(data);
 
