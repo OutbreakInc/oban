@@ -74,7 +74,7 @@ var ProjectView = Backbone.View.extend(
 
 		$(".errorsView").append(this.errorListView.render().el);
 
-		this.listenTo(this.devices, "reset", this.pairProjectWithDevice);
+		this.listenTo(this.devices, "reset", this.onDevicesReset);
 		this.listenTo(this.devices, "add", this.pairProjectWithDevice);
 
 		this.updateButtons();
@@ -93,19 +93,35 @@ var ProjectView = Backbone.View.extend(
 		});
 
 		// couldn't find an unused device, give up
-		if (!unusedDevice) return;
-
-		// assign this device to this client
-		unusedDevice.open(function(err, device)
+		if (!unusedDevice)
 		{
-			if (err) return alert(err);
-
-			this.openDevice = device;
-			this.listenTo(this.openDevice, "destroy", this.onProjectDeviceRemoved);
-
 			this.updateButtons();
+		}
+		else
+		{
+			// assign this device to this client
+			unusedDevice.open(function(err, device)
+			{
+				if (err) return alert(err);
 
-		}.bind(this));
+				this.openDevice = device;
+				this.listenTo(this.openDevice, "destroy", this.onProjectDeviceRemoved);
+
+				this.updateButtons();
+
+			}.bind(this));
+		}
+	},
+
+	onDevicesReset: function()
+	{
+		if (this.openDevice)
+		{
+			this.stopListening(this.openDevice);
+			delete this.openDevice;
+		}
+
+		this.pairProjectWithDevice();
 	},
 
 	onProjectDeviceRemoved: function()

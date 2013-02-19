@@ -1,6 +1,8 @@
 var _ = require("underscore"),
 	CollectionErrors = require("../models/device-collection").Errors,
-	badger = require("badger")(__filename);
+	EventListener = require("../event-listener"),
+	badger = require("badger")(__filename),
+	_ = require("underscore");
 
 badger.setLevel("debug");
 
@@ -19,6 +21,8 @@ function DeviceController(deviceCollection, sockets)
 	this._init();
 }
 
+_.extend(DeviceController.prototype, EventListener);
+
 DeviceController.prototype.events =
 {
 	"open": "onOpen",
@@ -27,7 +31,7 @@ DeviceController.prototype.events =
 
 DeviceController.prototype._init = function()
 {
-	this.sockets.on("connection", function(socket)
+	this.listenTo(this.sockets, "connection", function(socket)
 	{
 		badger.debug("got a socket connection");
 
@@ -41,6 +45,8 @@ DeviceController.prototype._init = function()
 
 	this._disconnectListeners = {};
 	this._socketOpenDevices = {};
+
+	this.listenTo(this.devices, "stopped", this.onServerStopped);	
 }
 
 DeviceController.prototype.findDevice = function(socket, handler)
@@ -101,17 +107,27 @@ DeviceController.prototype.onOpen = function(socket, device, callback)
 			badger.debug(	"closed device " + device.serialNumber() + 
 							"(device unplugged)");
 
-			this.devices.removeListener("remove", unplugDeviceFn);
+			this.stopListening(devices, "remove", unplugDeviceFn);
 
 		}.bind(this);
 
-		socket.on("disconnect", closeDeviceFn);
-		this.devices.on("remove", unplugDeviceFn);
+		this.listenTo(socket, "disconnect", closeDeviceFn);
+		this.listenTo(this.devices, "remove", unplugDeviceFn);
 
 		this._disconnectListeners[device.serialNumber()] = closeDeviceFn;
 		this._socketOpenDevices[socket.id] = device;
 
 	}.bind(this));
+}
+
+DeviceController.prototype.onServerStopped = function()
+{
+	this._disconnectListeners = {};
+	this._socketOpenDevices = {};
+
+	// remove all unplug device callbacks
+	this.stopListening(this.devices, "remove");
+
 }
 
 DeviceController.prototype.onClose = function(socket, device, callback)

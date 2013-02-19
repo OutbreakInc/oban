@@ -120,10 +120,11 @@ DeviceCollection.prototype._onServerStart = function()
 
 DeviceCollection.prototype._onServerStop = function()
 {
+	badger.debug("device server stopped!");
+
 	this.emit("stopped");
 
 	this._attrs.devices = [];
-	// TODO: try to restart the device server
 }
 
 DeviceCollection.prototype.findBySerial = function(serialNumber)

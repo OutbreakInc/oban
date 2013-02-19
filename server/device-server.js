@@ -173,6 +173,7 @@ DeviceServer.prototype.run = function()
 		badger.error("GalagoServer exited with code: " + code);
 		this.emit("stopped");
 		this.isStarted = false;
+		this._cleanUpListeners();
 		delete this.port;
 
 		// restart GalagoServer
@@ -180,6 +181,14 @@ DeviceServer.prototype.run = function()
 		this.run();
 
 	}.bind(this));
+}
+
+DeviceServer.prototype._cleanUpListeners = function()
+{
+	this.streamer.removeAllListeners();
+	this.socket.removeAllListeners();
+	this.process.stdout.removeAllListeners();
+	this.process.removeAllListeners();
 }
 
 module.exports = DeviceServer;

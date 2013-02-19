@@ -11,12 +11,12 @@ module.exports =
 		// create a version of cb bound to `this`, use that for the callback
 		var boundCb = _.bind(callback, this);
 
-		listeners.push({ obj: obj, name: name, callback: boundCb });
+		listeners.push({ obj: obj, name: name, callback: boundCb, originalCb: callback });
 		obj.on(name, boundCb);
 		return this;
 	},
 
-	stopListening: function(obj, name)
+	stopListening: function(obj, name, callback)
 	{
 		var listeners = this._listeners;
 
@@ -26,8 +26,17 @@ module.exports =
 		var toKeep = [];
 		var filter;
 
+		// remove one specific listener
+		if (obj && name && callback)
+		{
+			filter = function(listener)
+			{
+				return (listener.obj == obj && listener.name == name &&
+						listener.originalCb == callback);
+			}
+		}
 		// remove all listeners for object for the event `name`
-		if (obj && name) 
+		else if (obj && name)
 		{
 			filter = function(listener)
 			{
