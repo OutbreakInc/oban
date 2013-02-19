@@ -326,6 +326,26 @@ var ProjectView = Backbone.View.extend(
 	{
 		mixpanel.track("project:close");
 
+		this._closeDebugger(function()
+		{
+			this._closeOpenDevices(function(err)
+			{
+				if (err) return callback(err);
+
+				callback();
+
+			}.bind(this));
+		}.bind(this));
+	},
+
+	_closeDebugger: function(callback)
+	{
+		if (this.debugView) this.debugView.onDisconnect();
+		callback();
+	},
+
+	_closeOpenDevices: function(callback)
+	{
 		if (!this.openDevice)
 		{
 			this._cleanUp();
