@@ -106,6 +106,14 @@ var EditorView = Backbone.View.extend(
 	clearDirty: function()
 	{
 		this.dirty = false;
+	},
+
+	setEditable: function(isEditable)
+	{
+		this.editor.setReadOnly(!isEditable);
+
+		if (isEditable) this.editor.renderer.showCursor();
+		else this.editor.renderer.hideCursor();
 	}
 });
 

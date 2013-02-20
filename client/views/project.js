@@ -289,6 +289,9 @@ var ProjectView = Backbone.View.extend(
 	{
 		if(!this.errors.length > 0)
 		{
+			// disable editing code in debug view
+			this.editorView.setEditable(false);
+
 			// if flash succeeded, switch to debug view
 			this.debugView = new DebugView(
 			{
@@ -303,6 +306,8 @@ var ProjectView = Backbone.View.extend(
 			{
 				mixpanel.track("project:debug");
 				this.$(".debugView").addClass("hide");
+				this.editorView.setEditable(true);
+
 			}.bind(this));
 		}
 		else
