@@ -38,11 +38,11 @@ var server = http.createServer(function(request, response)
 		f.destroy();
 	});
 });
-server.listen(8000);
+server.listen(24400);
 
 var config =
 {
-	nodePort: 8000,
+	nodePort: 24400,
 	mode: "app"
 };
 
