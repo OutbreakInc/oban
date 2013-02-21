@@ -26,9 +26,14 @@ function DeviceServer()
 	badger.debug("setting device server binary:");
 	badger.debug(this.binary);
 
-	console.assert(fs.existsSync(this.binary),
-					"Device server binary wasn't found on the file system (looked in: " +
-						path.resolve(this.binary) + ")");
+	if (!fs.existsSync(this.binary))
+	{
+		badger.error(
+			"Device server binary wasn't found on the file system (looked in: " +
+			path.resolve(this.binary) + ")");
+
+		this.binaryMissing = true;
+	}
 
 	this.isStarted = false;
 
@@ -96,7 +101,9 @@ DeviceServer.prototype.requestStatus = function()
 
 DeviceServer.prototype.run = function()
 {
-	badger.debug("Starting device server...");	
+	badger.debug("Starting device server...");
+
+	if (this.binaryMissing) return;
 	
 	this.process = spawn(this.binary, [], {cwd: path.dirname(this.binary) });
 
