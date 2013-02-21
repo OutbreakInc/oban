@@ -9,7 +9,7 @@ var DeviceModel = Backbone.Model.extend(
 	initialize: function()
 	{
 		this.on("remove", this.onRemove, this);
-		this.socket = io.connect("http://localhost:8000/device");
+		this.socket = io.connect("/device");
 	},
 
 	onRemove: function()

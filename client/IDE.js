@@ -143,7 +143,7 @@ App.addInitializer(function(options)
 
 App.addInitializer(function()
 {
-	var socket = io.connect("http://localhost:8000");
+	var socket = io.connect();
 
 	socket.on("disconnect", function()
 	{

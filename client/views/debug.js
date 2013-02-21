@@ -18,8 +18,7 @@ var DebugView = Backbone.View.extend(
 	{
 		"click .continueButton": "onUserContinue",
 		"click .pauseButton": "onPause",
-		"click .stopButton" : "onStop",
-		"click .disconnectButton": "onDisconnect"
+		"click .endButton" : "onEnd"
 	},
 
 	unbindEvents: function()
@@ -32,7 +31,9 @@ var DebugView = Backbone.View.extend(
 		this.undelegateEvents();
 	},
 
-	onDisconnect: function()
+	// end a debugging session, leaving the program in whatever state it's
+	// currently in (could be either running or stopped)
+	onEnd: function()
 	{
 		this.unbindEvents();
 		this.clearMarker();
@@ -48,13 +49,6 @@ var DebugView = Backbone.View.extend(
 
 		this.trigger("debugEnd");
 		this.socket.emit("gdb_exit");
-	},
-
-	// same as onDisconnect, except we pause the program before disconnecting
-	onStop: function()
-	{
-		this.onPause();
-		this.onDisconnect();
 	},
 
 	initialize: function(options)
