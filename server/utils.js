@@ -1,16 +1,12 @@
 (function()
 {
 
-var os = require("os");
-
-var projectsDir;
-
 module.exports =
 {
 
 documentsDir: function()
 {
-	switch (os.platform())
+	switch (process.platform())
 	{
 	case "darwin": return process.env["HOME"] + "/Documents";
 	}
@@ -18,7 +14,7 @@ documentsDir: function()
 
 settingsDir: function()
 {
-	switch (os.platform())
+	switch (process.platform())
 	{
 	case "darwin": return process.env["HOME"] + 
 		"/Library/Application Support/outbreak-ide";
@@ -27,7 +23,7 @@ settingsDir: function()
 
 settingsDirForPort: function(port)
 {
-	switch (os.platform())
+	switch (process.platform())
 	{
 	case "darwin": return process.env["HOME"] + 
 		"/Library/Application Support/outbreak-ide-server/" + port;
