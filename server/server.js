@@ -49,4 +49,10 @@ var config =
 var core = new Core(server, config);
 core.init();
 
+//exit when the stdin stream is closed (i.e., when the parent process exits)
+process.stdin.on("end", function()
+{
+	process.exit(0);
+}).resume();
+
 }).call(this);
