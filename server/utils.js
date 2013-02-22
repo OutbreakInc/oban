@@ -1,14 +1,25 @@
 (function()
 {
 
+var fs = require("fs");
+
 module.exports =
 {
 
-documentsDir: function()
+modulesDir: function()
 {
 	switch (process.platform())
 	{
-	case "darwin": return process.env["HOME"] + "/Documents";
+	case "darwin": return process.env["HOME"] + "/Documents/Logiblock/modules";
+	case "win32":
+	{
+		var dir = fs.existsSync(process.env["HOMEPATH"] + "/Documents") ?
+			process.env["HOMEPATH"] + "/Documents" :
+			process.env["HOMEPATH"] + "/My Documents";
+
+		return (dir + "/Logiblock/modules/");
+	}
+	case "linux": return process.env["HOME"] + "/.logiblock/local/modules";
 	}
 },
 
@@ -16,28 +27,19 @@ settingsDir: function()
 {
 	switch (process.platform())
 	{
-	case "darwin": return process.env["HOME"] + 
-		"/Library/Application Support/outbreak-ide";
+	case "darwin": 
+		return process.env["HOME"] + "/Library/Application Support/Logiblock";
+	case "win32":
+		return process.env["APPDATA"] + "/Logiblock";
+	case "linux":
+		return process.env["HOME"] + "/.logiblock";
 	}
 },
 
-settingsDirForPort: function(port)
-{
-	switch (process.platform())
-	{
-	case "darwin": return process.env["HOME"] + 
-		"/Library/Application Support/outbreak-ide-server/" + port;
-	}
-},
-
+// keep around to not break code, replace/remove later
 projectsDir: function()
 {
-	return module.exports.documentsDir() + "/outbreak-ide";
-},
-
-projectsDirForPort: function(port)
-{
-	return module.exports.documentsDir() + "/outbreak-ide-server/" + port;
+	return module.exports.modulesDir();
 },
 
 sdkDir: function()

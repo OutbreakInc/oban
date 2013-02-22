@@ -83,10 +83,6 @@ _initDirectories: function()
 {
 	switch (this.config.mode)
 	{
-	case "server":
-		this.settingsDir = utils.settingsDirForPort(this.config.nodePort);
-		this.projectsDir = utils.projectsDirForPort(this.config.nodePort);
-		break;
 	case "app":
 		this.settingsDir = utils.settingsDir();
 		this.projectsDir = utils.projectsDir();
