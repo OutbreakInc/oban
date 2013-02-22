@@ -12,7 +12,8 @@
 		"sidestep": "0.1.1",
 		"async": "0.1.22",
 		"shelljs": "0.1.x",
-		"badger": "~0.0.2"
+		"badger": "~0.0.2",
+		"mkdirp": "0.3.x"
 	},
 	"scripts":
 	{
