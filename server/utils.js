@@ -3,6 +3,12 @@
 
 var fs = require("fs");
 
+if (process.env["LOGICODE_CONFIG"] == "dev")
+{
+	module.exports = require("./utils-dev");
+	return;
+}
+
 module.exports =
 {
 
@@ -17,10 +23,15 @@ modulesDir: function()
 			process.env["HOMEPATH"] + "/Documents" :
 			process.env["HOMEPATH"] + "/My Documents";
 
-		return (dir + "/Logiblock/modules/");
+		return (dir + "/Logiblock/modules");
 	}
 	case "linux": return process.env["HOME"] + "/.logiblock/local/modules";
 	}
+},
+
+coreModulesDir: function()
+{
+	return module.exports.settingsDir() + "/modules";
 },
 
 settingsDir: function()
