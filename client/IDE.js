@@ -75,7 +75,9 @@ App.addInitializer(function(options)
 		{
 			if (this.activeProject.get("name") == project.get("name")) return;
 
-			this.vent.trigger("closeProject");
+			var switchingProject = true;
+
+			this.vent.trigger("closeProject", switchingProject);
 
 			this.vent.on("closeProjectSuccess", openProject);
 		}
@@ -86,7 +88,7 @@ App.addInitializer(function(options)
 
 	}.bind(this));
 
-	this.vent.on("closeProject", function()
+	this.vent.on("closeProject", function(switchingProject)
 	{
 		if (!this.activeProject)
 		{
@@ -98,15 +100,21 @@ App.addInitializer(function(options)
 		{
 			if (err) return App.error("Close project error: " + err);
 
-			this.vent.trigger("closeProjectSuccess");
-			delete this.activeProject;
-
 			this.activeProjectView.close(function(err)
 			{
 				delete this.activeProjectView;
-				App.Views.welcomeView.setVisible(true);
+
+				// don't show welcome view if switching to another project
+				// in order to prevent flicker
+				if (!switchingProject)
+				{
+					App.Views.welcomeView.setVisible(true);
+				}
 
 				if (err) App.error("Close project view error: " + err);
+
+				this.vent.trigger("closeProjectSuccess");
+				delete this.activeProject;
 
 			}.bind(this));
 
