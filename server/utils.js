@@ -1,53 +1,63 @@
 (function()
 {
 
-var fs = require("fs");
-
-if (process.env["LOGICODE_CONFIG"] == "dev")
-{
-	module.exports = require("./utils-dev");
-	return;
-}
+var fs = require("fs"),
+	q = require("q");
 
 module.exports =
 {
 
 modulesDir: function()
 {
-	switch (process.platform())
+	var deferred = q.defer();
+
+	switch (process.platform)
 	{
-	case "darwin": return process.env["HOME"] + "/Documents/Logiblock/modules";
+	case "darwin": 
+		deferred.resolve(process.env["HOME"] + "/Documents/Logiblock/modules");
+		break;
+
 	case "win32":
 	{
-		var dir = fs.existsSync(process.env["HOMEPATH"] + "/Documents") ?
-			process.env["HOMEPATH"] + "/Documents" :
-			process.env["HOMEPATH"] + "/My Documents";
+		promise = q.nfcall(fs.exists, process.env["HOMEPATH"] + "/Documents");
 
-		return (dir + "/Logiblock/modules");
+		promise.then(function(exists)
+		{
+			if (exists) deferred.resolve(process.env["HOMEPATH"] + "/Documents");
+			else deferred.resolve(process.env["HOMEPATH"] + "/My Documents");
+		});
+
+		break;
 	}
-	case "linux": return process.env["HOME"] + "/.logiblock/local/modules";
+	case "linux":
+		deferred.resolve(process.env["HOME"] + "/.logiblock/local/modules");
+		break;
 	}
+
+	return deferred.promise;
 },
 
 coreModulesDir: function()
 {
-	return module.exports.settingsDir() + "/modules";
+ 	return process.env["LOGIBLOCK_CORE_PATH"] ? 
+		process.env["LOGIBLOCK_CORE_PATH"] :
+		module.exports.settingsDir() + "/modules";
 },
 
 settingsDir: function()
 {
-	switch (process.platform())
+	switch (process.platform)
 	{
 	case "darwin": 
 		return process.env["HOME"] + "/Library/Application Support/Logiblock";
-	case "win32":
+	case "win32": 
 		return process.env["APPDATA"] + "/Logiblock";
-	case "linux":
+	case "linux": 
 		return process.env["HOME"] + "/.logiblock";
 	}
 },
 
-// keep around to not break code, replace/remove later
+// backwards compatibility
 projectsDir: function()
 {
 	return module.exports.modulesDir();
@@ -55,17 +65,17 @@ projectsDir: function()
 
 sdkDir: function()
 {
-	return __dirname + "/../../ardbeg/SDK/";
+	return module.exports.coreModulesDir() + "/SDK/";
 },
 
 gdbServerDir: function()
 {
-	return __dirname + "/../../ardbeg/gdbServer/";
+	return module.exports.coreModulesDir() + "/platform/bin/";
 },
 
 platformDir: function()
 {
-	return __dirname + "/../../ardbeg/Platform/";
+	return module.exports.coreModulesDir() + "/platform/";
 }
 
 }

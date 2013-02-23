@@ -42,8 +42,7 @@ server.listen(24400);
 
 var config =
 {
-	nodePort: 24400,
-	mode: "app"
+	nodePort: 24400
 };
 
 var core = new Core(server, config);

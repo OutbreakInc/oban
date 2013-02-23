@@ -15,6 +15,7 @@ var badger = require("badger")(__filename),
 	DeviceController = require("./controllers/device"),
 	GdbClient = require("./gdb-client"),
 	socketIo = require("socket.io"),
+	mkdirp = require("mkdirp"),
 	Side = require("sidestep");
 
 function Core(server, config)
@@ -24,10 +25,6 @@ function Core(server, config)
 
 	console.assert( config.nodePort,
 					"Must pass a node port setting");
-
-	console.assert( config.mode || 
-					(config.mode != "server" && config.mode != "app"),
-					"Must have a mode (app or server)");
 
 	this.server = server;
 	this.config = config;
@@ -53,8 +50,10 @@ init: function()
 	step.define(
 	function()
 	{
-		projects = new ProjectCollection(
-			{ baseDir: utils.projectsDir() }, step.next);
+		utils.projectsDir().then(function(dir)
+		{
+			projects = new ProjectCollection({ baseDir: dir }, step.next);
+		});
 	},
 	function(err)
 	{
@@ -81,13 +80,8 @@ init: function()
 
 _initDirectories: function()
 {
-	switch (this.config.mode)
-	{
-	case "app":
-		this.settingsDir = utils.settingsDir();
-		this.projectsDir = utils.projectsDir();
-		break;
-	}
+	this.settingsDir = utils.settingsDir();
+	this.projectsDir = utils.projectsDir();
 
 	this._mkdirIfNotExist(this.projectsDir);
 	this._mkdirIfNotExist(this.settingsDir);
@@ -97,7 +91,7 @@ _mkdirIfNotExist: function(dir)
 {
 	if (!fs.existsSync(dir))
 	{
-		fs.mkdirSync(dir);
+		mkdirp.sync(dir);
 	}
 },
 

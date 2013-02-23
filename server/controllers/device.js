@@ -4,8 +4,6 @@ var _ = require("underscore"),
 	badger = require("badger")(__filename),
 	_ = require("underscore");
 
-badger.setLevel("debug");
-
 var Errors =
 {
 	CLIENT_HAS_OPEN_DEVICE: "You already have a device open"

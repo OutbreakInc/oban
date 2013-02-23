@@ -192,8 +192,8 @@ DeviceServer.prototype.run = function()
 
 DeviceServer.prototype._cleanUpListeners = function()
 {
-	this.streamer.removeAllListeners();
-	this.socket.removeAllListeners();
+	if (this.streamer) this.streamer.removeAllListeners();
+	if (this.socket) this.socket.removeAllListeners();
 	this.process.stdout.removeAllListeners();
 	this.process.removeAllListeners();
 }
