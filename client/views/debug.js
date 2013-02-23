@@ -137,6 +137,12 @@ var DebugView = Backbone.View.extend(
 
         this.breakPointMark = 
         	this.editor.session.addMarker(range, "ace_selection", "background");
+
+        // if row isn't visible, scroll to it and center on it
+        if (!this.editor.isRowVisible(row))
+        {
+        	this.editor.scrollToLine(row, true);
+        }
 	},
 
 	clearMarker: function()
