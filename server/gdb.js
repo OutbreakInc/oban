@@ -189,12 +189,13 @@ Gdb.prototype.toggleBreakpoint = function(line)
 
 Gdb.prototype.queueAction = function(action)
 {
+
 	this._actions.push(action);
 
-	// console.log("actions: " + this._actions);
-	// console.log("isStopped: " + this.isStopped);
-	// console.log("stop triggered? " + this._stopTriggered);
-	// console.log("isPause? " + (this._actions[this._actions.length - 1] == Gdb.actions.PAUSE));
+	badger.debug("action queued: " + action);
+	badger.debug("is stopped? " + this.isStopped);
+	badger.debug("stop triggered? " + this._stopTriggered);
+	badger.debug("actions: " + this._actions);
 
 	if (this.isStopped)
 	{

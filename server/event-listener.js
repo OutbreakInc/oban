@@ -1,6 +1,7 @@
 var _ = require("underscore"),
 	EventEmitter = require("events").EventEmitter,
-	inherits = require("util").inherits;
+	inherits = require("util").inherits,
+	badger = require("badger")(__filename);
 
 module.exports =
 {
@@ -13,6 +14,16 @@ module.exports =
 
 		listeners.push({ obj: obj, name: name, callback: boundCb, originalCb: callback });
 		obj.on(name, boundCb);
+
+		badger.debug("listeners:");
+		var msg = "";
+		listeners.forEach(function(listener)
+		{
+			msg += listener.name + ", ";
+		});
+
+		badger.debug(msg);
+
 		return this;
 	},
 
