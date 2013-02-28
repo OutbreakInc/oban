@@ -116,11 +116,11 @@ attachClient: function(client)
 		this._onExit(client);
 	});
 
-	this.listenTo(client, "query", function(id, callback)
+	this.listenTo(client, "gdb_query", function(variableStr, callback)
 	{
-		this.gdb.query(id, function(err, variables)
+		this.gdb.lookupVariable(variableStr, function(err, fields)
 		{
-			callback();
+			callback(null, fields);
 		});
 	});
 },
