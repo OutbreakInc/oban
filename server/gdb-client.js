@@ -23,7 +23,6 @@ run: function(file, callback)
 	var self = this;
 	
 	this.gdb = new Gdb(utils.sdkDir() + "/bin/arm-none-eabi-gdb");
-	this.gdb.setDebugging(true);	
 
 	badger.debug("running gdbclient on port " + this.deviceServer.port);
 
@@ -117,11 +116,11 @@ attachClient: function(client)
 		this._onExit(client);
 	});
 
-	this.listenTo(client, "query", function(id, callback)
+	this.listenTo(client, "gdb_query", function(variableStr, callback)
 	{
-		this.gdb.query(id, function(err, variables)
+		this.gdb.lookupVariable(variableStr, function(err, fields)
 		{
-			callback();
+			callback(null, fields);
 		});
 	});
 },

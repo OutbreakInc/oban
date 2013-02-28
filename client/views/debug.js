@@ -190,21 +190,56 @@ var DebugView = Backbone.View.extend(
 		_.forEach(variables, function(variable)
 		{
 			var node = new YAHOO.widget.TextNode(
-					this._printVar(variable), root);
+			{
+				id: variable.name,
+				label: this._printVar(variable)
+			}, root);
 
 			if (_.isArray(variable.value))
 			{
 				_.forEach(variable.value, function(subVar)
 				{
 					var subNode = new YAHOO.widget.TextNode(
-						this._printVar(subVar), node);
+					{
+						id: variable.name + "." + subVar.name,
+						label: this._printVar(subVar)
+					}, node);
+
+					if (subVar.resolvable)
+					{
+						subNode.setDynamicLoad(this.loadVariable);
+					}
 
 				}, this);
 			}
-
 		}, this);
 
 		this.tree.render();
+	},
+
+	loadVariable: function(node, callback)
+	{
+		this.socket.emit("gdb_query", node.data.id, function(err, subVars)
+		{
+			if (err) 
+			{
+				alert(err);
+				callback();
+				return;
+			}
+
+			_.forEach(subVars, function(subVar)
+			{
+				var subNode = new YAHOO.widget.TextNode(
+				{
+					id: node.data.id + "." + subVar.name,
+					label: this._printVar(subVar)
+				}, node);
+			}, this);
+
+			callback();
+			
+		}.bind(this));
 	},
 
 	_printVar: function(variable)

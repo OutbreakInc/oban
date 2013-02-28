@@ -9,7 +9,8 @@ var spawn = require("child_process").spawn,
 	util = require("util"),
 	_ = require("underscore"),
 	utils = require("./utils"),
-	badger = require("badger")(__filename);
+	badger = require("badger")(__filename),
+	idGen = require("./id-gen");
 
 var PYTHON_SCRIPT = __dirname + "/gdb/gdb.py";
 var PYTHON_HOST = "127.0.0.1";
@@ -27,6 +28,7 @@ function Gdb(binary)
 	this.binary = binary;
 	this._breakpoints = { isDirty: false, lines: {} };
 	this._actions = [];
+	this._idCallbacks = {};
 
 	_.bindAll(this);
 
@@ -39,7 +41,8 @@ Gdb.events =
 {
 	STOP: "stop",
 	CONTINUE: "continue",
-	RAW: "raw"
+	RAW: "raw",
+	VARIABLE_RESULT: "variable"
 };
 
 Gdb.actions =
@@ -47,12 +50,6 @@ Gdb.actions =
 	RESUME: "resume",
 	PAUSE: "pause"
 }
-
-Gdb.prototype.setDebugging = function(isEnabled) 
-{
-	console.log("set gdb debugging: " + isEnabled);
-	this.isDebugging = isEnabled;
-};
 
 Gdb.prototype._init = function(port, symbolFile)
 {
@@ -124,15 +121,12 @@ Gdb.prototype.run = function(symbolFile, port)
 
 	this.process.stderr.on("data", function(err)
 	{
-		console.error("ERROR: " + err);
+		badger.error(err);
 	});
 
 	this.process.stdout.on("data", function(data)
 	{
-		if (gdb.isDebugging)
-		{
-			console.log("gdb output: ", data);
-		}
+		badger.debug("gdb output: ", data);
 
 		// look for special python marker
 		if (data.indexOf("python started on port") != -1)
@@ -147,7 +141,7 @@ Gdb.prototype.run = function(symbolFile, port)
 
 	this.process.on("exit", function(code)
 	{
-		console.log("gdb has exited with code: " + code);
+		badger.debug("gdb has exited with code: " + code);
 	});
 };
 
@@ -166,12 +160,12 @@ Gdb.prototype.toggleBreakpoint = function(line)
 {
 	if (this._breakpoints.lines.hasOwnProperty(line))
 	{
-		console.log("Removing breakpoint at line " + line);
+		badger.debug("Removing breakpoint at line " + line);
 		delete this._breakpoints.lines[line];
 	}
 	else
 	{
-		console.log("Adding breakpoint at line: " + line);
+		badger.debug("Adding breakpoint at line: " + line);
 		this._breakpoints.lines[line] = true;
 	}
 
@@ -225,9 +219,16 @@ Gdb.prototype.exit = function()
 	}	
 }
 
-Gdb.prototype.getGlobalVariables = function()
+Gdb.prototype.lookupVariable = function(variableStr, callback)
 {
-	this.rawComand("info variables");
+	var id = idGen();
+
+	this.socket.write(
+		JSON.stringify({ type: "variable", variable: variableStr, id: id }));
+
+	this._idCallbacks[id] = callback;
+
+	badger.debug("list of id callbacks:", this._idCallbacks);
 }
 
 Gdb.prototype._connectSocket = function(host, port)
@@ -239,7 +240,7 @@ Gdb.prototype._connectSocket = function(host, port)
 		port: port }, 
 		function()
 		{
-			console.log("Connected to python GDB host");
+			badger.debug("Connected to python GDB host");
 			gdb._bindEvents();
 
 		});
@@ -269,12 +270,11 @@ Gdb.prototype._bindReconnectEvent = function()
 			}
 			else
 			{
-				console.log("Exceeded connection attempts to python GDB host");
+				badger.error("Exceeded connection attempts to python GDB host");
 			}
 		}
 
-		console.log("Socket error:");
-		console.log(err);
+		badger.error("Socket error:", err);
 	});	
 }
 
@@ -293,7 +293,7 @@ Gdb.prototype._unbindEvents = function()
 
 Gdb.prototype._processData = function(data)
 {
-	badger.debug("PYTHON GDB DATA:");
+ 	badger.debug("PYTHON GDB DATA:");
 	badger.debug(data);
 
 	data = JSON.parse(data);
@@ -309,10 +309,34 @@ Gdb.prototype._processData = function(data)
 		case Gdb.events.CONTINUE:
 			this.isStopped = false;
 			break;
+		case Gdb.events.VARIABLE_RESULT:
+			this._variableCallback(data);
+			break;
 		}
 
 		this.emit(data.event, data.data);
 	}
+}
+
+Gdb.prototype._variableCallback = function(data)
+{
+	if (!data.id)
+	{
+		return badger.error("Variable data event didn't have an ID!");
+	}
+
+	// find callback based on id
+	callback = this._idCallbacks[data.id];
+
+	if (!callback)
+	{
+		return badger.error("Variable data event id did not have a matching callback!");
+	}
+
+	// remove callback from list of ID callbacks
+	delete this._idCallbacks[data.id];
+
+	callback(null, data.data.value);
 }
 
 Gdb.prototype._syncBreakpoints = function()
@@ -320,14 +344,13 @@ Gdb.prototype._syncBreakpoints = function()
 	// clear all breakpoints first
 	this.rawCommand("delete");
 
-	console.log("breakpoints:");
-	console.log(this._breakpoints);
+	badger.debug("breakpoints:", this._breakpoints);
 
 	var gdb = this;
 
 	_.keys(this._breakpoints.lines).forEach(function(line)
 	{
-		console.log("b " + line);
+		badger.debug("b " + line);
 		gdb.rawCommand("b " + line);
 	});
 
