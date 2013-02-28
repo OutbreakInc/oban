@@ -23,7 +23,6 @@ run: function(file, callback)
 	var self = this;
 	
 	this.gdb = new Gdb(utils.sdkDir() + "/bin/arm-none-eabi-gdb");
-	this.gdb.setDebugging(true);	
 
 	badger.debug("running gdbclient on port " + this.deviceServer.port);
 
