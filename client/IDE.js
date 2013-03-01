@@ -129,7 +129,7 @@ App.addInitializer(function(options)
 	App.Collections = {};
 
 	App.Collections.projects = new ProjectCollection();
-	App.Collections.settings = new SettingCollection();
+	// App.Collections.settings = new SettingCollection();
 	App.Collections.devices = new DeviceCollection();
 
 	// init views
@@ -138,7 +138,7 @@ App.addInitializer(function(options)
 	App.Views.dashboard = new Dashboard(
 	{
 		projects: App.Collections.projects,
-		settings: App.Collections.settings
+		// settings: App.Collections.settings
 	});
 
 	App.Views.welcomeView = new WelcomeView(

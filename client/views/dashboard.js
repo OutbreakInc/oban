@@ -3,7 +3,7 @@ define(function(require)
 
 var Backbone = require("backbone"),
 	ProjectList = require("app/views/project-list"),
-	SettingList = require("app/views/setting-list"),
+	// SettingList = require("app/views/setting-list"),
 	App = require("app/app");
 
 var Dashboard = Backbone.View.extend(
@@ -13,7 +13,7 @@ var Dashboard = Backbone.View.extend(
 	events:
 	{
 		"click #homeButton" : "closeProject",
-		"click #settingsButton" : "openSettings"
+		// "click #settingsButton" : "openSettings"
 	},
 
 	initialize: function(options)
@@ -26,9 +26,9 @@ var Dashboard = Backbone.View.extend(
 
 		this.projectControls = this.$(".projectControls");
 		
-		this.settings = options.settings;
-		this.settingsList = new SettingList({ collection: this.settings });
-		this.settings.fetch();
+		// this.settings = options.settings;
+		// this.settingsList = new SettingList({ collection: this.settings });
+		// this.settings.fetch();
 		
 		App.vent.on("openProjectSuccess", function()
 		{
