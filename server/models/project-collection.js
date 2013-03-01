@@ -4,8 +4,7 @@ var Project = require("./project"),
 	_ = require("underscore"),
 	Side = require("sidestep"),
 	EventEmitter = require("events").EventEmitter,
-	util = require("util"),
-	utils = require("../utils");
+	util = require("util");
 
 require("shelljs/global");
 require("../string-utils");
@@ -100,7 +99,8 @@ function ProjectCollection(options, callback)
 		{
 			step.next();
 			callback();
-		});
+
+		}.bind(this));
 	})
 	.error(function(err)
 	{

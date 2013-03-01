@@ -10,34 +10,41 @@ var spawn = require("child_process").spawn,
 	badger = require("badger")(__filename);
 	_ = require("underscore"),
 	JsonStreamer = require("./json-streamer"),
-	utils = require("./utils");
+	dirs = require("./dirs");
 
 var Errors =
 {
 	STARTUP_ERROR: "Couldn't start server"
 };
 
-function DeviceServer()
+function DeviceServer(callback)
 {
 	EventEmitter.call(this);
 
-	this.binary = utils.gdbServerDir() + "GalagoServer";
-
-	badger.debug("setting device server binary:");
-	badger.debug(this.binary);
-
-	if (!fs.existsSync(this.binary))
+	dirs.bin()
+	.then(function(binDir)
 	{
-		badger.error(
-			"Device server binary wasn't found on the file system (looked in: " +
-			path.resolve(this.binary) + ")");
+		this.binary = binDir + "GalagoServer";
 
-		this.binaryMissing = true;
-	}
+		badger.debug("setting device server binary:");
+		badger.debug(this.binary);
 
-	this.isStarted = false;
+		if (!fs.existsSync(this.binary))
+		{
+			badger.error(
+				"Device server binary wasn't found on the file system (looked in: " +
+				path.resolve(this.binary) + ")");
 
-	this.streamer = new JsonStreamer;
+			this.binaryMissing = true;
+		}
+
+		this.isStarted = false;
+
+		this.streamer = new JsonStreamer;
+
+		callback();
+
+	}.bind(this));
 }
 
 util.inherits(DeviceServer, EventEmitter);

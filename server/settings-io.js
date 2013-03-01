@@ -23,7 +23,7 @@ SettingsIo.prototype.write = function(data, callback)
 
 	fs.writeFile(	this.settingsFilePath, 
 					JSON.stringify(data, null, "\t"), 
-					"utf8", callback);	
+					"utf8", callback);
 }
 
 SettingsIo.prototype.read = function(callback)

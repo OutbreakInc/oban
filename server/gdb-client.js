@@ -6,7 +6,7 @@ var spawn = require("child_process").spawn,
 	Gdb = require("./gdb"),
 	badger = require("badger")(__filename),
 	EventListener = require("./event-listener"),
-	utils = require("./utils");
+	dirs = require("./dirs");
 
 function GdbClient(deviceServer)
 {
@@ -21,32 +21,36 @@ GdbClient.prototype =
 run: function(file, callback)
 {
 	var self = this;
-	
-	this.gdb = new Gdb(utils.sdkDir() + "/bin/arm-none-eabi-gdb");
 
-	badger.debug("running gdbclient on port " + this.deviceServer.port);
-
-	if (this.events)
+	dirs.sdk()
+	.then(function(dir)
 	{
-		this.events.forEach(function(event)
+		this.gdb = new Gdb(dir + "/bin/arm-none-eabi-gdb");
+
+		badger.debug("running gdbclient on port " + this.deviceServer.port);
+
+		if (this.events)
 		{
-			this.listenTo(this.gdb, event.name, event.callback);
+			this.events.forEach(function(event)
+			{
+				this.listenTo(this.gdb, event.name, event.callback);
 
-		}.bind(this));
-	}
-	else
-	{
-		badger.warning("`this.events` did not exist, did you call run() before attachClient()?");
-	}
-	
-	if (!this.deviceServer.isStarted)
-	{
-		console.log("Device server not started, can't connect to GDB");
-		return callback("Device server not started");
-	}
+			}.bind(this));
+		}
+		else
+		{
+			badger.warning("`this.events` did not exist, did you call run() before attachClient()?");
+		}
+		
+		if (!this.deviceServer.isStarted)
+		{
+			badger.error("Device server not started, can't connect to GDB");
+			return callback("Device server not started");
+		}
 
-	this.gdb.run(file, this.deviceServer.port);
-	callback();
+		this.gdb.run(file, this.deviceServer.port);
+		callback();
+	}.bind(this));
 },
 
 // just used to resume a paused galago, does no actual debugging
@@ -54,14 +58,18 @@ resume: function(callback)
 {
 	badger.debug("resuming program");
 
-	this.gdb = new Gdb(utils.sdkDir() + "/bin/arm-none-eabi-gdb");
-
-	this.gdb.unpause(this.deviceServer.port,
-	function()
+	dirs.sdk()
+	.then(function(dir)
 	{
-		this.gdb.exit();
-		callback();
+		this.gdb = new Gdb(dir + "/bin/arm-none-eabi-gdb");
 
+		this.gdb.unpause(this.deviceServer.port,
+		function()
+		{
+			this.gdb.exit();
+			callback();
+
+		}.bind(this));
 	}.bind(this));
 },
 
@@ -84,13 +92,13 @@ attachClient: function(client)
 
 	this.listenTo(client, "gdb_command", function(command, data)
 	{
-		console.log("client command: ", command);
+		badger.debug("client command: ", command);
 		this.gdb.rawCommand(command);
 	});
 
 	this.listenTo(client, "gdb_break", function(line)
 	{
-		console.log("GDB_BREAK " + line);
+		badger.debug("gdb_break", line);
 		this.gdb.toggleBreakpoint(line);
 	});
 

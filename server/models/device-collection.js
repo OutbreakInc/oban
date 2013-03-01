@@ -23,26 +23,25 @@ function DeviceCollection(options, callback)
 	this._attrs = {};
 	this._attrs.devices = [];
 
-	this._deviceServer = new DeviceServer;
-
-	this._deviceServer.on("connect", this._add);
-	this._deviceServer.on("disconnect", this._remove);
-
-	this._deviceServer.on("list", this._reset);
-
-	this._deviceServer.on("started", this._onServerStart);
-	this._deviceServer.on("stopped", this._onServerStop);
-
-	this._deviceServer.on("error", badger.error);
-
-	this._statusRequested = true;
-
-	this._deviceServer.run();
-
-	process.nextTick(function()
+	this._deviceServer = new DeviceServer(function()
 	{
+		this._deviceServer.on("connect", this._add);
+		this._deviceServer.on("disconnect", this._remove);
+
+		this._deviceServer.on("list", this._reset);
+
+		this._deviceServer.on("started", this._onServerStart);
+		this._deviceServer.on("stopped", this._onServerStop);
+
+		this._deviceServer.on("error", badger.error);
+
+		this._statusRequested = true;
+
+		this._deviceServer.run();
+
 		callback();
-	});
+		
+	}.bind(this));
 
 	EventEmitter.call(this);
 }

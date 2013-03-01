@@ -8,7 +8,7 @@ var spawn = require("child_process").spawn,
 	EventEmitter = require("events").EventEmitter,
 	util = require("util"),
 	_ = require("underscore"),
-	utils = require("./utils"),
+	dirs = require("./dirs"),
 	badger = require("badger")(__filename),
 	idGen = require("./id-gen");
 

@@ -8,8 +8,8 @@ var _ = require("underscore"),
 	async = require("async"),
 	idGen = require("../id-gen"),
 	File = require("./file"),
-	utils = require("../utils"),
-	Compiler = require("../toolchain").Compiler;
+	dirs = require("../dirs"),
+	q = require("q");
 
 var DEFAULT_FILE_NAME = "main.cpp";
 
@@ -84,7 +84,7 @@ var Project = function(options, callback)
 	this._attrs.files = [];
 
 	this._fileIo = new FileIo(this._attrs.path);
-	this._settingsIo = new SettingsIo(this._attrs.path, "project");
+	this._settingsIo = new SettingsIo(this._attrs.path, "module");
 
 	this.step = new Side(this);
 
@@ -467,34 +467,48 @@ Project.prototype.build = function(callback)
 	var err;
 	var binary = "module.elf";
 
-	var compiler = new Compiler;
-
 	console.log("about to compile");
 
-	compiler.compile(
+	q.all([ dirs.bin(), dirs.sdk(), dirs.platform() ])
+	.then(function(dirList)
 	{
-		sdk: utils.sdkDir(), 
-		platform: utils.platformDir(), 
-		module: this._attrs.path
+		var binDir = dirList[0], 
+			sdkDir = dirList[1], 
+			platformDir = dirList[2];
 
-	}, function(err, outputName, result)
-	{
-		console.log(arguments);
+		var Sdk = require(binDir + "SDK");
 
-		if (err) return callback(err);
+		if (!Sdk) return callback("Couldn't find SDK");
 
-		if (result.compileErrors.length > 0)
+		var Compiler = Sdk.Compiler;
+
+		if (!Compiler) return callback("Couldn't find compiler");
+
+		var compiler = new Compiler;
+
+		compiler.compile(
 		{
-			console.log(result.compileErrors);
-			this._attrs.buildStatus = BuildStatus.ERRORS;
-			return callback(null, result.compileErrors);
-		}
+			sdk: sdkDir,
+			platform: platformDir,
+			project: this._attrs.path
 
-		this._attrs.buildStatus = BuildStatus.COMPILED;
-		this._attrs.binary = binary;
-		
-		callback();
+		}, function(err, outputName, result)
+		{
+			if (err) return callback(err);
 
+			if (result.compileErrors.length > 0)
+			{
+				console.log(result.compileErrors);
+				this._attrs.buildStatus = BuildStatus.ERRORS;
+				return callback(null, result.compileErrors);
+			}
+
+			this._attrs.buildStatus = BuildStatus.COMPILED;
+			this._attrs.binary = binary;
+			
+			callback();
+
+		}.bind(this));
 	}.bind(this));
 }
 

@@ -2,19 +2,45 @@ var _ = require("underscore"),
 	idGen = require("../id-gen"),
 	Side = require("sidestep"),
 	SettingsIo = require("../settings-io"),
-	utils = require("../utils");
+	dirs = require("../dirs");
+
+var DEFAULT_SETTINGS =
+{
+	"allowTracking":
+	{
+		"text": "Allow sending anonymous usage statistics", 
+		"value": true
+	},
+
+	"keyBindings":
+	{
+		"text": "Key bindings",
+		"value": 
+		[
+			{
+				"shortcut": "cmd+b",
+				"event": "build:start"
+			}
+		]
+	}
+};
 
 var Setting = function(callback)
 {
-	this.settingsDir = utils.settingsDir();
-	this.step = new Side(this);
-	
-	this._fileName = "settings";
-	this._settingsIo = new SettingsIo(this.settingsDir, this._fileName);
-	this._attrs = {};
-	this._attrs.id = idGen();
-	
-	this._load(callback);
+	dirs.settings()
+	.then(function(settingsDir)
+	{
+		this.settingsDir = settingsDir;
+		this.step = new Side(this);
+		
+		this._fileName = "settings";
+		this._settingsIo = new SettingsIo(this.settingsDir, this._fileName);
+		this._attrs = {};
+		this._attrs.id = idGen();
+		
+		this._load(callback);
+		
+	}.bind(this));
 }
 
 Setting.prototype._load = function(callback)

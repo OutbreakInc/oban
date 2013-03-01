@@ -154,9 +154,14 @@ ProjectController.prototype.onBuild = function(socket, project, callback)
 
 	project.build(function(err, compileErrors)
 	{
-		if (err) return callback(err.message);
+		if (err)
+		{
+			badger.error(err);
+			return callback(err.message);
+		}
 		else if (compileErrors)
 		{
+			badger.error(compileErrors);
 			return callback(null, compileErrors);
 		}
 

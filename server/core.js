@@ -3,7 +3,7 @@
 
 var badger = require("badger")(__filename),
 	fs = require("fs"),
-	utils = require("./utils"),
+	dirs = require("./dirs"),
 	ProjectCollection = require("./models/project-collection"),
 	DeviceCollection = require("./models/device-collection"),
 	SettingCollection = require("./models/setting-collection"),
@@ -50,9 +50,10 @@ init: function()
 	step.define(
 	function()
 	{
-		utils.projectsDir().then(function(dir)
+		dirs.modules()
+		.then(function(modulesDir)
 		{
-			projects = new ProjectCollection({ baseDir: dir }, step.next);
+			projects = new ProjectCollection({ baseDir: modulesDir }, step.next);
 		});
 	},
 	function(err)
@@ -78,13 +79,24 @@ init: function()
 	.exec();
 },
 
-_initDirectories: function()
+_initDirectories: function(callback)
 {
-	this.settingsDir = utils.settingsDir();
-	this.projectsDir = utils.projectsDir();
+	dirs.settings()
+	.then(function(settingsDir)
+	{
+		this.settingsDir = settingsDir;
+		this._mkdirIfNotExist(this.settingsDir);
 
-	this._mkdirIfNotExist(this.projectsDir);
-	this._mkdirIfNotExist(this.settingsDir);
+		return dirs.projects();
+
+	}.bind(this))
+	.then(function(projectsDir)
+	{
+		this.projectsDir = projectsDir;
+		this._mkdirIfNotExist(this.projectsDir);
+		callback();
+
+	}.bind(this));
 },
 
 _mkdirIfNotExist: function(dir)
