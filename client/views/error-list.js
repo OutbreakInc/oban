@@ -10,7 +10,7 @@ var ErrorItemView = Backbone.Marionette.ItemView.extend(
 {
 	tagName: "li",
 
-	template: _.template($("#errorItemTemplate").html()),
+	template: "#errorItemTemplate",
 
 	events:
 	{

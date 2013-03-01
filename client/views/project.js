@@ -244,7 +244,7 @@ var ProjectView = Backbone.View.extend(
 				if (err)
 				{
 					mixpanel.track("project:flash failed");
-					return App.error(err);
+					this.setCompileErrors([err]);
 				}
 
 				mixpanel.track("project:flash");
