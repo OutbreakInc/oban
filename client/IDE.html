@@ -206,7 +206,7 @@
 	</script>
 
 	<script type="text/template" id="errorItemTemplate">
-		<div class="view"><% if (line) { %> Line <%= line %>: <% } %> <%= err %></div>
+		<div class="view"><% if (typeof(line) != "undefined") { %> Line <%= line %>: <% } %> <%= err %></div>
 	</script>
 
 	<script type="text/template" id="stackItemTemplate">
