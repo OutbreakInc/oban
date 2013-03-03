@@ -21,7 +21,12 @@ var RestartView = Backbone.View.extend(
 
 	render: function()
 	{
-		this.$el.modal();
+		this.$el.modal(
+		{
+			keyboard: false,
+			backdrop: "static"
+		});
+		
 		return this;
 	}
 });
