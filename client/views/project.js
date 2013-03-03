@@ -243,8 +243,10 @@ var ProjectView = Backbone.View.extend(
 			{
 				if (err)
 				{
+					err = "Flash error: " + err;
+
 					mixpanel.track("project:flash failed");
-					this.setCompileErrors([err]);
+					this.setCompileErrors([{ err: err }]);
 				}
 
 				mixpanel.track("project:flash");
@@ -297,6 +299,7 @@ var ProjectView = Backbone.View.extend(
 			{
 				model: this.project,
 				editor: this.editorView.editor,
+				device: this.openDevice,
 				el: ".debugView"
 			});
 

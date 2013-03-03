@@ -59,6 +59,7 @@ var DebugView = Backbone.View.extend(
 		this.messageView.html("");
 		this.project = this.model;
 		this.socket = this.project.socket;
+		this.device = options.device;
 
 		this.stack = new StackCollection({ socket: this.socket });
 
@@ -88,6 +89,9 @@ var DebugView = Backbone.View.extend(
 			if (err) this.trigger("debugEnd");
 
 		}.bind(this));
+
+		// when the device is unplugged, stop debugging
+		this.listenTo(this.device, "destroy", this.onEnd);
 	},
 
 	onSetBreakpoint: function(event)
