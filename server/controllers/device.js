@@ -105,7 +105,7 @@ DeviceController.prototype.onOpen = function(socket, device, callback)
 			badger.debug(	"closed device " + device.serialNumber() + 
 							"(device unplugged)");
 
-			this.stopListening(devices, "remove", unplugDeviceFn);
+			this.stopListening(this.devices, "remove", unplugDeviceFn);
 
 		}.bind(this);
 

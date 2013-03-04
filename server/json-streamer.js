@@ -65,14 +65,21 @@ JsonStreamer.prototype.processChunk = function(data)
 
 	this._buffer = this._buffer.substr(this._pos + 1);
 
+	var parsed;
+
+	var parseError;
+
 	try
 	{
-		this.emit("data", JSON.parse(json));
+		parsed = JSON.parse(json);
 	}
 	catch(e)
 	{
+		parseError = true;
 		this.emit("error", e);
 	}
+
+	if (!parseError) this.emit("data", parsed);
 
 	// if there's still data left over, keep going
 	if (this._buffer.length > 0) this.processChunk();

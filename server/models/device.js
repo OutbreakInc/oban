@@ -58,8 +58,7 @@ Device.prototype.serialNumber = function()
 // a device can only be open in one project at a time
 Device.prototype.open = function(socketId, callback)
 {
-	if (this._attrs.isOpenBy &&
-		this._attrs.isOpenBy != socketId) 
+	if (this._attrs.isOpenBy)//this._attrs.isOpenBy != socketId) 
 	{
 		return callback(new Error(Errors.ALREADY_OPEN));
 	}
