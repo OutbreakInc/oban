@@ -87,7 +87,8 @@ attachClient: function(client)
 	[
 		{ name: Gdb.events.STOP, callback: parser.onStop },
 		{ name: Gdb.events.CONTINUE, callback: parser.onContinue },
-		{ name: Gdb.events.RAW, callback: parser.onData }
+		{ name: Gdb.events.RAW, callback: parser.onData },
+		{ name: Gdb.events.ERROR, callback: parser.onError }
 	];
 
 	this.listenTo(client, "gdb_command", function(command, data)

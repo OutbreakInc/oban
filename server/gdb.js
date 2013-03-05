@@ -42,7 +42,8 @@ Gdb.events =
 	STOP: "stop",
 	CONTINUE: "continue",
 	RAW: "raw",
-	VARIABLE_RESULT: "variable"
+	VARIABLE_RESULT: "variable",
+	ERROR: "gdb_error"
 };
 
 Gdb.actions =
@@ -122,6 +123,7 @@ Gdb.prototype.run = function(symbolFile, port)
 	this.process.stderr.on("data", function(err)
 	{
 		badger.error(err);
+		gdb.emit(Gdb.events.ERROR, err);
 	});
 
 	this.process.stdout.on("data", function(data)

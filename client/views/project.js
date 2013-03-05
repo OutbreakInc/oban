@@ -12,7 +12,10 @@ var Backbone = require("backbone"),
 	File = require("app/models/file"),
 	DeviceCollection = require("app/models/device-collection"),
 	ErrorCollection = require("app/models/error-collection"),
-	App = require("app/app");
+	BuildState = require("app/models/build-state").Model,
+	BuildStates = require("app/models/build-state").States,
+	App = require("app/app"),
+	q = require("q");
 
 var ProjectView = Backbone.View.extend(
 {
@@ -20,7 +23,7 @@ var ProjectView = Backbone.View.extend(
 
 	events:
 	{
-		"click .buildButton": "onBuild",
+		"click .buildButton": "build",
 		"click .runButton": "onRun",
 		"click .debugButton": "onDebug",
 		"click .removeButton": "onRemove"
@@ -78,6 +81,8 @@ var ProjectView = Backbone.View.extend(
 		this.listenTo(this.devices, "add", this.pairProjectWithDevice);
 
 		this.updateButtons();
+
+		this.buildState = new BuildState();
 	},
 
 	// look for the first unused device and open it for the current project
@@ -162,166 +167,156 @@ var ProjectView = Backbone.View.extend(
 
 			this.editorView = new EditorView(
 			{ 
-				model: this.activeFile, el: ".editorView" 
+				model: this.activeFile, 
+				el: ".editorView",
+				buildState: this.buildState
 			});
 
 			this.editorView.render();
 
 		}.bind(this));
 	},
-	
-	onBuild: function()
-	{
-		this.goBuild(function(){}, function(){});
-	},
 
-	goBuild: function(updateUI, callback)
+	build: function()
 	{
+		var deferred = q.defer();
+
 		this.setCompileErrors([]);
 		
 		this.editorView.clearError();
 		this.progressView.setText("Building project...");
-		this.progressView.setVisible(true, function(){});
+		this.progressView.setVisible(true);
 		
 		this.project.build(function(err, compileErrors)
 		{
-			console.log(compileErrors);
-
 			var isSuccess = (!err && !compileErrors);
 			
 			mixpanel.track("project:build");
 			this.progressView.setSuccess(isSuccess);
 			this.progressView.setText(err || compileErrors ? 
 				"Build failed" : "Build succeeded");
-			this.progressView.setVisible(false, updateUI);
-			
-			if (compileErrors)
+			this.progressView.setVisible(false);
+
+			if (err)
 			{
+				deferred.reject(err);
+			}
+			else if (compileErrors)
+			{
+				deferred.reject("Compile errors");
 				this.setCompileErrors(compileErrors);
 			}
 			else
 			{
-				this.editorView.clearDirty();
+				deferred.resolve();
+				this.buildState.set("state", BuildStates.NEEDS_FLASH);
 			}
-			
-			callback();
 
 		}.bind(this));
+
+		return deferred.promise;
 	},
 
 	onRun: function()
 	{
-		//isDirty checks if the editor has changed, and thus needs to be rebuilt before flashing
-		if(this.editorView.isDirty())
+		if (this.buildState.get("state") == BuildStates.NEEDS_BUILD)
 		{
-			//todo: a bit of a hack to wait for the "build succeeded" progressview to fade away before changing the text
-			//to "flashing device"
-			this.goBuild(function()
-			{
-				this.progressView.setText("Flashing device...");
-				this.progressView.setVisible(true, function(){});
-			}.bind(this),function()
-			{
-				this.goRun(function(){},function(){});
-			}.bind(this));
+			this.build().then(this.run);
 		}
 		else
 		{
-			this.progressView.setText("Flashing device...");
-			this.progressView.setVisible(true, function(){});			
-			this.goRun(function(){});
+			this.run();
 		}
 	},
 	
-	goRun: function(callback)
+	run: function()
 	{
-		if(!this.errors.length > 0)
+		var deferred = q.defer();
+
+		this.progressView.setText("Flashing device...");
+		this.progressView.setVisible(true);
+
+		this.project.flash(this.openDevice.get("serialNumber"),
+		function(err)
 		{
-			// hack
-			this.project.flash(this.openDevice.get("serialNumber"),
-			function(err)
+			if (err)
 			{
-				if (err)
-				{
-					err = "Flash error: " + err;
+				err = "Flash error: " + err;
 
-					mixpanel.track("project:flash failed");
-					this.setCompileErrors([{ err: err }]);
-				}
+				mixpanel.track("project:flash failed");
+				this.setCompileErrors([{ err: err }]);
+			}
 
-				mixpanel.track("project:flash");
-				this.progressView.setSuccess(!err);
-				
-				this.progressView.setText(err ? 
-					"Error flashing" : "Flashing succeeded");
-				this.progressView.setVisible(false, callback);
+			mixpanel.track("project:flash");
+			this.progressView.setSuccess(!err);
+			
+			this.progressView.setText(err ? 
+				"Error flashing" : "Flashing succeeded");
+			this.progressView.setVisible(false);
 
-			}.bind(this));
-		}
-		else
-		{
-			$(".errorList").highlight();
-		}
+			if (err) deferred.reject(err);
+			else 
+			{
+				this.buildState.set("state", BuildStates.READY_TO_DEBUG);
+				setTimeout(deferred.resolve(), 1000);
+			}
+
+		}.bind(this));
+
+		return deferred.promise;
 	},
 
 	onDebug: function()
 	{
-		//isDirty checks if the editor has changed, and thus needs to be rebuilt and reflashed before debugging
-		if(this.editorView.isDirty())
+		var state = this.buildState.get("state");
+
+		switch (this.buildState.get("state"))
 		{
-			this.goBuild(function()
-			{
-				this.progressView.setText("Flashing device...");
-				this.progressView.setVisible(true, function(){});
-			}.bind(this),function()
-			{
-				this.goRun(function()
-				{
-					this.goDebug();
-				}.bind(this));
-			}.bind(this));
-		}
-		else
-		{
-			this.goDebug();
+		case BuildStates.READY_TO_DEBUG:
+			this.debug();
+			break;
+
+		case BuildStates.NEEDS_FLASH:
+			this.run().then(this.debug);
+			break;
+
+		default:
+			console.log("Warning: build state seems to be invalid, falling back to `NEEDS_BUILD`");
+		case BuildStates.NEEDS_BUILD:
+			this.build().then(this.run).then(this.debug);
+			break;
 		}
 	},
 	
-	goDebug: function()
+	debug: function()
 	{
-		if(!this.errors.length > 0)
+		// disable editing code in debug view
+		this.editorView.setEditable(false);
+
+		// if flash succeeded, switch to debug view
+		this.debugView = new DebugView(
 		{
-			// disable editing code in debug view
-			this.editorView.setEditable(false);
+			model: this.project,
+			editor: this.editorView.editor,
+			device: this.openDevice,
+			el: ".debugView"
+		});
 
-			// if flash succeeded, switch to debug view
-			this.debugView = new DebugView(
-			{
-				model: this.project,
-				editor: this.editorView.editor,
-				device: this.openDevice,
-				el: ".debugView"
-			});
+		this.$(".debugView").removeClass("hide");
 
-			this.$(".debugView").removeClass("hide");
-
-			this.debugView.on("debugEnd", function()
-			{
-				mixpanel.track("project:debug");
-				this.$(".debugView").addClass("hide");
-				this.editorView.setEditable(true);
-
-			}.bind(this));
-		}
-		else
+		this.debugView.on("debugEnd", function()
 		{
-			$(".errorList").highlight();
-		}
+			mixpanel.track("project:debug");
+			this.$(".debugView").addClass("hide");
+			this.editorView.setEditable(true);
+
+		}.bind(this));
 	},
 	
 	onRemove: function()
 	{
 		var confirmDialog = confirm("Are you sure you want to remove this project?");
+
 		if (confirmDialog == true)
 		{
 			App.vent.trigger("closeProject");
@@ -350,43 +345,39 @@ var ProjectView = Backbone.View.extend(
 	{
 		mixpanel.track("project:close");
 
-		this._closeDebugger(function()
-		{
-			this._closeOpenDevices(function(err)
-			{
-				if (err) return callback(err);
+		this._closeDebugger();
 
-				callback();
-
-			}.bind(this));
-		}.bind(this));
-	},
-
-	_closeDebugger: function(callback)
-	{
-		if (this.debugView) this.debugView.onDisconnect();
-		callback();
-	},
-
-	_closeOpenDevices: function(callback)
-	{
-		if (!this.openDevice)
+		this._closeOpenDevices().then(
+		function()
 		{
 			this._cleanUp();
 			callback();
-		}
-		else
+		}.bind(this),
+		function(err)
 		{
-			this.openDevice.close(function(err)
-			{
-				// clean up the rest of the views/events even if we have an error
-				this._cleanUp();
+			this._cleanUp();
+			callback(err);
+		}.bind(this));
+	},
 
-				if (err) callback(err);
-				else callback();
-				
-			}.bind(this));
-		}
+	_closeDebugger: function()
+	{
+		if (this.debugView) this.debugView.onEnd();
+	},
+
+	_closeOpenDevices: function()
+	{
+		var deferred = q.defer();
+
+		if (!this.openDevice) return deferred.resolve();
+
+		this.openDevice.close(function(err)
+		{
+			if (err) deferred.reject(err);
+			else deferred.resolve();	
+		});
+
+		return deferred.promise;
 	},
 
 	_cleanUp: function()

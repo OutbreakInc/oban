@@ -5,7 +5,9 @@ var Backbone = require("backbone"),
 	App = require("app/app"),
 	ace = require("ace/ace"),
 	Range = ace.require("ace/range").Range,
-	CppMode = ace.require("ace/mode/c_cpp").Mode;
+	CppMode = ace.require("ace/mode/c_cpp").Mode,
+	BuildState = require("app/models/build-state").Model,
+	BuildStates = require("app/models/build-state").States;
 
 require("ace/mode-c_cpp");
 
@@ -14,6 +16,7 @@ var EditorView = Backbone.View.extend(
 	initialize: function(options)
 	{
 		this.file = options.model;
+		this.buildState = options.buildState;
 
 		this.$el.removeAttr("hidden");
 
@@ -60,7 +63,7 @@ var EditorView = Backbone.View.extend(
 		if (e.flags && e.flags.renderCall) return;
 		
 		mixpanel.track("file: saved");
-		this.dirty = true;
+		this.buildState.set("state", BuildStates.NEEDS_BUILD);
 		this.file.setContents(this.session.getValue(),
 		function(err)
 		{
@@ -98,14 +101,14 @@ var EditorView = Backbone.View.extend(
 		}
 	},
 	
-	isDirty: function()
+	setBuildStatus: function(status)
 	{
-		return this.dirty;
+		this.status = status;
 	},
 
-	clearDirty: function()
+	buildStatus: function()
 	{
-		this.dirty = false;
+		return this.status;
 	},
 
 	setEditable: function(isEditable)

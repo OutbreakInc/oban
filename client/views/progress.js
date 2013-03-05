@@ -17,12 +17,13 @@ var ProgressView = Backbone.View.extend(
 		this.$(".progress").removeClass("progress-striped active");
 	},
 
-	setVisible: function(isVisible, callback)
+	setVisible: function(isVisible)
 	{
+		this.$el.stop();
+
 		if (isVisible)
 		{
 			this.$el.fadeIn("fast");
-			return callback();
 		}
 		else
 		{
@@ -30,7 +31,6 @@ var ProgressView = Backbone.View.extend(
 			{
 				this.progressBar.removeClass("bar-success bar-danger");
 				this.progress.addClass("progress-striped active");
-				return callback();
 			}.bind(this));
 		}
 	},

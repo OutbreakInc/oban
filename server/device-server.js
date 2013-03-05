@@ -67,13 +67,21 @@ DeviceServer.prototype.flash = function(device, fullFilePath, callback)
 
 		if (data.device.serialNumber == device.serialNumber)
 		{
-			callback();
 			this.streamer.removeListener("data", flashCallback);
+			clearTimeout(flashTimeout);
+			callback();
 		}
 
 	}.bind(this);
 
 	this.streamer.on("data", flashCallback);
+
+	var flashTimeout = setTimeout(function()
+	{
+		this.streamer.removeListener("data", flashCallback);
+		callback("Flash timeout!");
+
+	}.bind(this), 10000);
 }
 
 DeviceServer.prototype._onStatus = function(data)

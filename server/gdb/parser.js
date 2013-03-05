@@ -84,6 +84,11 @@ Parser.prototype.onData = function(data)
 	this.client.emit("gdb_message", data);
 }
 
+Parser.prototype.onError = function(err)
+{
+	this.client.emit("gdb_error", err);
+}
+
 module.exports = Parser;
 
 }).call(this);

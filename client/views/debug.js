@@ -27,6 +27,7 @@ var DebugView = Backbone.View.extend(
 		this.socket.removeListener("gdb_break", this.onBreakpoint);
 		this.socket.removeListener("gdb_variables", this.onVariables);
 		this.socket.removeListener("gdb_continue", this.onContinue);
+		this.socket.removeListener("gdb_error", this.onError);
 		this.editor.removeListener("guttermousedown", this.onSetBreakpoint);
 		this.undelegateEvents();
 	},
@@ -70,10 +71,11 @@ var DebugView = Backbone.View.extend(
 
 		var self = this;
 
-		this.listenTo(this.socket, "gdb_message", this.onData);
-		this.listenTo(this.socket, "gdb_break", this.onBreakpoint);
-		this.listenTo(this.socket, "gdb_variables", this.onVariables);
-		this.listenTo(this.socket, "gdb_continue", this.onContinue);
+		this.socket.on("gdb_message", this.onData);
+		this.socket.on("gdb_break", this.onBreakpoint);
+		this.socket.on("gdb_variables", this.onVariables);
+		this.socket.on("gdb_continue", this.onContinue);
+		this.socket.on("gdb_error", this.onError);
 
 		this.editor = options.editor;
 
@@ -174,6 +176,12 @@ var DebugView = Backbone.View.extend(
 		this.socket.emit("gdb_resume");
 		this.clearMarker();
 		this.clearSidebar();
+	},
+
+	onError: function(err)
+	{
+		alert(err);
+		this.onEnd();
 	},
 
 	clearSidebar: function()
