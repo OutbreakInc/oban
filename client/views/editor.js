@@ -30,7 +30,6 @@ var EditorView = Backbone.View.extend(
 
 		this.session = this.editor.getSession();
 		this.session.setMode(new CppMode);
-		this.dirty = true;
 		
 		setTimeout(_.bind(function()
 		{	
