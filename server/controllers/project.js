@@ -170,7 +170,7 @@ ProjectController.prototype.onBuild = function(socket, project, callback)
 	}.bind(this));
 }
 
-ProjectController.prototype.onFlash = function(socket, project, serialNumber, callback)
+ProjectController.prototype.onFlash = function(socket, project, serialNumber, isDebuggingAfter, callback)
 {
 	if (!this._isOpenBy(project, socket))
 	{
@@ -189,15 +189,23 @@ ProjectController.prototype.onFlash = function(socket, project, serialNumber, ca
 	{
 		if (err) return callback(err);
 
-		// after flash is done, start GDB just to resume the device
-		this.gdbClient.resume(
-		function(err)
+		// if we're debugging after, don't resume the device
+		if (isDebuggingAfter)
 		{
-			if (err) return callback(err);
-
 			callback();
+		}
+		else
+		{
+			// after flash is done, start GDB just to resume the device
+			this.gdbClient.resume(
+			function(err)
+			{
+				if (err) return callback(err);
 
-		}.bind(this));
+				callback();
+
+			}.bind(this));
+		}
 
 	}.bind(this));
 }

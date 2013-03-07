@@ -121,9 +121,9 @@ var ProjectModel = Backbone.Model.extend(
 		}.bind(this));
 	},
 
-	flash: function(serialNumber, callback)
+	flash: function(serialNumber, isDebuggingAfter, callback)
 	{
-		this.socket.emit("flash", this.id, serialNumber, function(err)
+		this.socket.emit("flash", this.id, serialNumber, isDebuggingAfter, function(err)
 		{
 			if (err) return callback(err);
 

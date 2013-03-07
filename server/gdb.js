@@ -81,14 +81,25 @@ Gdb.prototype.unpause = function(port, callback)
 	this.process.stdout.setEncoding("utf8");
 	this.process.stderr.setEncoding("utf8");
 
-	this._resume();
-
-	// hack, make it actually correctly find out when we are running
-	setTimeout(function()
+	// slightly less gruesome hack than before
+	this.process.stdout.on("data", function(data)
 	{
-		callback();
+		if (data.match(/Continuing/))
+		{
+			// wait a short amount of time after the "continue":
+			// continue is asynchronous, so even after we've received
+			// the "Continuing" message in GDB, there may still be commands
+			// that need to finish running to properly continue
+			setTimeout(function()
+			{
+				this.process.stdout.removeAllListeners();
+				callback();
+			}.bind(this), 1000);
+		}
 
-	}.bind(this), 1000);
+	}.bind(this));	
+
+	this._resume();
 }
 
 // start gdb process and connect to our local gdb server

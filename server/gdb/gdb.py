@@ -86,17 +86,20 @@ def stop_handler(event):
 	global isStopped
 	isStopped = True
 	frame = gdb.newest_frame()
-	block = frame.block()
 
-	blockSymbols = parse_block(block, frame)
-	backtrace = parse_bt(frame)
-	location = parse_location(frame.find_sal())
+	packet = { "event": "stop" }
 
-	packet = { "event": "stop", "data": 
-		{"blockSymbols": blockSymbols, 
-		"backtrace": backtrace,
-		"location": location}
-		}
+	try:
+		block = frame.block()
+	except RuntimeError:
+		print "herp derp"
+		packet["data"] = {}
+		# can't find symbols for current block, send nothing
+	else:
+		packet["data"] = { "blockSymbols": parse_block(block, frame) }
+
+	packet["data"]["backtrace"] = parse_bt(frame)
+	packet["data"]["location"] = parse_location(frame.find_sal())
 
 	conn.send(json.dumps(packet))
 
@@ -174,11 +177,10 @@ def parse_value_field(field, value, frame):
 		"value": str(value[field.name])
 	}
 
-
 def parse_bt(frame):
 	frameNames = []
 
-	while frame != None:
+	while frame != None and frame.name() != None:
 		frameNames.append({
 			"name": frame.name() })
 		frame = frame.older()

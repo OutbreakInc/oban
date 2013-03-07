@@ -229,14 +229,16 @@ var ProjectView = Backbone.View.extend(
 		}
 	},
 	
-	run: function()
+	run: function(isDebuggingAfter)
 	{
 		var deferred = q.defer();
 
 		this.progressView.setText("Flashing device...");
 		this.progressView.setVisible(true);
 
-		this.project.flash(this.openDevice.get("serialNumber"),
+		this.project.flash(
+			this.openDevice.get("serialNumber"),
+			isDebuggingAfter,
 		function(err)
 		{
 			if (err)
@@ -258,7 +260,7 @@ var ProjectView = Backbone.View.extend(
 			else 
 			{
 				this.buildState.set("state", BuildStates.READY_TO_DEBUG);
-				setTimeout(deferred.resolve(), 1000);
+				deferred.resolve();
 			}
 
 		}.bind(this));
@@ -269,6 +271,7 @@ var ProjectView = Backbone.View.extend(
 	onDebug: function()
 	{
 		var state = this.buildState.get("state");
+		var isDebuggingAfter = true;
 
 		switch (this.buildState.get("state"))
 		{
@@ -277,13 +280,17 @@ var ProjectView = Backbone.View.extend(
 			break;
 
 		case BuildStates.NEEDS_FLASH:
-			this.run().then(this.debug);
+			this.run(isDebuggingAfter).then(this.debug);
 			break;
 
 		default:
 			console.log("Warning: build state seems to be invalid, falling back to `NEEDS_BUILD`");
 		case BuildStates.NEEDS_BUILD:
-			this.build().then(this.run).then(this.debug);
+			this.build().then(function()
+			{
+				return this.run(isDebuggingAfter).then(this.debug);
+				
+			}.bind(this));
 			break;
 		}
 	},
