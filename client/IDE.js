@@ -107,6 +107,34 @@ App.addInitializer(function(options)
 	}.bind(this));
 });
 
+App.addInitializer(function()
+{
+	// make sure backspace key doesn't trigger page navigation
+	$(document).keydown(function(event)
+	{
+		if (event.keyCode === 8) // backspace
+		{
+			var doPrevent = false;
+
+			if (event.keyCode === 8) 
+			{
+				var d = event.srcElement || event.target;
+				if ((d.tagName.toUpperCase() === 'INPUT' && (d.type.toUpperCase() === 'TEXT' || d.type.toUpperCase() === 'PASSWORD')) 
+					|| d.tagName.toUpperCase() === 'TEXTAREA') 
+				{
+					doPrevent = d.readOnly || d.disabled;
+				}
+				else 
+				{
+					doPrevent = true;
+				}
+			}
+
+			if (doPrevent) event.preventDefault();
+		}
+	});
+});
+
 App.addInitializer(function(options)
 {
 	// init collections
