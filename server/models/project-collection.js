@@ -4,9 +4,9 @@ var Project = require("./project"),
 	_ = require("underscore"),
 	Side = require("sidestep"),
 	EventEmitter = require("events").EventEmitter,
-	util = require("util");
+	util = require("util"),
+	rimraf = require("rimraf");
 
-require("shelljs/global");
 require("../string-utils");
 
 var Errors =
@@ -191,10 +191,7 @@ ProjectCollection.prototype.removeProject = function(id, callback)
 	function()
 	{
 		// remove project from disk
-		exec(
-			"rm -rf " + removedProject.path(),
-			{ async: true },
-			step.next);
+		rimraf(removedProject.path(), step.next);
 	},
 	function(errCode, output)
 	{

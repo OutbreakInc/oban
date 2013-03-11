@@ -15,7 +15,12 @@
 		"badger": "~0.0.2",
 		"mkdirp": "0.3.x",
 		"q": "0.8.12",
-		"moduleverse": ">0"
+		"moduleverse": ">0",
+		"rimraf": "2.1.4"
+	},
+	"devDependencies":
+	{
+		"shelljs": "*"
 	},
 	"scripts":
 	{
