@@ -92,7 +92,7 @@ def stop_handler(event):
 	try:
 		block = frame.block()
 	except RuntimeError:
-		print "herp derp"
+		print "frame did not have a block!"
 		packet["data"] = {}
 		# can't find symbols for current block, send nothing
 	else:
@@ -153,7 +153,10 @@ def parse_symbol(symbol, frame):
 
 	# for all other types, just record their value
 	else:
-		value = str(symbol.value(frame))
+		try:
+			value = str(symbol.value(frame))
+		except gdb.error:
+			value = "Error resolving value"
 
 	return { "name": symbol.name, "type": str(symbol.type), "value": value }
 
@@ -164,17 +167,35 @@ def is_resolvable(symType):
 	return symType.code == gdb.TYPE_CODE_STRUCT or symType.code == gdb.TYPE_CODE_ARRAY
 
 def parse_field(field, symbol, frame):
+	name = str(field.name)
+	type = str(field.type)
+	value = None
+
+	try:
+		value = str(symbol.value(frame)[field.name])
+	except gdb.error:
+		value = "Error resolving value"
+
 	return { 
-		"name": field.name, 
-		"type": str(field.type),
-		"value": str(symbol.value(frame)[field.name])
+		"name": name,
+		"type": type,
+		"value": value
 	}
 
-def parse_value_field(field, value, frame):
-	return {
-		"name": field.name,
-		"type": str(field.type),
-		"value": str(value[field.name])
+def parse_value_field(field, valueField, frame):
+	name = str(field.name)
+	type = str(field.type)
+	value = None
+
+	try:
+		value = str(valueField[field.name])
+	except gdb.error:
+		value = "Error resolving value"
+
+	return { 
+		"name": name,
+		"type": type,
+		"value": value
 	}
 
 def parse_bt(frame):

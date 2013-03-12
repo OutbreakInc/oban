@@ -23,6 +23,8 @@ var DeviceCollection = Backbone.Collection.extend(
 		this.socket.on("add", this.add);
 		this.socket.on("remove", this.remove);
 		this.socket.on("clear", this.removeModels);
+		this.socket.on("reset", this.reset);
+		this.socket.on("error", this.onError);
 	},
 
 	removeModels: function()
@@ -38,11 +40,16 @@ var DeviceCollection = Backbone.Collection.extend(
 	{
 		this.socket.emit("list", function(err, devices)
 		{
-			if (err) return alert(err);
+			if (err) return this.onError(err);
 
 			this.reset(devices);
 
 		}.bind(this));
+	},
+
+	onError: function(err)
+	{
+		this.trigger("error", err);
 	}
 });
 

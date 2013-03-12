@@ -196,7 +196,6 @@ Gdb.prototype.toggleBreakpoint = function(line)
 
 Gdb.prototype.queueAction = function(action)
 {
-
 	this._actions.push(action);
 
 	badger.debug("action queued: " + action);
@@ -206,12 +205,14 @@ Gdb.prototype.queueAction = function(action)
 
 	if (this.isStopped)
 	{
+		badger.debug("stopped, processing actions");
 		this._processActions();
 		return;
 	}
 
 	if (!this._stopTriggered && this._actions[this._actions.length - 1] == Gdb.actions.PAUSE)
 	{
+		badger.debug("triggering pause");
 		this._pause();
 	}
 }
@@ -380,13 +381,29 @@ Gdb.prototype._pause = function()
 {
 	if (this.process)
 	{
+		badger.debug("have a process, sending SIGINT");
 		this._stopTriggered = true;
 		this.process.kill("SIGINT");
+
+		// set up a timer - we except to get a pause action soon
+		// if we don't get one, error out of debugging
+		if (!this._stopTimeout)
+		{
+			this._stopTimeout = setTimeout(function()
+			{
+				badger.error("pause action timed out, sending client error");
+				this.emit(Gdb.events.ERROR, "Pause action timed out");
+
+			}.bind(this), 5000);
+		}
+
 	}
 }
 
 Gdb.prototype._processActions = function()
 {
+	badger.debug("processing actions");
+
 	var action = this._actions[this._actions.length - 1];
 
 	// we only need to do something if the last action is a resume action
@@ -403,6 +420,11 @@ Gdb.prototype._processActions = function()
 
 Gdb.prototype._onStop = function()
 {
+	if (this._stopTimeout)
+	{
+		clearTimeout(this._stopTimeout);
+	}
+
 	if (this._breakpoints.isDirty)
 	{
 		this._syncBreakpoints();

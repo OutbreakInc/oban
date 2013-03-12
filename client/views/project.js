@@ -79,6 +79,7 @@ var ProjectView = Backbone.View.extend(
 
 		this.listenTo(this.devices, "reset", this.onDevicesReset);
 		this.listenTo(this.devices, "add", this.pairProjectWithDevice);
+		this.listenTo(this.devices, "error", this.onDeviceError);
 
 		this.updateButtons();
 
@@ -400,6 +401,11 @@ var ProjectView = Backbone.View.extend(
 		this.errorListView.close();
 		this.undelegateEvents();
 		this.stopListening();		
+	},
+
+	onDeviceError: function(err)
+	{
+		this.setCompileErrors([{ err: err }]);
 	}
 });
 

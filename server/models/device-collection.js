@@ -35,7 +35,9 @@ function DeviceCollection(options, callback)
 
 		this._deviceServer.on("error", badger.error);
 
-		this._statusRequested = true;
+		this._deviceServer.on("cantStart", this._onServerInvalid);
+
+		this._gotStatusRequest = false;
 
 		this._deviceServer.run();
 
@@ -52,7 +54,11 @@ DeviceCollection.Errors = Errors;
 
 DeviceCollection.prototype._reset = function(devices)
 {
-	if (!this._statusRequested) return;
+	// only process one status request per run of the device server
+	// if device server restarts, then we can accept another one
+	if (this._gotStatusRequest) return;
+
+	this._gotStatusRequest = true;
 
 	badger.debug("reset devices", devices);
 
@@ -67,9 +73,10 @@ DeviceCollection.prototype._reset = function(devices)
 	function(err)
 	{
 		if (err) return badger.error(err);
-	});
 
-	this._statusRequested = false;
+		this.emit("reset", this._attrs.devices);
+
+	}.bind(this));
 }
 
 DeviceCollection.prototype._add = function(data)
@@ -124,6 +131,16 @@ DeviceCollection.prototype._onServerStop = function()
 	this.emit("stopped");
 
 	this._attrs.devices = [];
+	this._gotStatusRequest = false;
+}
+
+DeviceCollection.prototype._onServerInvalid = function()
+{
+	badger.debug("device server binary invalid!");
+
+	this._attrs.isServerInvalid = true;
+	this.emit("cantStart");
+	this._gotStatusRequest = false;
 }
 
 DeviceCollection.prototype.findBySerial = function(serialNumber)
@@ -141,6 +158,11 @@ DeviceCollection.prototype.flash = function(serialNumber, fullFilePath, callback
 	if (!device) return callback(Errors.NO_SUCH_DEVICE);
 
 	this._deviceServer.flash(device.toJSON(), fullFilePath, callback);
+}
+
+DeviceCollection.prototype.isServerInvalid = function()
+{
+	return this._attrs.isServerInvalid;
 }
 
 DeviceCollection.prototype.toJSON = function()

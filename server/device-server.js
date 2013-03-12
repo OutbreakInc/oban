@@ -63,6 +63,14 @@ DeviceServer.prototype.flash = function(device, fullFilePath, callback)
 	{
 		badger.debug("flashback!");
 
+		// got an error while flashing
+		if (data && data.err)
+		{
+			this.streamer.removeListener("data", flashCallback);
+			clearTimeout(flashTimeout);
+			callback(data.err.msg);
+		}
+
 		if (!data || !data.event || data.event != "flashed") return;
 
 		if (data.device.serialNumber == device.serialNumber)
@@ -94,7 +102,7 @@ DeviceServer.prototype._onStatus = function(data)
 	if (this.devices.length > 0)
 	{
 		this.port = this.devices[0].gdbPort;
-		badger.debug(this.port);
+		badger.debug("assigned port " + this.port + " as the gdb debug port");
 		this.isStarted = true;
 	}
 }
@@ -107,6 +115,12 @@ DeviceServer.prototype._onDeviceConnect = function(data)
 DeviceServer.prototype._onDeviceDisconnect = function(data)
 {
 	this.emit("disconnect", data.device);
+}
+
+DeviceServer.prototype._onError = function(err)
+{
+	badger.error(err);
+	this.emit("error", err.msg);
 }
 
 DeviceServer.prototype.requestStatus = function()
@@ -182,7 +196,19 @@ DeviceServer.prototype.run = function()
 				break;
 			case "unplug":
 				this._onDeviceDisconnect(data);
-				break;	
+				break;
+			default:
+			{
+				badger.warning("unknown event");
+
+				if (data.err) this._onError(data.err);
+				else
+				{
+					badger.warning(data);
+				}
+
+				break;
+			}
 			}
 
 		}.bind(this));
@@ -199,14 +225,22 @@ DeviceServer.prototype.run = function()
 	this.process.on("exit", function(code)
 	{
 		badger.error("GalagoServer exited with code: " + code);
-		this.emit("stopped");
 		this.isStarted = false;
 		this._cleanUpListeners();
 		delete this.port;
+		this.emit("stopped");
 
-		// restart GalagoServer
-		badger.error("restarting GalagoServer...");
-		this.run();
+		// code 255 means we can't start the server, don't try to restart
+		if (code === 127)
+		{
+			this.emit("cantStart");
+		}
+		else
+		{
+			// restart GalagoServer
+			badger.error("restarting GalagoServer...");
+			this.run();
+		}
 
 	}.bind(this));
 }
