@@ -17,7 +17,7 @@ var DebugView = Backbone.View.extend(
 	events:
 	{
 		"click .continueButton": "onUserContinue",
-		"click .pauseButton": "onPause",
+		"click .pauseButton": "onUserPause",
 		"click .endButton" : "onEnd"
 	},
 
@@ -28,6 +28,7 @@ var DebugView = Backbone.View.extend(
 		this.socket.removeListener("gdb_variables", this.onVariables);
 		this.socket.removeListener("gdb_continue", this.onContinue);
 		this.socket.removeListener("gdb_error", this.onError);
+		this.socket.removeListener("gdb_pause", this.onPause);
 		this.editor.removeListener("guttermousedown", this.onSetBreakpoint);
 		this.undelegateEvents();
 	},
@@ -36,6 +37,8 @@ var DebugView = Backbone.View.extend(
 	// currently in (could be either running or stopped)
 	onEnd: function()
 	{
+		this.setButtonLoading(".endButton", true);
+
 		this.unbindEvents();
 		this.clearMarker();
 		this.clearSidebar();
@@ -47,6 +50,8 @@ var DebugView = Backbone.View.extend(
 			this.editor.session.clearBreakpoint(row);
 
 		}, this);
+
+		this.setButtonLoading(".endButton", false);
 
 		this.trigger("debugEnd");
 		this.socket.emit("gdb_exit");
@@ -76,6 +81,7 @@ var DebugView = Backbone.View.extend(
 		this.socket.on("gdb_variables", this.onVariables);
 		this.socket.on("gdb_continue", this.onContinue);
 		this.socket.on("gdb_error", this.onError);
+		this.socket.on("gdb_pause", this.onPause);
 
 		this.editor = options.editor;
 
@@ -133,6 +139,23 @@ var DebugView = Backbone.View.extend(
 		this.messageView.append(data + "<br>");		
 	},
 
+	onUserPause: function()
+	{
+		if (this.isPaused) return;
+
+		this.socket.emit("gdb_pause");
+
+		this.setButtonLoading(".pauseButton", true);
+	},	
+
+	onPause: function()
+	{
+		this.setButtonLoading(".pauseButton", false);
+		this.$(".pauseButton").attr("disabled", "disabled");
+		this.$(".continueButton").setEnabled(true);
+		this.isPaused = true;
+	},
+
 	setMarker: function(line)
 	{
 		var line = parseInt(line, 10);
@@ -167,15 +190,17 @@ var DebugView = Backbone.View.extend(
 
 	onContinue: function()
 	{
+		this.isPaused = false;
 		this.clearMarker();
 		this.clearSidebar();
+		this.$(".continueButton").setEnabled(false);
+		this.$(".pauseButton").setEnabled(true);
 	},
 
 	onUserContinue: function()
 	{
 		this.socket.emit("gdb_resume");
-		this.clearMarker();
-		this.clearSidebar();
+		this.onContinue();
 	},
 
 	onError: function(err)
@@ -261,9 +286,13 @@ var DebugView = Backbone.View.extend(
 			" ("+variable.type+")";
 	},
 
-	onPause: function()
+	setButtonLoading: function(buttonName, isLoading)
 	{
-		this.socket.emit("gdb_pause");
+		this.$(".continueButton").setEnabled(!isLoading);
+		this.$(".pauseButton").setEnabled(!isLoading);
+		this.$(".endButton").setEnabled(!isLoading);
+
+		this.$(buttonName).setLoading(isLoading);
 	}
 });
 

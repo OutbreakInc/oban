@@ -79,13 +79,13 @@
 			<div class="devView sidebar">
 				<div class="optionsView">
 					<div class="projectControls sidebarHeader">
-						<button class="btn btn-small btn-primary buildButton">
+						<button class="btn btn-small btn-primary buildButton" data-loading-text="Building...">
 							<span class="icon-check icon-white"></span> Build
 						</button>
-						<button class="btn btn-small btn-primary runButton">
+						<button class="btn btn-small btn-primary runButton" data-loading-text="Flashing...">
 							<span class="icon-play icon-white"></span> Run
 						</button>
-						<button class="btn btn-small btn-primary debugButton">
+						<button class="btn btn-small btn-primary debugButton" data-loading-text="Starting Debugging..."
 							<span class="icon-play icon-white"></span> Debug
 						</button>
 					</div>
@@ -137,9 +137,9 @@
 			</div>
 			<div class="debugView sidebar hide">
 				<div class="controls sidebarHeader">
-					<button class="btn btn-small btn-primary continueButton">Continue</button>
-					<button class="btn btn-small btn-primary pauseButton">Pause</button> 
-					<button class="btn btn-small btn-primary endButton">End Debugging</button>
+					<button class="btn btn-small btn-primary continueButton" data-loading-text="Continuing...">Continue</button>
+					<button class="btn btn-small btn-primary pauseButton" data-loading-text="Pausing...">Pause</button> 
+					<button class="btn btn-small btn-primary endButton" data-loading-text="Ending Debugging...">End Debugging</button>
 				</div>
 				<div class="varView yui-skin-sam">
 					<h4>Variables</h4>

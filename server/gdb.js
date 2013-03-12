@@ -284,6 +284,7 @@ Gdb.prototype._bindReconnectEvent = function()
 			}
 			else
 			{
+				// TODO: handle this error and send to frontend!
 				badger.error("Exceeded connection attempts to python GDB host");
 			}
 		}
@@ -393,6 +394,7 @@ Gdb.prototype._pause = function()
 			{
 				badger.error("pause action timed out, sending client error");
 				this.emit(Gdb.events.ERROR, "Pause action timed out");
+				delete this._stopTimeout;
 
 			}.bind(this), 5000);
 		}
@@ -423,6 +425,7 @@ Gdb.prototype._onStop = function()
 	if (this._stopTimeout)
 	{
 		clearTimeout(this._stopTimeout);
+		delete this._stopTimeout;
 	}
 
 	if (this._breakpoints.isDirty)

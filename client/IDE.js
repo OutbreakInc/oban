@@ -20,12 +20,26 @@ $.fn.setEnabled = function(isEnabled)
 {
 	if (isEnabled) 
 	{
-		$(this).removeAttr("disabled");
+		$(this).removeAttr("disabled").removeClass("disabled");
 	}
 	else
 	{
-		$(this).attr("disabled", "disabled");
+		$(this).attr("disabled", "disabled").addClass("disabled");
 	}
+}
+
+$.fn.setLoading = function(isLoading)
+{
+	// if loading, disable button and set its text to its data loading attribute
+	var data = $(this).data(),
+		$el = $(this);
+
+	var state = (isLoading ? "loading" : "reset") + "Text";
+
+	data.resetText || $el.data("resetText", $el.html());
+	var text = data[state] || "Loading...";
+	$el.html(text);
+	$el.setEnabled(!isLoading);
 }
 
 App.addInitializer(function(options)

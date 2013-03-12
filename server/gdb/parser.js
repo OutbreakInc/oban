@@ -46,6 +46,7 @@ Parser.utils = utils;
 
 Parser.prototype.onStop = function(data)
 {
+	this.client.emit("gdb_pause");
 	this.client.emit("gdb_break", data.location);
 	this.client.emit("gdb_stack", data.backtrace);
 	this.client.emit("gdb_variables", data.blockSymbols);

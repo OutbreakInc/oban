@@ -182,6 +182,8 @@ var ProjectView = Backbone.View.extend(
 	{
 		var deferred = q.defer();
 
+		this.setButtonLoading(".buildButton", true);
+
 		this.setCompileErrors([]);
 		
 		this.editorView.clearError();
@@ -197,6 +199,8 @@ var ProjectView = Backbone.View.extend(
 			this.progressView.setText(err || compileErrors ? 
 				"Build failed" : "Build succeeded");
 			this.progressView.setVisible(false);
+
+			this.setButtonLoading(".buildButton", false);
 
 			if (err)
 			{
@@ -234,6 +238,8 @@ var ProjectView = Backbone.View.extend(
 	{
 		var deferred = q.defer();
 
+		this.setButtonLoading(".runButton", true);
+
 		this.progressView.setText("Flashing device...");
 		this.progressView.setVisible(true);
 
@@ -256,6 +262,8 @@ var ProjectView = Backbone.View.extend(
 			this.progressView.setText(err ? 
 				"Error flashing" : "Flashing succeeded");
 			this.progressView.setVisible(false);
+
+			this.setButtonLoading(".runButton", false);
 
 			if (err) deferred.reject(err);
 			else 
@@ -406,7 +414,23 @@ var ProjectView = Backbone.View.extend(
 	onDeviceError: function(err)
 	{
 		this.setCompileErrors([{ err: err }]);
-	}
+	},
+
+	setButtonLoading: function(buttonName, isLoading)
+	{
+		this.$(".buildButton").setEnabled(!isLoading);
+		this.$(".runButton").setEnabled(!isLoading);
+		this.$(".debugButton").setEnabled(!isLoading);
+		this.$(".removeButton").setEnabled(!isLoading);
+
+		this.$(buttonName).setLoading(isLoading);
+
+		// respect button state based on whether a device is connected
+		if (!isLoading)
+		{
+			this.updateButtons();
+		}
+	}	
 });
 
 return ProjectView;
