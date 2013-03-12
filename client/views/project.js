@@ -376,13 +376,18 @@ var ProjectView = Backbone.View.extend(
 	{
 		var deferred = q.defer();
 
-		if (!this.openDevice) return deferred.resolve();
-
-		this.openDevice.close(function(err)
+		if (!this.openDevice)
 		{
-			if (err) deferred.reject(err);
-			else deferred.resolve();	
-		});
+			deferred.resolve();
+		}
+		else
+		{
+			this.openDevice.close(function(err)
+			{
+				if (err) deferred.reject(err);
+				else deferred.resolve();	
+			});
+		}
 
 		return deferred.promise;
 	},
