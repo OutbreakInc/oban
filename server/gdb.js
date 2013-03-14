@@ -111,6 +111,8 @@ Gdb.prototype.run = function(symbolFile, port)
 	console.assert( _.isNumber(port) && port > 0,
 					"Must specify valid device server port: " + port);
 
+	this.gdbPort = port;
+
 	badger.debug("run arguments:", arguments);
 
 	this.process = spawn(this.binary, [], { cwd: path.dirname(symbolFile) });
@@ -392,11 +394,20 @@ Gdb.prototype._pause = function()
 		{
 			this._stopTimeout = setTimeout(function()
 			{
-				badger.error("pause action timed out, sending client error");
-				this.emit(Gdb.events.ERROR, "Pause action timed out");
-				delete this._stopTimeout;
+				badger.warning("pause did not go off, trying pause workaround");
+				this.process.kill("SIGINT");
+				this.rawCommand("target remote localhost:" + this.gdbPort);
 
-			}.bind(this), 5000);
+				// if pause workaround did not work either, end debug session
+				this._stopTimeout = setTimeout(function()
+				{
+					badger.error("pause action timed out, sending client error");
+					this.emit(Gdb.events.ERROR, "Pause action timed out");
+					delete this._stopTimeout;
+
+				}.bind(this), 4000);
+
+			}.bind(this), 1000);
 		}
 
 	}
