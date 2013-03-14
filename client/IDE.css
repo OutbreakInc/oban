@@ -240,3 +240,11 @@ img.outbreakIDELogo
 {
 	text-align: center;
 }
+
+.errorsView
+{
+    overflow: auto;
+    height: 67%;
+    width: 100%;
+    position: absolute;
+}
