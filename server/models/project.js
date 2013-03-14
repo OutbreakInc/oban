@@ -498,6 +498,13 @@ Project.prototype.build = function(callback)
 
 			if (result.compileErrors.length > 0)
 			{
+				// extract just the filename
+				result.compileErrors.forEach(function(err)
+				{
+					err.filePath = err.file;
+					err.file = err.file.substr(err.file.lastIndexOf("/") + 1);
+				});
+
 				console.log(result.compileErrors);
 				this._attrs.buildStatus = BuildStatus.ERRORS;
 				return callback(null, result.compileErrors);
