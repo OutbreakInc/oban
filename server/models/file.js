@@ -107,7 +107,7 @@ File.prototype.toJSON = function()
 
 File.prototype.toFile = function()
 {
-	return _.omit(this._attrs, "isOpen");
+	return _.omit(this._attrs, "isOpen", "contents");
 }
 
 File.prototype._checkAttrs = function(attrs, callback)
