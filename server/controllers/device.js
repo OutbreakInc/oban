@@ -84,6 +84,8 @@ DeviceController.prototype.onOpen = function(socket, device, callback)
 		callback(null, device);
 		socket.broadcast.emit("open", device);
 
+		// TODO: closeDeviceFn does not get properly removed when a client closes
+		// a project, fix this later
 		var closeDeviceFn = function()
 		{
 			device.close();
@@ -92,6 +94,8 @@ DeviceController.prototype.onOpen = function(socket, device, callback)
 
 			badger.debug(	"closed device " + device.serialNumber() + 
 							"(client disconnected)");
+
+			this.stopListening(this.devices, "remove", unplugDeviceFn);
 
 		}.bind(this);
 
