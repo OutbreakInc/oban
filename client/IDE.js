@@ -128,10 +128,10 @@ App.addInitializer(function(options)
 
 App.addInitializer(function()
 {
-	// make sure backspace key doesn't trigger page navigation
 	$(document).keydown(function(event)
 	{
-		if (event.keyCode === 8) // backspace
+		// Make sure backspace key doesn't trigger page navigation.
+		if (event.keyCode === 8)
 		{
 			var doPrevent = false;
 
@@ -150,6 +150,11 @@ App.addInitializer(function()
 			}
 
 			if (doPrevent) event.preventDefault();
+		}
+		// Make sure escape key doesn't kill the socket.io connection on Firefox
+		else if (event.keyCode === 27)
+		{
+			event.preventDefault();
 		}
 	});
 });
