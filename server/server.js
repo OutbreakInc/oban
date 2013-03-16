@@ -38,15 +38,22 @@ var server = http.createServer(function(request, response)
 		f.destroy();
 	});
 });
-server.listen(24400);
 
 var config =
 {
 	nodePort: 24400
 };
 
+server.listen(config.nodePort);
+
 var core = new Core(server, config);
-core.init();
+
+core.init().then(function()
+{
+	// send host/port we're running on to parent (if one is present)
+	process.send({ host: "localhost:", port: config.nodePort });
+
+}).done();
 
 //exit when the stdin stream is closed (i.e., when the parent process exits)
 process.stdin.on("end", function()

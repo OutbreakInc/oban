@@ -31,12 +31,10 @@ var dirs = module.exports =
 
 		case "win32":
 		{
-			promise = q.nfcall(fs.exists, process.env["HOMEPATH"] + "/Documents");
-
-			promise.then(function(exists)
+			fs.exists(process.env["HOME"] + "/Documents", function(exists)
 			{
-				if (exists) deferred.resolve(process.env["HOMEPATH"] + "/Documents");
-				else deferred.resolve(process.env["HOMEPATH"] + "/My Documents");
+				if (exists) deferred.resolve(process.env["HOME"] + "/Documents/Logiblock/modules");
+				else deferred.resolve(process.env["HOME"] + "/My Documents/Logiblock/modules");
 			});
 
 			break;

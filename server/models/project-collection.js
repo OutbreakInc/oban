@@ -5,7 +5,8 @@ var Project = require("./project"),
 	Side = require("sidestep"),
 	EventEmitter = require("events").EventEmitter,
 	util = require("util"),
-	rimraf = require("rimraf");
+	rimraf = require("rimraf"),
+	badger = require("badger")(__filename);
 
 require("../string-utils");
 
@@ -51,17 +52,17 @@ function ProjectCollection(options, callback)
 
 			fs.stat(path, function(err, stats)
 			{
-				console.log(path + ":");
+				badger.debug(path + ":");
 
 				if (err)
 				{
-					console.log(err);
+					badger.error(err);
 					return next();
 				}
 				// skip non-directories
 				else if (!stats.isDirectory())
 				{
-					console.log("skipping (not a directory)");
+					badger.warning("skipping (not a directory)");
 					return next();
 				}
 
@@ -69,7 +70,7 @@ function ProjectCollection(options, callback)
 
 				if (ownerAndName.length != 2)
 				{
-					console.log("skipping (invalid name: must be owner+name)");
+					badger.warning("skipping (invalid name: must be owner+name)");
 					return next();
 				}
 
@@ -86,16 +87,16 @@ function ProjectCollection(options, callback)
 					{
 						// just skip invalid project directories
 						// and go on
-						console.log(err);
+						badger.error(err);
 					}
 					else if (this.findById(project.id()))
 					{
 						// don't allow duplicate IDs
-						console.log("skipping (duplicate project id)");
+						badger.warning("skipping (duplicate project id)");
 					}
 					else if (this.findByNameAndOwner(project.name(), project.owner()))
 					{
-						console.log("skipping (duplicate project name and owner)");
+						badger.warning("skipping (duplicate project name and owner)");
 					}
 					else
 					{
@@ -147,7 +148,6 @@ ProjectCollection.prototype.addProject = function(name, owner, callback)
 	// don't allow duplicate project names
 	if (this.findByNameAndOwner(name))
 	{
-		console.log("DUPLICATE");
 		return callback(new Error(Errors.DUPLICATE_NAME));
 	}
 

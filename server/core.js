@@ -39,16 +39,15 @@ Core.prototype =
 
 init: function()
 {
-	this._initDirectories()
+	return this._initDirectories()
 		.then(this._initControllers)
-		.then(this._initVersion).done();
+		.then(this._initVersion);
 },
 
 _initControllers: function()
 {
-	var sockets = this.sockets = socketIo.listen(this.server);
+	var sockets = this.sockets = socketIo.listen(this.server, { "log level" : 0 });
 
-	sockets.set("log level", 1);
 	var devices, projects, settings;
 
 	var step = new Side(this);
@@ -93,14 +92,17 @@ _initDirectories: function()
 	return dirs.settings()
 	.then(function(settingsDir)
 	{
+		badger.debug("resolved settings dir: " + settingsDir);
+
 		this.settingsDir = settingsDir;
 		this._mkdirIfNotExist(this.settingsDir);
-
 		return dirs.modules();
 
 	}.bind(this))
 	.then(function(projectsDir)
 	{
+		badger.debug("resolved projects dir: " + projectsDir);
+
 		this.projectsDir = projectsDir;
 		this._mkdirIfNotExist(this.projectsDir);
 
@@ -121,7 +123,6 @@ _initVersion: function()
 	return dirs.ide()
 	.then(function(dir)
 	{
-		console.log(dir);
 		var version = require(dir + "/module.json").version;
 
 		badger.debug("IDE version: " + version);
