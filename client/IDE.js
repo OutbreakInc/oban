@@ -11,7 +11,8 @@ var $ = require("jquery"),
 	RestartView = require("app/views/restart"),
 	ProjectView = require("app/views/project"),
 	ErrorListView = require("app/views/error-list"),
-	App = require("app/app");
+	App = require("app/app"),
+	io = require("socket.io");
 
 require("bootstrap");
 require("backbone.marionette");
@@ -193,6 +194,21 @@ App.addInitializer(function()
 	{
 		socket.disconnect();
 		App.Views.restartView.render();
+	});
+});
+
+App.addInitializer(function()
+{
+	// set up version number
+	var socket = io.connect("/version");
+
+	$version = $(".versionText");
+
+	socket.emit("version", function(err, version)
+	{
+		if (err) return $version.text("Couldn't retrieve version");
+
+		$version.text("v" + version);
 	});
 });
 

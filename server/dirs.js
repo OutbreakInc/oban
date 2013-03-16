@@ -72,16 +72,14 @@ var dirs = module.exports =
 		return dirs.coreModules()
 		.then(function(dir)
 		{
-			return dir + "/ide/";
+			return verse.findLocalInstallation(dir, "IDE", undefined)
+			.then(function(json)
+			{
+				return json.__path;
+			});
 		});
 	},
-
-	// backwards compatibility
-	// projectsDir: function()
-	// {
-	// 	return module.exports.modulesDir();
-	// },
-
+	
 	sdk: function()
 	{
 		return dirs.coreModules()

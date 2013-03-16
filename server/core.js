@@ -39,12 +39,14 @@ Core.prototype =
 
 init: function()
 {
-	this._initDirectories().then(this._initControllers).done();
+	this._initDirectories()
+		.then(this._initControllers)
+		.then(this._initVersion).done();
 },
 
 _initControllers: function()
 {
-	var sockets = socketIo.listen(this.server);
+	var sockets = this.sockets = socketIo.listen(this.server);
 
 	sockets.set("log level", 1);
 	var devices, projects, settings;
@@ -112,6 +114,29 @@ _mkdirIfNotExist: function(dir)
 		badger.debug("creating: " + dir);
 		mkdirp.sync(dir);
 	}
+},
+
+_initVersion: function()
+{
+	return dirs.ide()
+	.then(function(dir)
+	{
+		console.log(dir);
+		var version = require(dir + "/module.json").version;
+
+		badger.debug("IDE version: " + version);
+
+		var versionSocket = this.sockets.of("/version");
+
+		versionSocket.on("connection", function(socket)
+		{
+			socket.on("version", function(callback)
+			{
+				callback(null, version);
+			});
+		});
+
+	}.bind(this));
 }
 
 }
