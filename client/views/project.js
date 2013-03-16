@@ -189,34 +189,38 @@ var ProjectView = Backbone.View.extend(
 		this.editorView.clearError();
 		this.progressView.setText("Building project...");
 		this.progressView.setVisible(true);
-		
-		this.project.build(function(err, compileErrors)
+
+		// trigger a save on the file
+		this.activeFile.saveContentsToServer(function(err)
 		{
-			var isSuccess = (!err && !compileErrors);
-			
-			mixpanel.track("project:build");
-			this.progressView.setSuccess(isSuccess);
-			this.progressView.setText(err || compileErrors ? 
-				"Build failed" : "Build succeeded");
-			this.progressView.setVisible(false);
-
-			this.setButtonLoading(".buildButton", false);
-
-			if (err)
+			this.project.build(function(err, compileErrors)
 			{
-				deferred.reject(err);
-			}
-			else if (compileErrors)
-			{
-				deferred.reject("Compile errors");
-				this.setCompileErrors(compileErrors);
-			}
-			else
-			{
-				deferred.resolve();
-				this.buildState.set("state", BuildStates.NEEDS_FLASH);
-			}
+				var isSuccess = (!err && !compileErrors);
+				
+				mixpanel.track("project:build");
+				this.progressView.setSuccess(isSuccess);
+				this.progressView.setText(err || compileErrors ? 
+					"Build failed" : "Build succeeded");
+				this.progressView.setVisible(false);
 
+				this.setButtonLoading(".buildButton", false);
+
+				if (err)
+				{
+					deferred.reject(err);
+				}
+				else if (compileErrors)
+				{
+					deferred.reject("Compile errors");
+					this.setCompileErrors(compileErrors);
+				}
+				else
+				{
+					deferred.resolve();
+					this.buildState.set("state", BuildStates.NEEDS_FLASH);
+				}
+
+			}.bind(this));
 		}.bind(this));
 
 		return deferred.promise;

@@ -22,15 +22,23 @@ var FileModel = Backbone.Model.extend(
 		callback();
 	},
 
-	saveContentsToServer: _.debounce(function()
+	saveContentsToServer: _.debounce(function(callback)
 	{
+		callback = callback || function(){};
+
 		this.socket.emit(	"setContents", 
 							this.get("project").id,
 							this.get("name"),
 							this.get("contents"),
 		function(err)
 		{
-			if (err) alert(err);
+			if (err)
+			{
+				alert(err);
+				callback(err);
+			}
+
+			callback();
 
 		}.bind(this));
 

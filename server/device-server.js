@@ -21,10 +21,10 @@ function DeviceServer(callback)
 {
 	EventEmitter.call(this);
 
-	dirs.bin()
-	.then(function(binDir)
+	dirs.deviceServerBin()
+	.then(function(binary)
 	{
-		this.binary = binDir + "GalagoServer";
+		this.binary = binary;
 
 		badger.debug("setting device server binary:");
 		badger.debug(this.binary);

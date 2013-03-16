@@ -115,6 +115,15 @@ var dirs = module.exports =
 				return json.__path;
 			});
 		});
+	},
+
+	deviceServerBin: function()
+	{
+		return dirs.bin()
+		.then(function(dir)
+		{
+			return (dir + "/GalagoServer." + process.platform);
+		});
 	}
 }
 
