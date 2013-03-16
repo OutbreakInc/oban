@@ -1,6 +1,6 @@
 {
 	"name": "logiblock-ide",
-	"version": "0.2.6",
+	"version": "0.2.7",
 	"private": true,
 	"description": "Logiblock IDE, an IDE for developing software on Logiblock products",
 	"main": "server/server.js",
