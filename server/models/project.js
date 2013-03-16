@@ -9,7 +9,8 @@ var _ = require("underscore"),
 	idGen = require("../id-gen"),
 	File = require("./file"),
 	dirs = require("../dirs"),
-	q = require("q");
+	q = require("q"),
+	badger = require("badger")(__filename);
 
 var DEFAULT_FILE_NAME = "main.cpp";
 
@@ -35,6 +36,7 @@ var Compatibility =
 var Errors = 
 {
 	INVALID_PROJECT_NAME: "Invalid project name",
+	INVALID_PROJECT_OWNER: "Invalid project owner",
 	INVALID_BASEDIR: "Invalid base directory",
 	NON_EXISTENT_BASEDIR: "Non-existent base directory",
 	NO_PROJECT_JSON: "Project directory missing project.json",
@@ -54,11 +56,18 @@ var nextTickError = function(err, callback)
 
 var Project = function(options, callback)
 {
+	badger.debug("creating project with options: ", options);
+
 	options = options || {};
 
 	if (!this._checkName(options.name))
 	{
 		return nextTickError(new Error(Errors.INVALID_PROJECT_NAME), callback);
+	}
+
+	if (!this._checkOwner(options.owner))
+	{
+		return nextTickError(new Error(Errors.INVALID_PROJECT_OWNER), callback);
 	}
 
 	if (!options.baseDir || options.baseDir.length === 0)
@@ -75,7 +84,9 @@ var Project = function(options, callback)
 	this._attrs = {};
 
 	this._attrs.name = options.name;
-	this._attrs.path = options.baseDir + "/" + this._attrs.name + "/";
+	this._attrs.owner = options.owner;
+	this._attrs.path = 	options.baseDir + "/" + 
+						this._attrs.owner + "+" + this._attrs.name + "/";
 
 	this._attrs.buildStatus = BuildStatus.UNCOMPILED;
 	this._attrs.runStatus = RunStatus.STOPPED;
@@ -91,7 +102,8 @@ var Project = function(options, callback)
 	if (fs.existsSync(this._attrs.path) && 
 		fs.existsSync(this._settingsIo.path()))
 	{
-		console.log("project:restore " + this._attrs.name);
+		badger.debug(	"restoring project: " + this._attrs.name + 
+						" (" + this._attrs.owner + ")");
 
 		process.nextTick(function()
 		{
@@ -101,7 +113,8 @@ var Project = function(options, callback)
 	}
 	else if (options.create)
 	{
-		console.log("init project from scratch: " + this._attrs.name);
+		badger.debug(	"init project from scratch: " + this._attrs.name +
+						" (" + this._attrs.owner + ")");
 
 		process.nextTick(function()
 		{			
@@ -142,8 +155,6 @@ Project.prototype._init = function(callback)
 	step.define(
 	function()
 	{
-		console.log("next step of init");
-
 		if (error) return step.next(error);
 
 		step.next();
@@ -179,7 +190,7 @@ Project.prototype._restore = function(callback)
 			{
 				if (err) return next(err);
 
-				console.log("loaded file: " + file.name());
+				badger.debug("loaded file: " + file.name());
 				fileObjects.push(file);
 				next();	
 			});
@@ -198,6 +209,11 @@ Project.prototype._restore = function(callback)
 Project.prototype._checkName = function(name, callback)
 {
 	return !(!name || name.length === 0);
+}
+
+Project.prototype._checkOwner = function(owner, callback)
+{
+	return !(!owner || owner.length === 0);
 }
 
 Project.prototype.findFile = function(name)
@@ -276,7 +292,7 @@ Project.prototype.addFile = function(name, callback)
 
 Project.prototype.removeFile = function(name, options, callback)
 {
-	console.log("model:remove", name, options)
+	badger.debug("removing file: ", name, options)
 	var file = this.findFile(name);
 
 	if (!file) return callback(new Error(Errors.NO_SUCH_FILE));
@@ -298,7 +314,7 @@ Project.prototype.removeFile = function(name, options, callback)
 	{
 		if (options.removeFromSystem)
 		{
-			console.log("removing from system: " + file.name());
+			badger.debug("removing from system: " + file.name());
 			this._fileIo.remove(file.name(), step.next);
 		}
 		else
@@ -308,12 +324,12 @@ Project.prototype.removeFile = function(name, options, callback)
 	},
 	function(err)
 	{	
-		console.log("removed file, now updating project settings");
+		badger.debug("removed file, now updating project settings");
 		this._saveAttrs(step.next);
 	},
 	function(err)
 	{
-		console.log("updated project settings");
+		badger.debug("updated project settings");
 		step.next();
 		callback();
 	})
@@ -409,7 +425,7 @@ Project.prototype.closeFile = function(name, callback)
 
 Project.prototype.saveFile = function(name, callback)
 {
-	console.log("saving " + name);
+	badger.debug("saving " + name);
 
 	var file = this.findFile(name);
 
@@ -428,6 +444,11 @@ Project.prototype.saveFile = function(name, callback)
 Project.prototype.name = function()
 {
 	return this._attrs.name;
+}
+
+Project.prototype.owner = function()
+{
+	return this._attrs.owner;
 }
 
 Project.prototype.setName = function(newName, callback)
@@ -467,7 +488,7 @@ Project.prototype.build = function(callback)
 	var err;
 	var binary = "module.elf";
 
-	console.log("about to compile");
+	badger.debug("about to compile");
 
 	q.all([ dirs.bin(), dirs.sdk(), dirs.platform() ])
 	.then(function(dirList)
@@ -505,7 +526,7 @@ Project.prototype.build = function(callback)
 					err.file = err.file.substr(err.file.lastIndexOf("/") + 1);
 				});
 
-				console.log(result.compileErrors);
+				badger.debug(result.compileErrors);
 				this._attrs.buildStatus = BuildStatus.ERRORS;
 				return callback(null, result.compileErrors);
 			}

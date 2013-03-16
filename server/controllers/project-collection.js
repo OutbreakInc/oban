@@ -18,7 +18,9 @@ ProjectCollectionController.prototype._init = function()
 
 		socket.on("add", function(name, callback)
 		{
-			this.projects.addProject(name, function(err, project)
+			// New projects being added from frontend are all treated
+			// as local projects.
+			this.projects.addProject(name, "local", function(err, project)
 			{
 				if (err) return callback(err.message);
 

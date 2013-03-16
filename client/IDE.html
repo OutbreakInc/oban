@@ -228,7 +228,7 @@
 		</div> -->
 
 	<script type="text/template" id="projectListTemplate">
-		<a class="projectListItem"><%= name %></a>
+		<a class="projectListItem"><%= name %><% if (typeof(isOpenBy) != "undefined" && isOpenBy) { %>*<% } %> (<%= owner %>)</a>
 	</script>
 
 	<script type="text/template" id="errorItemTemplate">

@@ -10,7 +10,7 @@ module.exports = function idGen()
             ).toString(16);
     };
 
-    return (S4() + S4() + S4());
+    return (S4() + S4() + S4() + S4() + S4() + S4());
 }
 
 }).call(this);

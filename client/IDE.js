@@ -71,7 +71,12 @@ App.addInitializer(function(options)
 
 		if (this.activeProjectView)
 		{
-			if (this.activeProject.get("name") == project.get("name")) return;
+			if (this.activeProject.get("name") == project.get("name") &&
+				this.activeProject.get("owner") == project.get("owner")) 
+			{
+				console.log("tried to open project that we already have open, ignoring action");
+				return;
+			}
 
 			var switchingProject = true;
 

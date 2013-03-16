@@ -26,14 +26,6 @@ var ProjectListItem = Backbone.View.extend(
 	render: function()
 	{
 		this.$el.html(this.template(this.project.toJSON()));
-		console.log("render!");
-
-		if (this.project.has("isOpenBy"))
-		{
-			console.log("isOpenBy");
-			this.$(".projectListItem").text(this.project.get("name") + "*");
-		}
-
 		return this;
 	},
 

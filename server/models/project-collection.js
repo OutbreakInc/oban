@@ -65,8 +65,21 @@ function ProjectCollection(options, callback)
 					return next();
 				}
 
+				var ownerAndName = dir.split("+");
+
+				if (ownerAndName.length != 2)
+				{
+					console.log("skipping (invalid name: must be owner+name)");
+					return next();
+				}
+
+				var owner = ownerAndName[0],
+					name = ownerAndName[1];
+
 				var project = new Project(
-					{ name: dir, baseDir: this._attrs.baseDir },
+					{ 	owner: ownerAndName[0], 
+						name: ownerAndName[1], 
+						baseDir: this._attrs.baseDir },
 				function(err)
 				{
 					if (err)
@@ -80,9 +93,9 @@ function ProjectCollection(options, callback)
 						// don't allow duplicate IDs
 						console.log("skipping (duplicate project id)");
 					}
-					else if (this.findByName(project.name()))
+					else if (this.findByNameAndOwner(project.name(), project.owner()))
 					{
-						console.log("skipping (duplicate project name)");
+						console.log("skipping (duplicate project name and owner)");
 					}
 					else
 					{
@@ -113,11 +126,11 @@ function ProjectCollection(options, callback)
 
 util.inherits(ProjectCollection, EventEmitter);
 
-ProjectCollection.prototype.findByName = function(name)
+ProjectCollection.prototype.findByNameAndOwner = function(name, owner)
 {
 	return _.find(this._attrs.projects, function(project)
 	{
-		return _.stricmp(project.name(), name);
+		return _.stricmp(project.name(), name) && _.stricmp(project.owner(), owner);
 	});
 }
 
@@ -129,10 +142,10 @@ ProjectCollection.prototype.findById = function(id)
 	});	
 }
 
-ProjectCollection.prototype.addProject = function(name, callback)
+ProjectCollection.prototype.addProject = function(name, owner, callback)
 {
 	// don't allow duplicate project names
-	if (this.findByName(name))
+	if (this.findByNameAndOwner(name))
 	{
 		console.log("DUPLICATE");
 		return callback(new Error(Errors.DUPLICATE_NAME));
@@ -146,6 +159,7 @@ ProjectCollection.prototype.addProject = function(name, callback)
 		var project = new Project(
 		{
 			name: name,
+			owner: owner,
 			baseDir: this._attrs.baseDir,
 			create: true
 		}, step.next);
@@ -215,7 +229,7 @@ ProjectCollection.prototype.renameProject = function(id, newName, callback)
 	}
 
 	// check to see if we already have a project with this name
-	var duplicateProject = this.findByName(newName);
+	var duplicateProject = this.findByNameAndOwner(newName, project.owner());
 
 	if (duplicateProject)
 	{
