@@ -191,6 +191,7 @@ App.addInitializer(function()
 
 	socket.on("disconnect", function()
 	{
+		socket.disconnect();
 		App.Views.restartView.render();
 	});
 });

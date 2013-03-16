@@ -16,7 +16,7 @@
 
 	<script src="/lib/platform/require-jquery.js" type="application/javascript" charset="utf-8"></script>
 
-	<script type="application/javascript" charset="utf-8">
+	<script type="application/javascript">
 		require(["./config"], function(config)
 		{
 			require(["app/IDE"]);
@@ -111,7 +111,7 @@
 						<button class="btn btn-small btn-primary runButton" data-loading-text="Flashing...">
 							<span class="icon-play icon-white"></span> Run
 						</button>
-						<button class="btn btn-small btn-primary debugButton" data-loading-text="Starting Debugging..."
+						<button class="btn btn-small btn-primary debugButton" data-loading-text="Starting Debugging...">
 							<span class="icon-play icon-white"></span> Debug
 						</button>
 					</div>
@@ -208,9 +208,9 @@
 				</div>
 			</div>
 
-			<div id="restartModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="settingsHeader" aria-hidden="true">
+			<div id="restartModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="restartHeader" aria-hidden="true">
 				<div class="modal-header">
-					<h3 id="settingsHeader">Uh oh...</h3>
+					<h3 id="restartHeader">Uh oh...</h3>
 				</div>
 				<div class="modal-body">
 					<p>Something went wrong</p>
