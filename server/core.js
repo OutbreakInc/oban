@@ -13,10 +13,10 @@ var badger = require("badger")(__filename),
 	SettingController = require("./controllers/setting-collection"),
 	DeviceCollectionController = require("./controllers/device-collection"),
 	DeviceController = require("./controllers/device"),
-	GdbClient = require("./gdb-client"),
 	socketIo = require("socket.io"),
 	mkdirp = require("mkdirp"),
-	Side = require("sidestep");
+	Side = require("sidestep"),
+	_ = require("underscore");
 
 function Core(server, config)
 {
@@ -28,6 +28,8 @@ function Core(server, config)
 
 	this.server = server;
 	this.config = config;
+
+	_.bindAll(this);
 }
 
 module.exports = Core;
@@ -37,9 +39,11 @@ Core.prototype =
 
 init: function()
 {
-	badger.debug("initializing directories");
-	this._initDirectories();
+	this._initDirectories().then(this._initControllers).done();
+},
 
+_initControllers: function()
+{
 	var sockets = socketIo.listen(this.server);
 
 	sockets.set("log level", 1);
@@ -66,6 +70,7 @@ init: function()
 	},
 	function()
 	{
+		badger.debug("initializing controllers");
 		var pcController = new ProjectCollectionController(projects, sockets);
 		var projectController = new ProjectController(projects, devices, sockets);
 		var fileController = new FileController(projects, sockets);
@@ -79,22 +84,23 @@ init: function()
 	.exec();
 },
 
-_initDirectories: function(callback)
+_initDirectories: function()
 {
-	dirs.settings()
+	badger.debug("initializing directories");
+
+	return dirs.settings()
 	.then(function(settingsDir)
 	{
 		this.settingsDir = settingsDir;
 		this._mkdirIfNotExist(this.settingsDir);
 
-		return dirs.projects();
+		return dirs.modules();
 
 	}.bind(this))
 	.then(function(projectsDir)
 	{
 		this.projectsDir = projectsDir;
 		this._mkdirIfNotExist(this.projectsDir);
-		callback();
 
 	}.bind(this));
 },
@@ -103,13 +109,9 @@ _mkdirIfNotExist: function(dir)
 {
 	if (!fs.existsSync(dir))
 	{
+		badger.debug("creating: " + dir);
 		mkdirp.sync(dir);
 	}
-},
-
-_onStop: function(project)
-{
-	this.gdbClient.stop();
 }
 
 }
