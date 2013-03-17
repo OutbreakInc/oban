@@ -50,9 +50,12 @@ var core = new Core(server, config);
 
 core.init().then(function()
 {
-	// send host/port we're running on to parent (if one is present)
-	process.send({ host: "localhost:", port: config.nodePort });
-
+	if (process.send)
+	{
+		// send host/port we're running on to parent (if one is present)
+		process.send({ host: "localhost:", port: config.nodePort });
+	}
+	
 }).done();
 
 //exit when the stdin stream is closed (i.e., when the parent process exits)
