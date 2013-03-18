@@ -53,7 +53,7 @@ core.init().then(function()
 	if (process.send)
 	{
 		// send host/port we're running on to parent (if one is present)
-		process.send({ host: "localhost:", port: config.nodePort });
+		process.send({ host: "localhost", port: config.nodePort });
 	}
 	
 }).done();
