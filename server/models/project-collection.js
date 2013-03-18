@@ -62,7 +62,7 @@ function ProjectCollection(options, callback)
 				// skip non-directories
 				else if (!stats.isDirectory())
 				{
-					badger.warning("skipping (not a directory)");
+					badger.debug("skipping (not a directory)");
 					return next();
 				}
 
@@ -70,7 +70,7 @@ function ProjectCollection(options, callback)
 
 				if (ownerAndName.length != 2)
 				{
-					badger.warning("skipping (invalid name: must be owner+name)");
+					badger.debug("skipping (invalid name: must be owner+name)");
 					return next();
 				}
 
@@ -92,11 +92,11 @@ function ProjectCollection(options, callback)
 					else if (this.findById(project.id()))
 					{
 						// don't allow duplicate IDs
-						badger.warning("skipping (duplicate project id)");
+						badger.debug("skipping (duplicate project id)");
 					}
 					else if (this.findByNameAndOwner(project.name(), project.owner()))
 					{
-						badger.warning("skipping (duplicate project name and owner)");
+						badger.debug("skipping (duplicate project name and owner)");
 					}
 					else
 					{
