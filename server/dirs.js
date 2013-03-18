@@ -4,6 +4,7 @@
 var fs = require("fs"),
 	verse = require("moduleverse"),
 	_ = require("underscore"),
+	join = require("path").join,
 	q = require("q");
 
 var dirs = module.exports =
@@ -15,7 +16,7 @@ var dirs = module.exports =
 		{
 			return process.env["LOGIBLOCK_CORE_PATH"] ? 
 				process.env["LOGIBLOCK_CORE_PATH"] :
-				dir + "/modules";
+				join(dir, "/modules");
 		});
 	},
 
@@ -26,21 +27,23 @@ var dirs = module.exports =
 		switch (process.platform)
 		{
 		case "darwin": 
-			deferred.resolve(process.env["HOME"] + "/Documents/Logiblock/modules");
+			deferred.resolve(join(process.env["HOME"], "/Documents/Logiblock/modules"));
 			break;
 
 		case "win32":
 		{
+			var basePath = join(process.env["HOMEDRIVE"], process.env["HOMEPATH"]);
+
 			fs.exists(process.env["HOME"] + "/Documents", function(exists)
 			{
-				if (exists) deferred.resolve(process.env["HOME"] + "/Documents/Logiblock/modules");
-				else deferred.resolve(process.env["HOME"] + "/My Documents/Logiblock/modules");
+				if (exists) deferred.resolve(join(basePath, "/Documents/Logiblock/modules"));
+				else deferred.resolve(join(basePath, "/My Documents/Logiblock/modules"));
 			});
 
 			break;
 		}
 		case "linux":
-			deferred.resolve(process.env["HOME"] + "/.logiblock/local/modules");
+			deferred.resolve(join(process.env["HOME"], "/.logiblock/local/modules"));
 			break;
 		}
 
@@ -55,11 +58,11 @@ var dirs = module.exports =
 		{
 		case "darwin": 
 			deferred.resolve(
-				process.env["HOME"] + "/Library/Application Support/Logiblock");
+				join(process.env["HOME"], "/Library/Application Support/Logiblock"));
 		case "win32": 
-			deferred.resolve(process.env["APPDATA"] + "/Logiblock");
+			deferred.resolve(join(process.env["APPDATA"], "/Logiblock"));
 		case "linux": 
-			deferred.resolve(process.env["HOME"] + "/.logiblock");
+			deferred.resolve(join(process.env["HOME"], "/.logiblock"));
 		}
 
 		return deferred.promise;
@@ -96,7 +99,7 @@ var dirs = module.exports =
 		return dirs.platform()
 		.then(function(dir)
 		{
-			return dir + "/bin/";
+			return join(dir, "/bin/");
 		});
 	},
 
@@ -118,7 +121,7 @@ var dirs = module.exports =
 		return dirs.bin()
 		.then(function(dir)
 		{
-			return (dir + "/GalagoServer." + process.platform);
+			return join(dir, ("/GalagoServer." + process.platform));
 		});
 	}
 }

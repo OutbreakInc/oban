@@ -6,6 +6,7 @@ var Project = require("./project"),
 	EventEmitter = require("events").EventEmitter,
 	util = require("util"),
 	rimraf = require("rimraf"),
+	join = require("path").join,
 	badger = require("badger")(__filename);
 
 require("../string-utils");
@@ -48,7 +49,7 @@ function ProjectCollection(options, callback)
 	{
 		async.forEachSeries(projectDirs, function(dir, next)
 		{
-			var path = this._attrs.baseDir + "/" + dir;
+			var path = join(this._attrs.baseDir, dir);
 
 			fs.stat(path, function(err, stats)
 			{

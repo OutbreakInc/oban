@@ -1,15 +1,13 @@
 var fs = require("fs"),
-	path = require("path"),
+	join = require("path").join,
 	_ = require("underscore");
 
 var MS_BETWEEN_SAVES = 500;
 
 function SettingsIo(settingsPath, name)
 {
-	//console.log("settingsPath", settingsPath)
 	this.name = name;
-	this.settingsFilePath = 
-		path.normalize(settingsPath + "/" + this.name + ".json");
+	this.settingsFilePath = join(settingsPath, (this.name + ".json"));
 }
 
 SettingsIo.prototype.path = function()

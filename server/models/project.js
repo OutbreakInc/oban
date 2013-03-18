@@ -10,6 +10,8 @@ var _ = require("underscore"),
 	File = require("./file"),
 	dirs = require("../dirs"),
 	q = require("q"),
+	join = require("path").join,
+	pathSep = require("path").sep,
 	badger = require("badger")(__filename);
 
 var DEFAULT_FILE_NAME = "main.cpp";
@@ -85,8 +87,8 @@ var Project = function(options, callback)
 
 	this._attrs.name = options.name;
 	this._attrs.owner = options.owner;
-	this._attrs.path = 	options.baseDir + "/" + 
-						this._attrs.owner + "+" + this._attrs.name + "/";
+	this._attrs.path = 
+		join(options.baseDir, this._attrs.owner, this._attrs.name);
 
 	this._attrs.buildStatus = BuildStatus.UNCOMPILED;
 	this._attrs.runStatus = RunStatus.STOPPED;
@@ -523,7 +525,7 @@ Project.prototype.build = function(callback)
 				result.compileErrors.forEach(function(err)
 				{
 					err.filePath = err.file;
-					err.file = err.file.substr(err.file.lastIndexOf("/") + 1);
+					err.file = err.file.substr(err.file.lastIndexOf(pathSep) + 1);
 				});
 
 				badger.debug(result.compileErrors);

@@ -1,14 +1,10 @@
 var fs = require("fs"),
-	_ = require("underscore");
+	_ = require("underscore"),
+	join = require("path").join;
 
 function FileIo(path)
 {
-	this.path = path;
-
-	if (this.path[this.path.length - 1] != "/")
-	{
-		this.path += "/";
-	}
+	this.path = join(path);
 
 	if (!fs.existsSync(this.path))
 	{
@@ -19,33 +15,33 @@ function FileIo(path)
 FileIo.prototype.write = function(fileName, data, callback)
 {
 	console.log("writing file " + fileName);
-	fs.writeFile(this.path + fileName, data, "utf8", callback);
+	fs.writeFile(join(this.path, fileName), data, "utf8", callback);
 }
 
 FileIo.prototype.read = function(fileName, callback)
 {
-	fs.readFile(this.path + fileName, "utf8", callback);
+	fs.readFile(join(this.path, fileName), "utf8", callback);
 }
 
 FileIo.prototype.create = function(fileName, callback)
 {
-	this.write(fileName, "", callback);
+	fs.writeFile(join(this.path, fileName), "", "utf8", callback);
 }
 
 FileIo.prototype.remove = function(fileName, callback)
 {
-	console.log("removing ", this.path + fileName);
-	fs.unlink(this.path + fileName, callback);
+	console.log("removing ", join(this.path, fileName));
+	fs.unlink(join(this.path, fileName), callback);
 }
 
 FileIo.prototype.rename = function(oldName, newName, callback)
 {
-	fs.rename(this.path + oldName, this.path + newName, callback);
+	fs.rename(join(this.path, oldName), join(this.path, newName), callback);
 }
 
 FileIo.prototype.exists = function(fileName, callback)
 {
-	fs.exists(this.path + fileName, function(exists)
+	fs.exists(join(this.path, fileName), function(exists)
 	{
 		callback(null, exists);
 	});
@@ -53,7 +49,7 @@ FileIo.prototype.exists = function(fileName, callback)
 
 FileIo.prototype.watch = function(fileName, callback)
 {
-	fs.watchFile(this.path + fileName, function(curr, prev)
+	fs.watchFile(join(this.path, fileName), function(curr, prev)
 	{
 		if (curr.mtime > prev.mtime) callback();
 	});
