@@ -88,7 +88,7 @@ var Project = function(options, callback)
 	this._attrs.name = options.name;
 	this._attrs.owner = options.owner;
 	this._attrs.path = 
-		join(options.baseDir, this._attrs.owner, this._attrs.name);
+		join(options.baseDir, (this._attrs.owner + "+" + this._attrs.name));
 
 	this._attrs.buildStatus = BuildStatus.UNCOMPILED;
 	this._attrs.runStatus = RunStatus.STOPPED;
