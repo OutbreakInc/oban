@@ -1,6 +1,6 @@
 {
 	"name":"ide",
-	"version": "0.2.10",
+	"version": "0.2.11",
 	"tags":["logicode","logiblock","development","tool","ide"],
 	"description":"Logiblock IDE (integrated development environment)."
 }
