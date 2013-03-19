@@ -147,7 +147,7 @@ ProjectCollection.prototype.findById = function(id)
 ProjectCollection.prototype.addProject = function(name, owner, callback)
 {
 	// don't allow duplicate project names
-	if (this.findByNameAndOwner(name))
+	if (this.findByNameAndOwner(name, owner))
 	{
 		return callback(new Error(Errors.DUPLICATE_NAME));
 	}
