@@ -3,6 +3,7 @@
 	Mixins = require("./mixins"),
 	GdbClient = require("../gdb-client"),
 	_ = require("underscore"),
+	join = require("path").join,
 	badger = require("badger")(__filename);
 
 var Errors =
@@ -184,7 +185,7 @@ ProjectController.prototype.onFlash = function(socket, project, serialNumber, is
 		return callback(Errors.CANT_RUN_UNBUILT_PROJECT);
 	}
 
-	this.devices.flash(serialNumber, project.path() + project.binary(),
+	this.devices.flash(serialNumber, join(project.path(), project.binary()),
 	function(err)
 	{
 		if (err) return callback(err);
@@ -216,7 +217,7 @@ ProjectController.prototype.onDebug = function(socket, project, callback)
 	badger.debug("attaching client to GDB");
 	this.gdbClient.attachClient(socket);
 
-	this.gdbClient.run(project.path() + project.binary(), 
+	this.gdbClient.run(join(project.path(), project.binary()),
 	function(err)
 	{
 		if (err) return callback(err);
